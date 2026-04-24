@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ────────────────────────────────────────────────────────────
+   New Spirit — Sharp Type, licensed. OTF files live under
+   public/fonts/. Weights 300, 400, 500, 700 are wired up per
+   the design system artifact (no 600, no italics).
+   ──────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "New Spirit";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local("New Spirit Light"), url("/fonts/NewSpirit-Light.otf") format("opentype");
+}
+@font-face {
+  font-family: "New Spirit";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("New Spirit"), url("/fonts/NewSpirit-Regular.otf") format("opentype");
+}
+@font-face {
+  font-family: "New Spirit";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local("New Spirit Medium"), url("/fonts/NewSpirit-Medium.otf") format("opentype");
+}
+@font-face {
+  font-family: "New Spirit";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local("New Spirit Bold"), url("/fonts/NewSpirit-Bold.otf") format("opentype");
+}
+
+:root {
+  /* Neutrals — Ivory */
+  --ivory: #f5f0e6;
+  --ivory-soft: #efe7d6;
+  --ivory-deep: #ebe4d4;
+  --ivory-light: #f0e8d8;
+  --hair: #d9ceb9;
+
+  /* Texto — Espresso */
+  --espresso: #2b1d14;
+  --espresso-soft: #4a3426;
+  --espresso-muted: #7a6352;
+  --espresso-deep: #1c140f;
+
+  /* Acento — Azul tinta */
+  --ink: #2e4761;
+  --ink-deep: #1c2e42;
+  --ink-soft: #c3cdd8;
+  --ink-tint: #e6ecf2;
+
+  /* Semánticos */
+  --success: #3e6d4d;
+  --warn: #b38540;
+  --error: #a84738;
+
+  /* Motion */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode reverses surface/text. Accents stay the same. */
+    --ivory: #1c140f;
+    --ivory-soft: #221b16;
+    --ivory-deep: #2a221c;
+    --espresso: #f0e8d8;
+    --espresso-soft: #d8ccb4;
+    --espresso-muted: #a89880;
+    --hair: rgba(240, 232, 216, 0.12);
+  }
+}
+
+html {
+  background: var(--ivory);
+  color: var(--espresso);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  /* --font-sans is defined by next/font/google in src/app/layout.tsx */
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv01";
+  font-size: 0.875rem; /* 14px — design system base */
+  line-height: 1.55;
+}
+
+/*
+ * Editorial emphasis — the signature touch of the brand.
+ * <em> and <i> are NOT italicized. They become medium-weight ink-colored text.
+ * This is what makes phrases like "Inglés Hotelero" feel like a publication,
+ * not a web app. Every page with italics implicitly has the accent.
+ */
+em,
+i {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Serif display defaults. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "New Spirit", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+/* Focus ring — 2px ink outline, 2px offset. Applies to every interactive element. */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Selection color — ink, not terracotta. Editorial, not energetic. */
+::selection {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Honor reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Utilities
+   ──────────────────────────────────────────────────────────── */
+
+/* 10px uppercase mono caption — the "caps" pattern from the DS. */
+.caps {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.625rem; /* 10px */
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--espresso-muted);
+  font-weight: 500;
+}
+
+/*
+ * Diagonal-stripe placeholder pattern — the "not yet photographed" signal.
+ * Use this via <div className="placeholder-pattern" /> or via
+ * <NumberedPlaceholder /> which composes it.
+ */
+.placeholder-pattern {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--ivory-deep),
+    var(--ivory-deep) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  border: 1px solid var(--hair);
+}
+
+/* ────────────────────────────────────────────────────────────
+   Print — clean letter-size PDF output from the browser.
+   Used by /hr/employees/[id] and /hr/reports when HR clicks
+   "Exportar como PDF".
+   ──────────────────────────────────────────────────────────── */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+  @page {
+    size: letter;
+    margin: 0.75in;
+  }
+  /* Hide nav, buttons, and anything marked print:hidden via Tailwind. */
+  header nav,
+  footer,
+  button,
+  [aria-hidden="true"] {
+    break-inside: avoid;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  /* Cards flatten for print */
+  .border-hair,
+  [class*="border-hair"] {
+    border-color: #ccc !important;
+  }
+}

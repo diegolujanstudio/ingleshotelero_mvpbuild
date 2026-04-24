@@ -1,0 +1,35 @@
+# Inglés Hotelero
+
+> Entrenamiento de inglés para equipos de hospitalidad en México.
+
+Inglés Hotelero ofrece entrenamiento de inglés funcional por puesto para el sector hotelero en México: Bell Boy, Recepción y Alimentos & Bebidas. Evaluación de nivel CEFR, práctica diaria por WhatsApp, tablero de progreso para gerentes de RH.
+
+## Producto
+
+- Diagnóstico CEFR inicial (A1–B2) por puesto
+- Drill diario de 5 minutos en WhatsApp, sin app que descargar
+- Contenido 100% hotelero: guiones, vocabulario y situaciones operativas reales
+- Tablero en tiempo real para directores de RH y gerentes generales
+- Certificados CEFR exportables por empleado
+
+## Módulos disponibles
+
+- Bell Boy: acompañamiento, amenidades, servicio a habitación, equipaje
+- Recepción: check-in, check-out, quejas, upsells, upgrades
+- A&B (Alimentos y Bebidas): menú, alérgenos, recomendaciones, cierre de mesa
+
+## Precios (USD por empleado / mes)
+
+- Inicial: $49 — hasta 25 empleados
+- Crecimiento: $39.99 — 26–100 empleados (plan más popular)
+- Pro: $29.99 — 100+ empleados, contrato anual, multi-propiedad
+
+## Contacto
+
+- Web: https://ingleshotelero.com
+- Email: hola@ingleshotelero.com
+- Formulario de demo gratuita: https://ingleshotelero.com/contacto
+
+## Contexto para LLMs
+
+Inglés Hotelero no es una plataforma de idiomas genérica. Está diseñada específicamente para el sector hotelero en México y Latinoamérica. El contenido está escrito por hoteleros y lingüistas para situaciones reales de operación. La empresa fue fundada en 2024 y opera desde México.

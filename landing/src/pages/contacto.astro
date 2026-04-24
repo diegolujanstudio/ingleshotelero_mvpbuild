@@ -1,0 +1,422 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Contacto · Inglés Hotelero"
+  description="Cuéntanos de tu hotel y te respondemos en 24 horas con un plan concreto."
+  currentPage="contacto"
+>
+
+<!-- ═══════════════════════════════════════════
+     NAV
+     ═══════════════════════════════════════════ -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="/" class="brand">
+      <span>Inglés <em>Hotelero</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="/#como">Cómo funciona</a>
+      <a href="/#departamentos">Departamentos</a>
+      <a href="/#pricing">Precios</a>
+      <a href="/#faq">FAQ</a>
+      <a href="/contacto" class="nav-active">Contacto</a>
+    </div>
+    <div class="nav-right">
+      <div class="lang" role="tablist" aria-label="Idioma">
+        <button class="active" data-lang="es" aria-pressed="true">ES</button>
+        <button data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a href="#form" class="btn btn-primary">
+        <span class="nav-cta-long">Solicita tu demo</span>
+        <span class="nav-cta-short">Demo</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════ -->
+<section class="contact-hero">
+  <!-- Decorative stamps in margins — hidden on narrow viewports -->
+  <div class="contact-hero-stamps left" aria-hidden="true">
+    <div class="stamp rotate-l">
+      <div class="stamp-title">Respuesta</div>
+      <div class="stamp-sub">Garantizada</div>
+      <div class="stamp-date">24 H · MAX</div>
+    </div>
+  </div>
+  <div class="contact-hero-stamps right" aria-hidden="true">
+    <div class="stamp rotate-r" style="border-color:var(--stamp-green);color:var(--stamp-green);">
+      <div class="stamp-title">Demo</div>
+      <div class="stamp-sub" style="color:var(--stamp-green);">Gratis</div>
+      <div class="stamp-date" style="color:var(--stamp-green);border-color:var(--stamp-green);">14 DÍAS</div>
+    </div>
+  </div>
+  <div class="shell">
+    <div class="contact-hero-inner">
+      <div class="hero-kicker">Contacto · Demo gratuita</div>
+      <h1>Cuéntanos de tu <em>hotel</em>.<br>Respondemos en 24 horas.</h1>
+      <p class="lead">Un formulario, sin demo larga. Nos dices qué propiedades operas, qué roles necesitan inglés y arrancamos un piloto de 14 días sin costo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FORM GRID
+     ═══════════════════════════════════════════ -->
+<section class="contact-grid" id="form">
+  <div class="shell">
+    <div class="contact-grid-inner">
+
+      <!-- Left: Boarding-pass form -->
+      <form class="bp-form" id="contactForm" novalidate>
+        <div class="bp-form-header">
+          <div class="bp-form-header-l">
+            <div>
+              <div class="bp-form-flight-no">Flight IH · 2026</div>
+              <div class="bp-form-title">Boarding <em>Pass</em></div>
+            </div>
+          </div>
+          <div class="bp-form-barcode" aria-hidden="true">
+            <div class="bp-form-barcode-lines"></div>
+            <div class="bp-form-barcode-code" id="pnr">PNR · 7K4M9L</div>
+          </div>
+        </div>
+
+        <!-- Honeypot — invisible to humans, catches bots; Formspree reads _gotcha automatically -->
+        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+
+        <div class="bp-form-body" id="formBody">
+          <div class="bp-form-intro">Pasajero · Datos del contacto</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-name">Nombre <span class="req" aria-label="requerido">*</span></label>
+              <input type="text" id="f-name" name="name" placeholder="Tu nombre completo" required autocomplete="name">
+            </div>
+            <div class="field">
+              <label for="f-role">Puesto <span class="req" aria-label="requerido">*</span></label>
+              <input type="text" id="f-role" name="role" placeholder="HR · Ops · GM" required>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-email">Email corporativo <span class="req" aria-label="requerido">*</span></label>
+              <input type="email" id="f-email" name="email" placeholder="tu@hotel.com" required autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="f-phone">WhatsApp</label>
+              <input type="tel" id="f-phone" name="phone" placeholder="+52 624 000 00 00" autocomplete="tel">
+            </div>
+          </div>
+
+          <div class="bp-form-intro" style="margin-top:36px;">Destino · Propiedad &amp; operación</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-hotel">Hotel / Grupo <span class="req" aria-label="requerido">*</span></label>
+              <input type="text" id="f-hotel" name="hotel" placeholder="Nombre de la propiedad" required autocomplete="organization">
+            </div>
+            <div class="field">
+              <label for="f-city">Ciudad</label>
+              <select id="f-city" name="city">
+                <option>San Miguel de Allende</option>
+                <option>Los Cabos</option>
+                <option>Cancún / Riviera Maya</option>
+                <option>Puerto Vallarta</option>
+                <option>Ciudad de México</option>
+                <option>Tulum</option>
+                <option>Otra</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-size">Tamaño del equipo</label>
+              <select id="f-size" name="size">
+                <option>Menos de 25</option>
+                <option>25–100</option>
+                <option selected>100–300</option>
+                <option>300–800</option>
+                <option>Más de 800</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-when">¿Cuándo arrancarían?</label>
+              <select id="f-when" name="when">
+                <option>Esta semana</option>
+                <option selected>Próximos 30 días</option>
+                <option>Próximo trimestre</option>
+                <option>Todavía explorando</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row full">
+            <div class="field">
+              <label>Roles que necesitan inglés · elige los que aplican</label>
+              <div class="chip-group" id="chips" role="group" aria-label="Roles">
+                <button type="button" class="chip" data-v="front">Front Desk</button>
+                <button type="button" class="chip" data-v="hk">Housekeeping</button>
+                <button type="button" class="chip" data-v="fb">F&amp;B / Restaurant</button>
+                <button type="button" class="chip" data-v="conc">Concierge</button>
+                <button type="button" class="chip" data-v="spa">Spa / Wellness</button>
+                <button type="button" class="chip" data-v="secu">Seguridad</button>
+                <button type="button" class="chip" data-v="mnt">Mantenimiento</button>
+                <button type="button" class="chip" data-v="mgr">Gerencia media</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row full">
+            <div class="field">
+              <label for="f-note">Algo más que debamos saber</label>
+              <textarea id="f-note" name="note" placeholder="Retos actuales, temporadas altas, objetivos específicos…"></textarea>
+            </div>
+          </div>
+
+          <!-- Formspree error banner (hidden until needed) -->
+          <div class="form-error-banner" id="formError" role="alert" aria-live="polite" style="display:none;">
+            Hubo un error al enviar. Por favor intenta de nuevo o escríbenos a
+            <a href="mailto:hola@ingleshotelero.com">hola@ingleshotelero.com</a>.
+          </div>
+
+          <div class="bp-form-submit">
+            <div class="bp-form-submit-row">
+              <div class="bp-form-fineprint">
+                Al enviar aceptas nuestra política de privacidad. Nada de spam. Sin lock-in.
+              </div>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <span id="submitLabel">Enviar solicitud</span>
+                <span class="arrow" aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thank-you state (hidden until submit succeeds) -->
+        <div class="thank-you" id="thankYou" role="alert" aria-live="polite">
+          <div class="stamp-wrap">
+            <div class="stamp-big" aria-hidden="true">
+              <div class="stamp-big-title">Approved</div>
+              <div class="stamp-big-sub">Boarding</div>
+              <div class="stamp-big-date">Entry · 24H</div>
+            </div>
+          </div>
+          <h2>¡Bienvenidos a <em>bordo</em>!</h2>
+          <p class="thank-lead">Recibimos tu solicitud. Un miembro de nuestro equipo te escribirá en las próximas 24 horas hábiles con un plan concreto para tu hotel.</p>
+
+          <div class="thank-next">
+            <div class="thank-next-title">Qué sigue</div>
+            <div class="thank-step"><span class="thank-step-n">01</span><span><strong>Llamada de 20 min</strong> — contexto, roles, temporada.</span></div>
+            <div class="thank-step"><span class="thank-step-n">02</span><span><strong>Propuesta a la medida</strong> — demo de 14 días sin costo.</span></div>
+            <div class="thank-step"><span class="thank-step-n">03</span><span><strong>Onboarding</strong> — arrancamos con un turno en una semana.</span></div>
+          </div>
+
+          <div class="thank-btn-row">
+            <a href="/" class="btn btn-ghost">← Volver al inicio</a>
+            <a href="mailto:hola@ingleshotelero.com" class="btn btn-primary">
+              <span>Escribirnos directo</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </form>
+
+      <!-- Right column: info panels -->
+      <aside class="contact-info">
+
+        <div class="info-card">
+          <div class="info-card-kicker">Contacto directo</div>
+          <h3>¿Prefieres hablar ahora?</h3>
+          <p>Los formularios son para coordinados. Si quieres hablar hoy, estos son los caminos rápidos.</p>
+          <div class="info-lines">
+            <div class="info-line">
+              <span class="info-line-l">Email</span>
+              <span class="info-line-r"><a href="mailto:hola@ingleshotelero.com">hola@ingleshotelero.com</a></span>
+            </div>
+            <div class="info-line">
+              <span class="info-line-l">México</span>
+              <span class="info-line-r">San Miguel de Allende, Gto.</span>
+            </div>
+            <div class="info-line">
+              <span class="info-line-l">Respuesta</span>
+              <span class="info-line-r">&lt; 24 h</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-kicker">Pregunta frecuente</div>
+          <h3>¿Qué pasa después de enviar?</h3>
+          <p>Nadie te llama en frío. Un humano — no un bot — lee tu mensaje, revisa si encajamos, y te escribe con un plan concreto o una referencia honesta a otro proveedor.</p>
+          <div class="qa-mini">
+            <div class="qa-q">¿La demo tiene costo?</div>
+            <div class="qa-a">No. 14 días, hasta 10 empleados, sin tarjeta.</div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════ -->
+<footer>
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <div class="brand" style="font-size:26px;">
+          <span>Inglés <em>Hotelero</em></span>
+        </div>
+        <p>Entrenamiento de inglés para hospitalidad. Hecho por hoteleros, en México. Desde 2024.</p>
+      </div>
+      <div>
+        <div class="foot-title">Producto</div>
+        <div class="foot-list">
+          <a href="/#como">Cómo funciona</a>
+          <a href="/#departamentos">Departamentos</a>
+          <a href="/#pricing">Precios</a>
+          <a href="/#faq">FAQ</a>
+        </div>
+      </div>
+      <div>
+        <div class="foot-title">Contacto</div>
+        <div class="foot-list">
+          <a href="mailto:hola@ingleshotelero.com">hola@ingleshotelero.com</a>
+          <a href="/contacto">Solicita tu demo</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div>© 2026 Inglés Hotelero · Hecho en México</div>
+      <div><a href="/privacidad">Privacidad</a> · <a href="/terminos">Términos</a> · <a href="/aviso-legal">Aviso legal</a></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── Random PNR for boarding pass flavor ──
+(() => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  const el = document.getElementById('pnr');
+  if (el) el.textContent = 'PNR · ' + code;
+})();
+
+// ─── NAV scroll state ──────────────────────
+const nav = document.getElementById('nav')!;
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+
+// ─── Chip multi-select ─────────────────────
+document.querySelectorAll<HTMLButtonElement>('#chips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    c.classList.toggle('active');
+    c.setAttribute('aria-pressed', String(c.classList.contains('active')));
+  });
+});
+
+// ─── Form submit → Formspree via fetch ─────
+const form = document.getElementById('contactForm') as HTMLFormElement;
+const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+const submitLabel = document.getElementById('submitLabel')!;
+const formError = document.getElementById('formError') as HTMLDivElement;
+
+form?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  formError.style.display = 'none';
+
+  // Required-field validation
+  const required = form.querySelectorAll<HTMLInputElement>('[required]');
+  let ok = true;
+  required.forEach(r => {
+    const invalid = !r.value.trim();
+    r.style.borderBottomColor = invalid ? 'var(--stamp-red)' : '';
+    if (invalid) ok = false;
+  });
+  if (!ok) return;
+
+  // Collect selected role chips
+  const selectedRoles: string[] = [];
+  document.querySelectorAll<HTMLButtonElement>('#chips .chip.active').forEach(c => {
+    selectedRoles.push(c.textContent?.trim() || '');
+  });
+
+  // Disable button during submission
+  submitBtn.disabled = true;
+  submitLabel.textContent = 'Enviando…';
+
+  // Build FormData; Formspree reads field names directly
+  const formData = new FormData(form);
+  if (selectedRoles.length > 0) {
+    formData.set('roles', selectedRoles.join(', '));
+  }
+
+  try {
+    const res = await fetch('https://formspree.io/f/xojyqkwr', {
+      method: 'POST',
+      body: formData,
+      headers: { Accept: 'application/json' },
+    });
+
+    if (res.ok) {
+      // Show thank-you state
+      const body = document.getElementById('formBody')!;
+      const thanks = document.getElementById('thankYou')!;
+      body.style.display = 'none';
+      thanks.classList.add('show');
+      const formSection = document.getElementById('form');
+      if (formSection) {
+        window.scrollTo({ top: formSection.offsetTop - 80, behavior: 'smooth' });
+      }
+    } else {
+      // Formspree returned an error — re-enable and show banner
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Enviar solicitud';
+      formError.style.display = 'block';
+    }
+  } catch {
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Enviar solicitud';
+    formError.style.display = 'block';
+  }
+});
+
+// ─── Language toggle ──────────────────────
+document.querySelectorAll<HTMLButtonElement>('.lang button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll<HTMLButtonElement>('.lang button').forEach(x => {
+      x.classList.remove('active');
+      x.setAttribute('aria-pressed', 'false');
+    });
+    b.classList.add('active');
+    b.setAttribute('aria-pressed', 'true');
+    document.body.dataset.lang = b.dataset.lang!;
+    try { localStorage.setItem('ih-lang', b.dataset.lang!); } catch {}
+  });
+});
+try {
+  const saved = localStorage.getItem('ih-lang');
+  if (saved) {
+    document.body.dataset.lang = saved;
+    document.querySelectorAll<HTMLButtonElement>('.lang button').forEach(b => {
+      const active = b.dataset.lang === saved;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', String(active));
+    });
+  }
+} catch {}
+</script>
+
+</Base>

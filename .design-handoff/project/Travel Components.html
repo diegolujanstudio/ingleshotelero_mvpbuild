@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inglés Hotelero · Travel Components</title>
+<template id="__bundler_thumbnail" data-bg-color="#F5F0E6">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#F5F0E6"/>
+    <!-- Stamp -->
+    <g transform="translate(600 400) rotate(-6)">
+      <rect x="-200" y="-120" width="400" height="240" fill="none" stroke="#2E4761" stroke-width="6"/>
+      <rect x="-188" y="-108" width="376" height="216" fill="none" stroke="#2E4761" stroke-width="3"/>
+      <text x="0" y="-20" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="72" fill="#2E4761" letter-spacing="6">INGLÉS</text>
+      <text x="0" y="56" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="72" fill="#2E4761" font-style="italic" letter-spacing="6">HOTELERO</text>
+      <line x1="-160" y1="86" x2="160" y2="86" stroke="#2E4761" stroke-width="2"/>
+    </g>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: 'New Spirit'; src: url('fonts/NewSpirit-Medium.otf') format('opentype'); font-weight: 500; }
+  @font-face { font-family: 'New Spirit'; src: url('fonts/NewSpirit-Bold.otf') format('opentype'); font-weight: 700; }
+
+  :root {
+    --ivory: #F5F0E6;
+    --ivory-deep: #EBE4D4;
+    --ivory-soft: #EFE7D6;
+    --kraft: #D9C9A8;
+    --espresso: #2B1D14;
+    --espresso-soft: #4A3426;
+    --espresso-muted: #7A6352;
+    --hair: #D9CEB9;
+    --accent: #2E4761;
+    --accent-deep: #1C2E42;
+    --accent-soft: #C3CDD8;
+    --accent-tint: #E6ECF2;
+    --stamp-red: #A84738;
+    --stamp-green: #3E6D4D;
+
+    --serif: 'New Spirit', Georgia, serif;
+    --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  em, i { font-style: normal; font-weight: 500; color: var(--accent); }
+  html, body {
+    background: var(--ivory);
+    color: var(--espresso);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .caps {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--espresso-muted);
+    font-weight: 500;
+  }
+  .shell { max-width: 1320px; margin: 0 auto; padding: 64px 48px 120px; }
+  .header {
+    display:grid; grid-template-columns: 1fr auto; align-items:end;
+    padding-bottom: 28px; border-bottom: 1px solid var(--hair); margin-bottom: 56px;
+  }
+  .brand {
+    font-family: var(--serif); font-weight: 500; font-size: 32px;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .intro {
+    font-family: var(--serif); font-weight: 500; font-size: 44px;
+    line-height: 1.08; letter-spacing: -0.02em; max-width: 880px; margin-bottom: 20px;
+  }
+  .intro-sub { max-width: 640px; color: var(--espresso-soft); font-size: 15px; line-height: 1.65; margin-bottom: 72px; }
+
+  .section { margin-bottom: 88px; }
+  .section-head {
+    display:grid; grid-template-columns: 70px 1fr auto; gap: 24px; align-items: baseline;
+    padding-bottom: 18px; border-bottom: 1px solid var(--hair); margin-bottom: 36px;
+  }
+  .section-num { font-family: var(--serif); font-weight: 500; font-size: 26px; color: var(--accent); letter-spacing: -0.02em; }
+  .section-title { font-family: var(--serif); font-weight: 500; font-size: 26px; letter-spacing: -0.015em; }
+  .section-note { max-width: 380px; color: var(--espresso-muted); font-size: 13px; text-align: right; }
+
+  .grid-2 { display:grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .grid-3 { display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .grid-4 { display:grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+  .spec {
+    padding: 12px 16px; border: 1px dashed var(--hair); border-radius: 6px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--espresso-muted); margin-top: 14px;
+  }
+
+  .stage {
+    background: #fff; border: 1px solid var(--hair); border-radius: 12px;
+    padding: 40px 32px; display: flex; align-items: center; justify-content: center;
+    min-height: 260px; position: relative; overflow: hidden;
+  }
+  .stage-label {
+    position: absolute; top: 14px; left: 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--espresso-muted);
+  }
+  .stage.kraft { background: var(--ivory-deep); }
+  .stage.ink { background: var(--espresso); }
+  .stage.ink .stage-label { color: var(--accent-soft); }
+
+  /* ═══ STAMP ═══ */
+  .stamp {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700;
+    color: var(--accent);
+    border: 3px double var(--accent);
+    padding: 14px 20px;
+    border-radius: 6px;
+    transform: rotate(-6deg);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    position: relative;
+    background: transparent;
+  }
+  .stamp-title { font-size: 18px; letter-spacing: 0.22em; line-height: 1; margin-bottom: 6px; }
+  .stamp-sub { font-size: 9px; letter-spacing: 0.3em; color: var(--accent); opacity: 0.8; }
+  .stamp-date { font-size: 10px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--accent); width: 100%; text-align: center; letter-spacing: 0.15em; }
+  .stamp.red { border-color: var(--stamp-red); color: var(--stamp-red); }
+  .stamp.red .stamp-sub, .stamp.red .stamp-date { color: var(--stamp-red); border-color: var(--stamp-red); }
+  .stamp.green { border-color: var(--stamp-green); color: var(--stamp-green); }
+  .stamp.green .stamp-sub, .stamp.green .stamp-date { color: var(--stamp-green); border-color: var(--stamp-green); }
+  .stamp.rotate-r { transform: rotate(7deg); }
+  .stamp.rotate-l { transform: rotate(-11deg); }
+  .stamp.circle {
+    border-radius: 50%;
+    width: 140px; height: 140px;
+    padding: 10px;
+    border: 2.5px solid var(--accent);
+    box-shadow: inset 0 0 0 6px transparent, inset 0 0 0 7px var(--accent);
+  }
+  .stamp.circle .stamp-title { font-size: 11px; letter-spacing: 0.15em; }
+  .stamp.circle .stamp-sub { font-size: 8px; }
+  .stamp.circle .stamp-center {
+    font-family: var(--serif); font-size: 28px; font-weight: 500;
+    letter-spacing: -0.02em; margin: 4px 0; color: var(--accent);
+    text-transform: none;
+  }
+
+  /* ═══ BOARDING PASS ═══ */
+  .boarding-pass {
+    display: grid; grid-template-columns: 1fr 180px;
+    background: #fff; border: 1px solid var(--espresso);
+    border-radius: 8px; overflow: hidden;
+    font-family: var(--mono); color: var(--espresso);
+    width: 100%; max-width: 520px;
+    position: relative;
+  }
+  .bp-main { padding: 20px 24px; }
+  .bp-header {
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding-bottom: 12px; border-bottom: 1px dashed var(--hair); margin-bottom: 16px;
+  }
+  .bp-brand {
+    font-family: var(--serif); font-weight: 500; font-size: 18px;
+    letter-spacing: -0.01em; color: var(--espresso);
+  }
+  .bp-brand em { color: var(--accent); }
+  .bp-flight { font-size: 10px; letter-spacing: 0.2em; color: var(--espresso-muted); }
+  .bp-route {
+    display:grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center;
+    margin-bottom: 18px;
+  }
+  .bp-city { font-family: var(--serif); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; }
+  .bp-city-sub { font-size: 10px; letter-spacing: 0.15em; color: var(--espresso-muted); margin-top: 6px; }
+  .bp-arrow {
+    font-size: 22px; color: var(--accent);
+  }
+  .bp-meta {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    padding-top: 12px; border-top: 1px dashed var(--hair);
+  }
+  .bp-meta-label { font-size: 9px; letter-spacing: 0.18em; color: var(--espresso-muted); margin-bottom: 4px; }
+  .bp-meta-val { font-family: var(--serif); font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
+  .bp-stub {
+    background: var(--espresso); color: var(--ivory);
+    padding: 16px 18px;
+    position: relative;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .bp-stub::before {
+    content: ''; position: absolute; top: 0; bottom: 0; left: -1px;
+    border-left: 2px dashed var(--ivory);
+    background-image: radial-gradient(circle, var(--ivory) 4px, transparent 4px);
+    background-size: 1px 12px;
+    width: 1px;
+  }
+  .bp-stub-label { font-size: 9px; letter-spacing: 0.2em; opacity: 0.7; margin-bottom: 3px; }
+  .bp-stub-val { font-family: var(--serif); font-weight: 500; font-size: 20px; letter-spacing: -0.01em; }
+  .bp-stub-val em { color: #7F9BBF; }
+
+  /* ═══ BAGGAGE TAG ═══ */
+  .baggage-tag {
+    width: 180px; background: var(--ivory-soft);
+    border: 1.5px solid var(--espresso); border-radius: 4px 4px 10px 10px;
+    padding: 14px; padding-top: 26px;
+    position: relative; font-family: var(--mono);
+    transform: rotate(-3deg);
+  }
+  .baggage-tag::before {
+    content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 18px; height: 18px; border: 1.5px solid var(--espresso);
+    border-radius: 50%; background: var(--ivory);
+  }
+  .baggage-tag::after {
+    content: ''; position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 6px; height: 6px; background: var(--espresso); border-radius: 50%;
+  }
+  .bt-code {
+    font-family: var(--serif); font-weight: 700; font-size: 22px;
+    letter-spacing: 0.04em; text-align: center;
+    padding: 8px 0; border-top: 1px solid var(--espresso); border-bottom: 1px solid var(--espresso);
+    margin-bottom: 10px;
+  }
+  .bt-row { display:flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .bt-row strong { font-weight: 700; }
+  .bt-barcode {
+    margin-top: 8px; height: 24px;
+    background: repeating-linear-gradient(90deg,
+      var(--espresso) 0px, var(--espresso) 1px,
+      transparent 1px, transparent 3px,
+      var(--espresso) 3px, var(--espresso) 5px,
+      transparent 5px, transparent 6px,
+      var(--espresso) 6px, var(--espresso) 8px,
+      transparent 8px, transparent 10px);
+  }
+
+  /* ═══ HOTEL KEY CARD ═══ */
+  .key-card {
+    width: 280px; height: 180px; border-radius: 12px;
+    background: var(--espresso); color: var(--ivory);
+    padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .key-card::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(46,71,97,0.4), transparent 50%),
+      radial-gradient(circle at 10% 90%, rgba(127,155,191,0.15), transparent 50%);
+  }
+  .key-brand {
+    position: relative; font-family: var(--serif); font-weight: 500;
+    font-size: 20px; letter-spacing: -0.01em;
+  }
+  .key-brand em { color: #9FB3CC; }
+  .key-chip {
+    position: relative; width: 34px; height: 26px;
+    background: linear-gradient(135deg, #C9A96E, #8A6620);
+    border-radius: 4px;
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  }
+  .key-chip::before, .key-chip::after {
+    content: ''; background: rgba(43,29,20,0.3);
+    border-radius: 1px;
+  }
+  .key-number {
+    position: relative; font-family: var(--mono); font-size: 13px;
+    letter-spacing: 0.3em; opacity: 0.8;
+  }
+  .key-footer {
+    position: relative; display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .key-room { font-family: var(--serif); font-weight: 500; font-size: 28px; letter-spacing: -0.02em; }
+  .key-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; opacity: 0.6; text-transform: uppercase; }
+
+  /* ═══ POSTCARD ═══ */
+  .postcard {
+    width: 100%; max-width: 520px;
+    background: var(--ivory-soft);
+    border: 1px solid var(--hair); border-radius: 4px;
+    display: grid; grid-template-columns: 1fr 1px 1fr;
+    min-height: 200px;
+    overflow: hidden;
+    position: relative;
+  }
+  .postcard::before {
+    content: ''; position: absolute;
+    left: 50%; top: 10%; bottom: 10%; width: 1px;
+    border-left: 1px dashed var(--hair);
+  }
+  .pc-left {
+    padding: 24px; font-family: var(--mono); font-size: 11px; line-height: 1.9;
+    color: var(--espresso-soft);
+  }
+  .pc-greeting {
+    font-family: var(--serif); font-weight: 500; font-size: 18px;
+    color: var(--espresso); letter-spacing: -0.01em; margin-bottom: 8px;
+  }
+  .pc-right {
+    padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
+    font-family: var(--mono);
+  }
+  .pc-to-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--espresso-muted); margin-bottom: 6px; }
+  .pc-to-name { font-family: var(--serif); font-size: 16px; font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; color: var(--espresso); }
+  .pc-address { font-size: 10px; letter-spacing: 0.08em; color: var(--espresso-soft); line-height: 1.7; margin-top: 6px; }
+  .pc-stamp-slot {
+    align-self: flex-end; width: 64px; height: 76px;
+    border: 1.5px dashed var(--accent); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: 8px; letter-spacing: 0.12em;
+    color: var(--accent); padding: 6px;
+  }
+  .pc-lines { display:flex; flex-direction:column; gap:4px; margin-top: 8px; }
+  .pc-line { height: 1px; background: var(--hair); }
+  .pc-line.short { width: 60%; }
+
+  /* ═══ TICKET ═══ */
+  .ticket {
+    width: 100%; max-width: 460px;
+    background: var(--ivory); border: 1px solid var(--espresso);
+    display: grid; grid-template-columns: 1fr auto;
+    font-family: var(--mono); position: relative;
+  }
+  .ticket-main { padding: 20px 24px; }
+  .ticket-eyebrow { font-size: 10px; letter-spacing: 0.25em; color: var(--espresso-muted); margin-bottom: 8px; }
+  .ticket-title { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 14px; }
+  .ticket-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding-top: 12px; border-top: 1px dashed var(--hair); }
+  .ticket-row-label { font-size: 9px; letter-spacing: 0.18em; color: var(--espresso-muted); }
+  .ticket-row-val { font-family: var(--serif); font-weight: 500; font-size: 15px; letter-spacing: -0.005em; margin-top: 2px; }
+  .ticket-stub {
+    width: 50px;
+    border-left: 2px dashed var(--espresso);
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 10px; letter-spacing: 0.4em; font-weight: 700;
+  }
+  .ticket::before, .ticket::after {
+    content: ''; position: absolute;
+    right: 48px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--ivory); border: 1px solid var(--espresso);
+  }
+  .ticket::before { top: -8px; border-bottom-color: transparent; }
+  .ticket::after { bottom: -8px; border-top-color: transparent; }
+
+  /* ═══ BADGE / DO NOT DISTURB ═══ */
+  .doorhanger {
+    width: 160px; padding: 18px 16px; padding-top: 38px;
+    background: var(--accent); color: #fff;
+    border-radius: 4px 4px 10px 10px;
+    font-family: var(--mono); position: relative;
+    text-align: center;
+    transform: rotate(2deg);
+  }
+  .doorhanger::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translate(-50%, -12px);
+    width: 52px; height: 24px; border: 3px solid var(--accent); border-bottom: none;
+    border-radius: 52px 52px 0 0; background: transparent;
+  }
+  .doorhanger::after {
+    content: ''; position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 4px; background: var(--ivory); border-radius: 2px;
+  }
+  .dh-title {
+    font-family: var(--serif); font-weight: 700; font-size: 18px;
+    letter-spacing: -0.005em; line-height: 1.1; margin-bottom: 8px;
+  }
+  .dh-sub { font-size: 9px; letter-spacing: 0.22em; opacity: 0.8; text-transform: uppercase; }
+
+  /* ═══ ICON SET ═══ */
+  .icons-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+    padding: 24px; background: #fff; border: 1px solid var(--hair); border-radius: 12px;
+  }
+  .icon-cell {
+    aspect-ratio: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    padding: 10px; border-radius: 6px;
+  }
+  .icon-cell:hover { background: var(--ivory-soft); }
+  .icon-cell svg { width: 40px; height: 40px; }
+  .icon-cell .icon-name {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--espresso-muted);
+  }
+
+  /* ═══ ACHIEVEMENT / MILESTONE STAMPS COLLECTION ═══ */
+  .passport {
+    background: var(--accent-deep); color: var(--ivory);
+    padding: 40px 32px; border-radius: 12px;
+    position: relative; overflow: hidden;
+  }
+  .passport::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(45deg, transparent 0, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 21px);
+  }
+  .passport-title {
+    position: relative; font-family: var(--serif); font-weight: 500; font-size: 20px;
+    letter-spacing: 0.02em; margin-bottom: 4px;
+  }
+  .passport-subtitle {
+    position: relative; font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent-soft);
+    margin-bottom: 28px;
+  }
+  .passport-stamps {
+    position: relative; display: flex; flex-wrap: wrap; gap: 32px;
+    align-items: center; justify-content: center; min-height: 180px;
+  }
+  .passport .stamp {
+    background: rgba(245, 240, 230, 0.05);
+  }
+
+  /* ═══ APPLIED: WELCOME SCREEN ═══ */
+  .phone-mock {
+    width: 300px; min-height: 500px; background: var(--ivory);
+    border-radius: 32px; padding: 24px 20px;
+    border: 10px solid var(--espresso);
+    display: flex; flex-direction: column; gap: 20px;
+    position: relative;
+  }
+  .phone-notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 20px; background: var(--espresso);
+    border-radius: 0 0 14px 14px;
+  }
+  .phone-mock .caps { font-size: 9px; }
+
+  /* placement helpers */
+  .stack { display:flex; flex-direction:column; gap: 24px; align-items:center; }
+  .row { display:flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: center; }
+
+  footer {
+    margin-top: 80px; padding-top: 36px; border-top: 1px solid var(--hair);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="header">
+    <div>
+      <div class="caps" style="margin-bottom:10px">Design System · Addendum</div>
+      <div class="brand">Inglés <em>Hotelero</em> · Componentes de <em>viaje</em></div>
+    </div>
+    <div class="caps" style="text-align:right; line-height:1.6;">
+      Abr · 2026<br/>
+      <span style="color:var(--accent)">V0.1 · Borrador</span>
+    </div>
+  </header>
+
+  <h1 class="intro">Un vocabulario visual de <em>ephemera de viaje</em> — sellos, pases, llaves, postales — que vive cómodo al lado del sistema editorial.</h1>
+  <p class="intro-sub">Cada pieza está dibujada con los mismos tokens: marfil, espresso, azul tinta. No decoración — funcionan. Un sello celebra un hito; una tarjeta de abordaje estructura el examen; una llave marca una unidad completada. El lenguaje hotelero hecho interfaz.</p>
+
+  <!-- ═══ 01 STAMPS ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">01</div>
+      <div class="section-title">Sellos · logros y momentos</div>
+      <div class="section-note">Se aplican sobre resultados, hitos, racha de 7 días, nivel alcanzado. Siempre ligeramente rotados.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="stage">
+        <div class="stage-label">Sello · rectangular · default</div>
+        <div class="stamp">
+          <div class="stamp-title">Aprobado</div>
+          <div class="stamp-sub">Nivel B1 alcanzado</div>
+          <div class="stamp-date">18 · ABR · 2026</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-label">Sello · circular · logro</div>
+        <div class="stamp circle">
+          <div class="stamp-sub">Inglés Hotelero</div>
+          <div class="stamp-center">7d</div>
+          <div class="stamp-sub">Racha completa</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-label">Variaciones de rotación y color</div>
+        <div class="row">
+          <div class="stamp red rotate-l">
+            <div class="stamp-title">Urgente</div>
+            <div class="stamp-sub">Pendiente</div>
+          </div>
+          <div class="stamp green">
+            <div class="stamp-title">Check-in</div>
+            <div class="stamp-sub">Completado</div>
+          </div>
+          <div class="stamp rotate-r">
+            <div class="stamp-title">A2 → B1</div>
+            <div class="stamp-sub">Subida de nivel</div>
+          </div>
+        </div>
+      </div>
+      <div class="stage kraft">
+        <div class="stage-label">Sobre superficie kraft</div>
+        <div class="stamp">
+          <div class="stamp-title">Primer día</div>
+          <div class="stamp-sub">Diagnóstico completo</div>
+          <div class="stamp-date">01 · ABR · 2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="spec">Tipografía: JetBrains Mono 700 · bordes dobles (3px) · rotación ±6°–11° · color = accent | success | error</div>
+  </section>
+
+  <!-- ═══ 02 BOARDING PASS ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">02</div>
+      <div class="section-title">Pase de abordaje · estructura de examen</div>
+      <div class="section-note">Reemplaza la pantalla genérica de "comenzar examen". El examen = un viaje.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="stage" style="padding: 32px;">
+        <div class="stage-label">Boarding pass · examen</div>
+        <div class="boarding-pass">
+          <div class="bp-main">
+            <div class="bp-header">
+              <div class="bp-brand">Inglés <em>Hotelero</em></div>
+              <div class="bp-flight">EXAM · IH-042</div>
+            </div>
+            <div class="bp-route">
+              <div>
+                <div class="bp-city">A2</div>
+                <div class="bp-city-sub">Nivel actual</div>
+              </div>
+              <div class="bp-arrow">→</div>
+              <div style="text-align:right;">
+                <div class="bp-city">B1</div>
+                <div class="bp-city-sub">Destino</div>
+              </div>
+            </div>
+            <div class="bp-meta">
+              <div>
+                <div class="bp-meta-label">PASAJERO</div>
+                <div class="bp-meta-val">M. López</div>
+              </div>
+              <div>
+                <div class="bp-meta-label">PUESTO</div>
+                <div class="bp-meta-val">Recepción</div>
+              </div>
+              <div>
+                <div class="bp-meta-label">DURACIÓN</div>
+                <div class="bp-meta-val">12 min</div>
+              </div>
+            </div>
+          </div>
+          <div class="bp-stub">
+            <div>
+              <div class="bp-stub-label">GATE</div>
+              <div class="bp-stub-val"><em>B1</em></div>
+            </div>
+            <div>
+              <div class="bp-stub-label">SEAT</div>
+              <div class="bp-stub-val">12A</div>
+            </div>
+            <div>
+              <div class="bp-stub-label">FECHA</div>
+              <div class="bp-stub-val" style="font-size:13px;">18 ABR</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="stage" style="padding: 32px; flex-direction:column; gap: 20px;">
+        <div class="stage-label">Aplicaciones</div>
+        <div style="font-family:var(--serif); font-weight:500; font-size:24px; letter-spacing:-0.02em; text-align:center; max-width: 380px; line-height:1.2;">
+          "Su vuelo al nivel <em>B1</em> despega en <em>12 minutos</em>"
+        </div>
+        <p style="text-align:center; max-width: 360px; color: var(--espresso-soft); font-size: 13px;">La metáfora hace que el examen se sienta como un viaje con destino claro, no como una prueba escolar.</p>
+      </div>
+    </div>
+    <div class="spec">Grid: 1fr 180px · tipografía mixta serif/mono · troquelado de perforación entre secciones</div>
+  </section>
+
+  <!-- ═══ 03 BAGGAGE TAG + TICKET ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">03</div>
+      <div class="section-title">Etiqueta de equipaje · ticket · door hanger</div>
+      <div class="section-note">Piezas auxiliares para estados, rol del usuario, habitación-lección.</div>
+    </div>
+
+    <div class="grid-3">
+      <div class="stage kraft">
+        <div class="stage-label">Baggage tag · rol</div>
+        <div class="baggage-tag">
+          <div class="bt-code">RCP<br/>102</div>
+          <div class="bt-row"><span>PUESTO</span><strong>Recepción</strong></div>
+          <div class="bt-row"><span>HOTEL</span><strong>Gran Cabo</strong></div>
+          <div class="bt-row"><span>NIVEL</span><strong>A2→B1</strong></div>
+          <div class="bt-barcode"></div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-label">Ticket · drill diario</div>
+        <div class="ticket">
+          <div class="ticket-main">
+            <div class="ticket-eyebrow">DRILL · Nº 042</div>
+            <div class="ticket-title">Ayudando con<br/>el equipaje</div>
+            <div class="ticket-row">
+              <div>
+                <div class="ticket-row-label">DURACIÓN</div>
+                <div class="ticket-row-val">3 min</div>
+              </div>
+              <div>
+                <div class="ticket-row-label">NIVEL</div>
+                <div class="ticket-row-val">A2</div>
+              </div>
+              <div>
+                <div class="ticket-row-label">TIPO</div>
+                <div class="ticket-row-val">Habla</div>
+              </div>
+            </div>
+          </div>
+          <div class="ticket-stub">ADMIT ONE</div>
+        </div>
+      </div>
+      <div class="stage ink">
+        <div class="stage-label">Door hanger · estado</div>
+        <div class="doorhanger">
+          <div class="dh-title">En clase<br/>No molestar</div>
+          <div class="dh-sub">· · ·</div>
+        </div>
+      </div>
+    </div>
+    <div class="spec">Ticket troquelado con perforaciones circulares · baggage tag con agujero troquelado arriba · door hanger colgado del nudillo</div>
+  </section>
+
+  <!-- ═══ 04 KEY CARD + POSTCARD ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">04</div>
+      <div class="section-title">Tarjeta llave · postal</div>
+      <div class="section-note">Para unidades desbloqueadas y mensajes del manager.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="stage">
+        <div class="stage-label">Key card · unidad desbloqueada</div>
+        <div class="stack">
+          <div class="key-card">
+            <div style="position:relative; display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="key-brand">Inglés <em>Hotelero</em></div>
+              <div class="key-chip"></div>
+            </div>
+            <div class="key-number">•••• •••• 2042</div>
+            <div class="key-footer">
+              <div>
+                <div class="key-label">Habitación</div>
+                <div class="key-room">B1-07</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="key-label">Acceso</div>
+                <div class="key-label" style="font-family:var(--serif); font-size:14px; opacity:1; text-transform:none; letter-spacing:0; font-weight:500;">Quejas difíciles</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-family:var(--mono); font-size:10px; letter-spacing:0.2em; color:var(--espresso-muted); text-transform:uppercase;">Unidad desbloqueada · 05 de 12</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-label">Postcard · mensaje del manager</div>
+        <div class="postcard">
+          <div class="pc-left">
+            <div class="pc-greeting">¡Qué semana, María!</div>
+            7 días de racha, y saltaste<br/>
+            de A2 a B1 en recepción.<br/>
+            Esto es justo lo que necesito<br/>
+            antes del Congreso de Mayo.<br/>
+            <br/>
+            Gracias, de verdad.<br/>
+            <br/>
+            — Carlos
+          </div>
+          <div></div>
+          <div class="pc-right">
+            <div>
+              <div class="pc-to-label">Para</div>
+              <div class="pc-to-name">María López</div>
+              <div class="pc-address">
+                Recepción<br/>
+                Hotel Gran Cabo<br/>
+                Los Cabos, BCS
+              </div>
+              <div class="pc-lines">
+                <div class="pc-line"></div>
+                <div class="pc-line"></div>
+                <div class="pc-line short"></div>
+              </div>
+            </div>
+            <div class="pc-stamp-slot">SELLO<br/>IH · 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="spec">Key card: gradiente sutil · chip dorado SMD · Postal: grid 1fr 1px 1fr con línea punteada central</div>
+  </section>
+
+  <!-- ═══ 05 PASSPORT / ACHIEVEMENT COLLECTION ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">05</div>
+      <div class="section-title">Pasaporte · colección de logros</div>
+      <div class="section-note">Pantalla de progreso del empleado. Los sellos se acumulan.</div>
+    </div>
+
+    <div class="passport">
+      <div class="passport-title">Pasaporte de <em style="color: #9FB3CC;">María López</em></div>
+      <div class="passport-subtitle">Recepción · Hotel Gran Cabo · desde Abr 2026</div>
+      <div class="passport-stamps">
+        <div class="stamp" style="border-color:var(--accent-soft); color:var(--accent-soft);">
+          <div class="stamp-title" style="color:var(--accent-soft);">Check-in</div>
+          <div class="stamp-sub" style="color:var(--accent-soft);">Completado</div>
+          <div class="stamp-date" style="border-color:var(--accent-soft); color:var(--accent-soft);">01 ABR</div>
+        </div>
+        <div class="stamp circle rotate-r" style="border-color:var(--accent-soft); color:var(--accent-soft); box-shadow: inset 0 0 0 6px transparent, inset 0 0 0 7px var(--accent-soft);">
+          <div class="stamp-sub" style="color:var(--accent-soft);">Racha</div>
+          <div class="stamp-center" style="color:var(--accent-soft);">7d</div>
+          <div class="stamp-sub" style="color:var(--accent-soft);">completa</div>
+        </div>
+        <div class="stamp rotate-l" style="border-color:var(--accent-soft); color:var(--accent-soft);">
+          <div class="stamp-title" style="color:var(--accent-soft);">A2 → B1</div>
+          <div class="stamp-sub" style="color:var(--accent-soft);">Subida</div>
+          <div class="stamp-date" style="border-color:var(--accent-soft); color:var(--accent-soft);">12 ABR</div>
+        </div>
+        <div class="stamp" style="border-color:var(--accent-soft); color:var(--accent-soft);">
+          <div class="stamp-title" style="color:var(--accent-soft);">Quejas</div>
+          <div class="stamp-sub" style="color:var(--accent-soft);">Unidad 05</div>
+          <div class="stamp-date" style="border-color:var(--accent-soft); color:var(--accent-soft);">15 ABR</div>
+        </div>
+        <div style="border: 2px dashed var(--accent-soft); border-radius: 50%; width: 100px; height: 100px; display:flex; align-items:center; justify-content:center; color: var(--accent-soft); font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-align:center; opacity: 0.5;">PRÓXIMO<br/>SELLO</div>
+      </div>
+    </div>
+    <div class="spec">Fondo tinta profunda · textura de líneas guilloché · sellos superpuestos ligeramente rotados</div>
+  </section>
+
+  <!-- ═══ 06 ICONS ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">06</div>
+      <div class="section-title">Iconografía · línea sencilla</div>
+      <div class="section-note">Stroke 1.5px · 40px viewBox · espresso o acento. Hotel + viaje.</div>
+    </div>
+    <div class="icons-grid">
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><rect x="8" y="14" width="24" height="18" rx="2"/><path d="M14 14v-3a6 6 0 0 1 12 0v3M20 22v4"/></svg><div class="icon-name">Llave</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><path d="M6 20 L34 20 M20 8 L28 20 L20 32 M28 20 L12 20"/></svg><div class="icon-name">Vuelo</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><rect x="10" y="14" width="20" height="18" rx="1"/><path d="M14 14v-3h12v3M14 20h12M14 26h12"/></svg><div class="icon-name">Maleta</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><circle cx="20" cy="20" r="12"/><path d="M8 20h24M20 8 a12 16 0 0 1 0 24 M20 8 a12 16 0 0 0 0 24"/></svg><div class="icon-name">Globo</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><rect x="6" y="14" width="28" height="18" rx="2"/><path d="M14 20h12M14 26h8"/><circle cx="31" cy="17" r="1.5" fill="#2B1D14"/></svg><div class="icon-name">Pase</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><path d="M20 6 L26 18 L20 30 L14 18 Z M20 14 v10"/></svg><div class="icon-name">Brújula</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><rect x="8" y="10" width="24" height="22" rx="2"/><path d="M8 18h24M14 24h4M14 28h10"/></svg><div class="icon-name">Pasaporte</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><circle cx="20" cy="20" r="14"/><path d="M14 18 l4 4 l8 -8"/></svg><div class="icon-name">Aprobado</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><path d="M10 30 V14 L20 8 L30 14 V30 Z M16 30 v-8 h8 v8"/></svg><div class="icon-name">Hotel</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><circle cx="20" cy="16" r="6"/><path d="M10 32 a10 10 0 0 1 20 0"/></svg><div class="icon-name">Huésped</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><path d="M20 8 v24 M8 20 h24 M12 12 l16 16 M28 12 l-16 16"/></svg><div class="icon-name">Compás</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><path d="M8 26 Q 14 14 20 14 T 32 26 M8 26 h24"/><circle cx="14" cy="26" r="2"/><circle cx="26" cy="26" r="2"/></svg><div class="icon-name">Carrito</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><circle cx="20" cy="20" r="3"/><path d="M20 8 v6 M20 26 v6 M8 20 h6 M26 20 h6 M11.5 11.5 l4 4 M24.5 24.5 l4 4 M11.5 28.5 l4 -4 M24.5 15.5 l4 -4"/></svg><div class="icon-name">Servicio</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><rect x="10" y="12" width="20" height="16" rx="1"/><path d="M14 12 v-2 M26 12 v-2 M10 18 h20"/></svg><div class="icon-name">Reserva</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2B1D14" stroke-width="1.5"><path d="M10 14 h20 l-3 14 h-14 z M14 18 v6 M20 18 v6 M26 18 v6"/></svg><div class="icon-name">Equipaje</div></div>
+      <div class="icon-cell"><svg viewBox="0 0 40 40" fill="none" stroke="#2E4761" stroke-width="1.5"><path d="M20 8 l3 8 h8 l-6.5 5 l2.5 8 l-7 -5 l-7 5 l2.5 -8 l-6.5 -5 h8 z"/></svg><div class="icon-name">Logro</div></div>
+    </div>
+    <div class="spec">Estilo: stroke-only · round joins · 40×40 viewBox · negro espresso · variante acento para estados activos</div>
+  </section>
+
+  <!-- ═══ 07 APPLIED ═══ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">07</div>
+      <div class="section-title">Sistema aplicado · pantalla de resultado</div>
+      <div class="section-note">Los componentes compuestos forman una experiencia completa.</div>
+    </div>
+    <div class="stage" style="padding: 48px; min-height: 520px;">
+      <div class="phone-mock">
+        <div class="phone-notch"></div>
+        <div class="caps" style="text-align:center;">Resultado · Diagnóstico</div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--serif); font-weight:500; font-size:36px; line-height:1.05; letter-spacing:-0.02em;">
+            ¡Buen viaje,<br/><em>María</em>!
+          </div>
+          <div style="margin-top:8px; font-size:13px; color:var(--espresso-soft);">Hoy aterrizaste en nivel B1.</div>
+        </div>
+        <div style="display:flex; justify-content:center; padding: 8px 0;">
+          <div class="stamp" style="transform:rotate(-5deg);">
+            <div class="stamp-title">A2 → B1</div>
+            <div class="stamp-sub">Subida de nivel</div>
+            <div class="stamp-date">18 · ABR · 2026</div>
+          </div>
+        </div>
+        <div style="border-top:1px dashed var(--hair); padding-top:16px;">
+          <div class="caps" style="margin-bottom:10px">Próximo destino</div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div style="font-family:var(--serif); font-weight:500; font-size:20px; letter-spacing:-0.01em;">
+              Quejas difíciles
+            </div>
+            <div style="font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:0.1em;">3 MIN →</div>
+          </div>
+          <div style="font-size:12px; color:var(--espresso-muted); margin-top:4px;">Unidad 05 · desbloqueada con su nivel B1</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="caps">Inglés Hotelero · Travel Components · v0.1</div>
+    <div style="font-family:var(--serif); font-weight:500; font-size:14px; color:var(--espresso-muted);">Diego Luján Studio · 2026</div>
+  </footer>
+
+</div>
+
+</body>
+</html>

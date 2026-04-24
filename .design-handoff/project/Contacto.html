@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contacto · Inglés Hotelero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="landing.css">
+<style>
+/* Travel motif styles reused from landing */
+.stamp {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; color: var(--accent);
+  border: 3px double var(--accent); padding: 14px 20px; border-radius: 6px;
+  transform: rotate(-6deg); letter-spacing: 0.14em; text-transform: uppercase;
+  position: relative; background: transparent;
+}
+.stamp-title { font-size: 18px; letter-spacing: 0.22em; line-height: 1; margin-bottom: 6px; }
+.stamp-sub { font-size: 9px; letter-spacing: 0.3em; opacity: 0.8; }
+.stamp-date { font-size: 10px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--accent); width: 100%; text-align: center; letter-spacing: 0.15em; }
+.stamp.rotate-r { transform: rotate(7deg); }
+.stamp.rotate-l { transform: rotate(-11deg); }
+
+/* ========== Contact page ========== */
+.contact-hero {
+  padding: 160px 0 60px;
+  position: relative;
+  overflow: hidden;
+}
+.contact-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, var(--espresso-muted) 1px, transparent 0);
+  background-size: 24px 24px;
+  opacity: 0.08;
+  pointer-events: none;
+}
+.contact-hero-inner { position: relative; z-index: 2; text-align: center; max-width: 820px; margin: 0 auto; }
+.contact-hero .hero-kicker {
+  display: inline-flex; align-items: center; gap: 14px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.24em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 32px;
+}
+.contact-hero .hero-kicker::before,
+.contact-hero .hero-kicker::after { content: ''; width: 28px; height: 1px; background: var(--accent); }
+.contact-hero h1 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(52px, 7vw, 88px);
+  line-height: 0.98; letter-spacing: -0.025em;
+  color: var(--espresso);
+}
+.contact-hero h1 em { color: var(--accent); font-style: normal !important; }
+.contact-hero .lead {
+  font-family: var(--serif); font-size: 20px; line-height: 1.5;
+  color: var(--espresso-soft); margin: 32px auto 0; max-width: 620px;
+  text-wrap: pretty;
+}
+.contact-hero-stamps {
+  position: absolute; pointer-events: none; z-index: 1;
+}
+.contact-hero-stamps.left { top: 180px; left: 6%; }
+.contact-hero-stamps.right { top: 200px; right: 6%; }
+@media (max-width: 1100px) {
+  .contact-hero-stamps { display: none; }
+}
+
+/* ========== Contact grid (form + info) ========== */
+.contact-grid {
+  padding: 60px 0 120px;
+  position: relative;
+}
+.contact-grid-inner {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .contact-grid-inner { grid-template-columns: 1fr; gap: 48px; }
+}
+
+/* Boarding-pass form */
+.bp-form {
+  background: #fff;
+  border: 1px solid var(--espresso);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -30px rgba(20, 24, 30, 0.18);
+  position: relative;
+}
+.bp-form-header {
+  background: var(--espresso);
+  color: var(--ivory);
+  padding: 24px 32px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 2px dashed rgba(240, 232, 216, 0.3);
+}
+.bp-form-header-l { display: flex; align-items: baseline; gap: 16px; }
+.bp-form-flight-no {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em;
+  color: rgba(240, 232, 216, 0.65); text-transform: uppercase;
+}
+.bp-form-title {
+  font-family: var(--serif); font-weight: 500; font-size: 22px;
+  letter-spacing: -0.01em;
+}
+.bp-form-title em { color: #BDCFE5; font-style: normal !important; }
+.bp-form-barcode {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+}
+.bp-form-barcode-lines {
+  height: 28px; width: 80px;
+  background: repeating-linear-gradient(90deg,
+    var(--ivory) 0, var(--ivory) 1px, transparent 1px, transparent 3px,
+    var(--ivory) 3px, var(--ivory) 5px, transparent 5px, transparent 6px,
+    var(--ivory) 6px, var(--ivory) 8px, transparent 8px, transparent 10px);
+}
+.bp-form-barcode-code {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em;
+  color: rgba(240, 232, 216, 0.7);
+}
+
+.bp-form-body { padding: 40px 48px 48px; background: #FAF6EE; position: relative; }
+.bp-form-body::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background-image: linear-gradient(90deg,
+    var(--espresso) 0, var(--espresso) 6px, transparent 6px, transparent 14px);
+  background-size: 14px 1px;
+}
+.bp-form-intro {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--espresso-muted);
+  display: flex; align-items: center; gap: 10px; margin-bottom: 28px;
+}
+.bp-form-intro::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
+
+.field-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  margin-bottom: 20px;
+}
+.field-row.full { grid-template-columns: 1fr; }
+.field label {
+  display: block;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--espresso-muted);
+  margin-bottom: 8px;
+}
+.field label .req { color: var(--accent); margin-left: 4px; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--espresso);
+  padding: 8px 0 10px;
+  font-family: var(--serif); font-size: 18px; font-weight: 400;
+  color: var(--espresso);
+  letter-spacing: -0.005em;
+  transition: border-color 0.18s, padding-bottom 0.18s;
+}
+.field input::placeholder, .field textarea::placeholder {
+  color: var(--espresso-muted); font-weight: 400;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-bottom: 1.5px solid var(--accent);
+  padding-bottom: 10px;
+}
+.field textarea { resize: vertical; min-height: 110px; font-size: 16px; line-height: 1.5; }
+.field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%231C1F23' stroke-width='1.5' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  padding-right: 24px;
+  cursor: pointer;
+}
+
+/* Chips as multi-select */
+.chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  border: 1px solid var(--hair);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--espresso-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--espresso); color: var(--espresso); }
+.chip.active {
+  background: var(--espresso);
+  color: var(--ivory);
+  border-color: var(--espresso);
+}
+
+/* Submit row — perforation + stub */
+.bp-form-submit {
+  margin-top: 36px;
+  position: relative;
+  padding-top: 28px;
+}
+.bp-form-submit::before {
+  content: ''; position: absolute; top: 0; left: -48px; right: -48px; height: 1px;
+  background-image: linear-gradient(90deg,
+    var(--espresso) 0, var(--espresso) 6px, transparent 6px, transparent 14px);
+  background-size: 14px 1px;
+}
+.bp-form-submit-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 24px; flex-wrap: wrap;
+}
+.bp-form-fineprint {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  color: var(--espresso-muted); text-transform: uppercase;
+  max-width: 280px;
+}
+
+/* ========== Right column: info panels ========== */
+.contact-info { display: flex; flex-direction: column; gap: 28px; }
+.info-card {
+  background: #fff;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  padding: 28px;
+  position: relative;
+}
+.info-card-kicker {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.info-card-kicker::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
+.info-card h3 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 26px; letter-spacing: -0.015em;
+  margin-bottom: 12px; line-height: 1.1;
+}
+.info-card p {
+  font-family: var(--serif); font-size: 16px; line-height: 1.55;
+  color: var(--espresso-soft);
+}
+.info-lines { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.info-line {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--hair);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.info-line:last-child { border-bottom: none; }
+.info-line-l { color: var(--espresso-muted); }
+.info-line-r {
+  font-family: var(--serif); font-weight: 500; font-size: 17px;
+  letter-spacing: -0.005em; color: var(--espresso); text-transform: none;
+}
+.info-line-r a { color: var(--espresso); border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+.info-line-r a:hover { border-bottom-color: var(--accent); }
+
+/* Destinations card */
+.dest-card {
+  background: var(--espresso);
+  color: var(--ivory);
+  border: none;
+}
+.dest-card .info-card-kicker { color: #BDCFE5; }
+.dest-card .info-card-kicker::after { background: rgba(240, 232, 216, 0.2); }
+.dest-card h3 { color: var(--ivory); }
+.dest-card p { color: rgba(240, 232, 216, 0.7); }
+.dest-list { display: flex; flex-direction: column; gap: 0; margin-top: 20px; }
+.dest-row {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: baseline; gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px dashed rgba(240, 232, 216, 0.2);
+}
+.dest-row:last-child { border-bottom: none; }
+.dest-city {
+  font-family: var(--serif); font-weight: 500; font-size: 22px;
+  letter-spacing: -0.01em;
+}
+.dest-time {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+  color: rgba(240, 232, 216, 0.55); text-transform: uppercase;
+}
+
+/* FAQ quick */
+.qa-mini { padding-top: 14px; border-top: 1px dashed var(--hair); margin-top: 16px; }
+.qa-q { font-family: var(--serif); font-weight: 500; font-size: 16px; letter-spacing: -0.005em; margin-bottom: 6px; }
+.qa-a { font-size: 13px; line-height: 1.55; color: var(--espresso-muted); }
+
+/* Thank-you state */
+.thank-you {
+  display: none;
+  text-align: center;
+  padding: 80px 40px;
+}
+.thank-you.show { display: block; }
+.thank-you .stamp-wrap {
+  display: flex; justify-content: center; margin-bottom: 40px;
+}
+.thank-you .stamp-big {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  border: 3px solid var(--stamp-green);
+  padding: 16px;
+  transform: rotate(-8deg);
+  font-family: var(--mono); font-weight: 700; color: var(--stamp-green);
+  text-align: center; letter-spacing: 0.18em; text-transform: uppercase;
+  position: relative;
+  animation: stamp-in 0.5s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+}
+.thank-you .stamp-big::before {
+  content: ''; position: absolute; inset: 6px;
+  border: 2px solid var(--stamp-green); border-radius: 50%; opacity: 0.5;
+}
+.thank-you .stamp-big-title { font-size: 16px; margin-bottom: 6px; }
+.thank-you .stamp-big-sub {
+  font-family: var(--serif); font-weight: 500; font-size: 32px;
+  letter-spacing: -0.01em; margin: 4px 0; text-transform: none;
+  color: var(--stamp-green);
+}
+.thank-you .stamp-big-date { font-size: 10px; letter-spacing: 0.2em; margin-top: 8px; }
+@keyframes stamp-in {
+  0% { transform: rotate(20deg) scale(1.8); opacity: 0; }
+  70% { transform: rotate(-12deg) scale(0.9); opacity: 1; }
+  100% { transform: rotate(-8deg) scale(1); opacity: 1; }
+}
+.thank-you h2 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 48px; letter-spacing: -0.02em; line-height: 1.05;
+  margin-bottom: 16px;
+}
+.thank-you h2 em { color: var(--accent); font-style: normal !important; }
+.thank-you .thank-lead {
+  font-family: var(--serif); font-size: 18px; line-height: 1.5;
+  color: var(--espresso-soft); max-width: 520px; margin: 0 auto 32px;
+}
+.thank-you .thank-next {
+  max-width: 440px; margin: 0 auto;
+  text-align: left;
+  padding: 24px 0;
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+.thank-you .thank-next-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--espresso-muted);
+  margin-bottom: 14px;
+}
+.thank-you .thank-step {
+  display: grid; grid-template-columns: 32px 1fr;
+  gap: 16px; padding: 10px 0;
+  font-family: var(--serif); font-size: 15px;
+}
+.thank-you .thank-step-n {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  color: var(--accent); padding-top: 4px;
+}
+.thank-you .thank-btn-row {
+  margin-top: 32px;
+  display: flex; gap: 12px; justify-content: center;
+}
+</style>
+</head>
+<body data-lang="es">
+
+<!-- ═══════════════════════════════════════════
+     NAV (same as landing)
+     ═══════════════════════════════════════════ -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="Landing Page.html" class="brand">
+      <span>Inglés <em>Hotelero</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="Landing Page.html#method">Método</a>
+      <a href="Landing Page.html#features">Plataforma</a>
+      <a href="Landing Page.html#dashboard">Para managers</a>
+      <a href="Landing Page.html#pricing">Precios</a>
+      <a href="Landing Page.html#faq">FAQ</a>
+      <a href="Contacto.html" class="nav-active">Contacto</a>
+    </div>
+    <div class="nav-right">
+      <div class="lang" role="tablist">
+        <button class="active" data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <a href="#form" class="btn btn-primary">
+        <span>Pedir piloto gratis</span>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════ -->
+<section class="contact-hero">
+  <div class="contact-hero-stamps left" aria-hidden="true">
+    <div class="stamp rotate-l">
+      <div class="stamp-title">Respuesta</div>
+      <div class="stamp-sub">Garantizada</div>
+      <div class="stamp-date">24 H · MAX</div>
+    </div>
+  </div>
+  <div class="contact-hero-stamps right" aria-hidden="true">
+    <div class="stamp rotate-r" style="border-color: var(--stamp-green); color: var(--stamp-green);">
+      <div class="stamp-title">Piloto</div>
+      <div class="stamp-sub" style="color: var(--stamp-green);">Gratis</div>
+      <div class="stamp-date" style="color: var(--stamp-green); border-color: var(--stamp-green);">14 DÍAS</div>
+    </div>
+  </div>
+  <div class="shell">
+    <div class="contact-hero-inner">
+      <div class="hero-kicker">Contacto · Piloto gratuito</div>
+      <h1>Cuéntanos de tu <em>hotel</em>.<br>Respondemos en 24 horas.</h1>
+      <p class="lead">Un formulario, sin demo larga. Nos dices qué propiedades operas, qué roles necesitan inglés y arrancamos un piloto de 14 días sin costo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FORM GRID
+     ═══════════════════════════════════════════ -->
+<section class="contact-grid" id="form">
+  <div class="shell">
+    <div class="contact-grid-inner">
+
+      <!-- Boarding-pass form -->
+      <form class="bp-form" id="contactForm" novalidate>
+        <div class="bp-form-header">
+          <div class="bp-form-header-l">
+            <div>
+              <div class="bp-form-flight-no">Flight IH · 2026</div>
+              <div class="bp-form-title">Boarding <em>Pass</em></div>
+            </div>
+          </div>
+          <div class="bp-form-barcode">
+            <div class="bp-form-barcode-lines"></div>
+            <div class="bp-form-barcode-code" id="pnr">PNR · 7K4M9L</div>
+          </div>
+        </div>
+
+        <div class="bp-form-body" id="formBody">
+          <div class="bp-form-intro">Pasajero · Datos del contacto</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Nombre <span class="req">*</span></label>
+              <input type="text" name="name" placeholder="Tu nombre completo" required>
+            </div>
+            <div class="field">
+              <label>Puesto <span class="req">*</span></label>
+              <input type="text" name="role" placeholder="HR · Ops · GM" required>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Email corporativo <span class="req">*</span></label>
+              <input type="email" name="email" placeholder="tu@hotel.com" required>
+            </div>
+            <div class="field">
+              <label>WhatsApp</label>
+              <input type="tel" name="phone" placeholder="+52 624 000 00 00">
+            </div>
+          </div>
+
+          <div class="bp-form-intro" style="margin-top: 36px;">Destino · Propiedad & operación</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Hotel / Grupo <span class="req">*</span></label>
+              <input type="text" name="hotel" placeholder="Nombre de la propiedad" required>
+            </div>
+            <div class="field">
+              <label>Ciudad</label>
+              <select name="city">
+                <option>Los Cabos</option>
+                <option>Cancún / Riviera Maya</option>
+                <option>Puerto Vallarta</option>
+                <option>Ciudad de México</option>
+                <option>Tulum</option>
+                <option>Otra</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Tamaño del equipo</label>
+              <select name="size">
+                <option>Menos de 25</option>
+                <option>25–100</option>
+                <option selected>100–300</option>
+                <option>300–800</option>
+                <option>Más de 800</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>¿Cuándo arrancarían?</label>
+              <select name="when">
+                <option>Esta semana</option>
+                <option selected>Próximos 30 días</option>
+                <option>Próximo trimestre</option>
+                <option>Todavía explorando</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row full">
+            <div class="field">
+              <label>Roles que necesitan inglés · elige los que aplican</label>
+              <div class="chip-group" id="chips">
+                <button type="button" class="chip" data-v="front">Front Desk</button>
+                <button type="button" class="chip" data-v="hk">Housekeeping</button>
+                <button type="button" class="chip" data-v="fb">F&amp;B / Restaurant</button>
+                <button type="button" class="chip" data-v="conc">Concierge</button>
+                <button type="button" class="chip" data-v="spa">Spa / Wellness</button>
+                <button type="button" class="chip" data-v="secu">Seguridad</button>
+                <button type="button" class="chip" data-v="mnt">Mantenimiento</button>
+                <button type="button" class="chip" data-v="mgr">Gerencia media</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row full">
+            <div class="field">
+              <label>Algo más que debamos saber</label>
+              <textarea name="note" placeholder="Retos actuales, temporadas altas, objetivos específicos…"></textarea>
+            </div>
+          </div>
+
+          <div class="bp-form-submit">
+            <div class="bp-form-submit-row">
+              <div class="bp-form-fineprint">
+                Al enviar aceptas nuestra política de privacidad. Nada de spam. Sin lock-in.
+              </div>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <span>Enviar solicitud</span>
+                <span class="arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thank-you state (hidden until submit) -->
+        <div class="thank-you" id="thankYou">
+          <div class="stamp-wrap">
+            <div class="stamp-big">
+              <div class="stamp-big-title">Approved</div>
+              <div class="stamp-big-sub">Boarding</div>
+              <div class="stamp-big-date">Entry · 24H</div>
+            </div>
+          </div>
+          <h2>¡Bienvenidos a <em>bordo</em>!</h2>
+          <p class="thank-lead">Recibimos tu solicitud. Un miembro de nuestro equipo te escribirá en las próximas 24 horas hábiles con un plan concreto para tu hotel.</p>
+
+          <div class="thank-next">
+            <div class="thank-next-title">Qué sigue</div>
+            <div class="thank-step"><span class="thank-step-n">01</span><span><strong>Llamada de 20 min</strong> — contexto, roles, temporada.</span></div>
+            <div class="thank-step"><span class="thank-step-n">02</span><span><strong>Propuesta a la medida</strong> — piloto de 14 días sin costo.</span></div>
+            <div class="thank-step"><span class="thank-step-n">03</span><span><strong>Onboarding</strong> — arrancamos con un turno en una semana.</span></div>
+          </div>
+
+          <div class="thank-btn-row">
+            <a href="Landing Page.html" class="btn btn-ghost">← Volver al inicio</a>
+            <a href="mailto:hola@ingleshotelero.com" class="btn btn-primary"><span>Escribirnos directo</span><span class="arrow">→</span></a>
+          </div>
+        </div>
+      </form>
+
+      <!-- Right column info -->
+      <aside class="contact-info">
+
+        <div class="info-card">
+          <div class="info-card-kicker">Contacto directo</div>
+          <h3>¿Prefieres hablar ahora?</h3>
+          <p>Los formularios son para coordinados. Si quieres hablar hoy, estos son los caminos rápidos.</p>
+          <div class="info-lines">
+            <div class="info-line">
+              <span class="info-line-l">Email</span>
+              <span class="info-line-r"><a href="mailto:hola@ingleshotelero.com">hola@ingleshotelero.com</a></span>
+            </div>
+            <div class="info-line">
+              <span class="info-line-l">WhatsApp</span>
+              <span class="info-line-r"><a href="https://wa.me/526245550142">+52 624 555 01 42</a></span>
+            </div>
+            <div class="info-line">
+              <span class="info-line-l">Oficina</span>
+              <span class="info-line-r">Los Cabos, MX</span>
+            </div>
+            <div class="info-line">
+              <span class="info-line-l">Respuesta</span>
+              <span class="info-line-r">&lt; 24 h</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card dest-card">
+          <div class="info-card-kicker">Dónde operamos</div>
+          <h3>Destinos activos</h3>
+          <p>Hoteles en operación con equipos en aprendizaje.</p>
+          <div class="dest-list">
+            <div class="dest-row"><span class="dest-city">Los Cabos</span><span class="dest-time">14 hoteles</span></div>
+            <div class="dest-row"><span class="dest-city">Riviera Maya</span><span class="dest-time">9 hoteles</span></div>
+            <div class="dest-row"><span class="dest-city">Puerto Vallarta</span><span class="dest-time">6 hoteles</span></div>
+            <div class="dest-row"><span class="dest-city">Ciudad de México</span><span class="dest-time">4 hoteles</span></div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-kicker">Pregunta frecuente</div>
+          <h3>¿Qué pasa después de enviar?</h3>
+          <p>Nadie te llama en frío. Un humano — no un bot — lee tu mensaje, revisa si encajamos, y te escribe con un plan concreto o una referencia honesta a otro proveedor.</p>
+          <div class="qa-mini">
+            <div class="qa-q">¿El piloto tiene costo?</div>
+            <div class="qa-a">No. 14 días, hasta 10 empleados, sin tarjeta.</div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER (same as landing)
+     ═══════════════════════════════════════════ -->
+<footer>
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <div class="brand" style="font-size: 26px;">
+          <span>Inglés <em>Hotelero</em></span>
+        </div>
+        <p>Aprendizaje de inglés para hospitalidad. Hecho por hoteleros, en México. Desde 2024.</p>
+      </div>
+      <div>
+        <div class="foot-title">Producto</div>
+        <div class="foot-list">
+          <a href="Landing Page.html#method">Método</a>
+          <a href="Landing Page.html#features">Plataforma</a>
+          <a href="Landing Page.html#dashboard">Para managers</a>
+          <a href="Landing Page.html#pricing">Precios</a>
+        </div>
+      </div>
+      <div>
+        <div class="foot-title">Compañía</div>
+        <div class="foot-list">
+          <a href="#">Sobre nosotros</a>
+          <a href="#">Clientes</a>
+          <a href="#">Prensa</a>
+          <a href="#">Trabaja con nosotros</a>
+        </div>
+      </div>
+      <div>
+        <div class="foot-title">Contacto</div>
+        <div class="foot-list">
+          <a href="mailto:hola@ingleshotelero.com">hola@ingleshotelero.com</a>
+          <a href="#">+52 624 555 01 42</a>
+          <a href="#">WhatsApp</a>
+          <a href="Contacto.html">Pedir piloto gratis</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div>© 2026 Inglés Hotelero · Hecho en Los Cabos, MX</div>
+      <div>Privacidad · Términos · Aviso legal</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Random PNR for flavor
+(() => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('pnr').textContent = 'PNR · ' + code;
+})();
+
+// Chip multi-select
+document.querySelectorAll('#chips .chip').forEach(c => {
+  c.addEventListener('click', () => c.classList.toggle('active'));
+});
+
+// Form submit → show thank-you state
+document.getElementById('contactForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const body = document.getElementById('formBody');
+  const thanks = document.getElementById('thankYou');
+
+  // very light validation
+  const required = form.querySelectorAll('[required]');
+  let ok = true;
+  required.forEach(r => {
+    if (!r.value.trim()) {
+      r.style.borderBottomColor = 'var(--stamp-red)';
+      ok = false;
+    } else {
+      r.style.borderBottomColor = '';
+    }
+  });
+  if (!ok) return;
+
+  body.style.display = 'none';
+  thanks.classList.add('show');
+  window.scrollTo({ top: document.getElementById('form').offsetTop - 80, behavior: 'smooth' });
+});
+
+// Language toggle (same pattern as landing — stores preference)
+document.querySelectorAll('.lang button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.lang button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.body.dataset.lang = b.dataset.lang;
+    try { localStorage.setItem('ih-lang', b.dataset.lang); } catch (e) {}
+  });
+});
+try {
+  const saved = localStorage.getItem('ih-lang');
+  if (saved) {
+    document.body.dataset.lang = saved;
+    document.querySelectorAll('.lang button').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === saved);
+    });
+  }
+} catch (e) {}
+</script>
+</body>
+</html>
