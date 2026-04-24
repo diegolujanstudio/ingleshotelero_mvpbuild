@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { DemoGuard } from "@/components/DemoGuard";
 import "./globals.css";
 
 /**
@@ -68,7 +69,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-MX" className={`${jakarta.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-ivory text-espresso antialiased">{children}</body>
+      <body className="min-h-screen bg-ivory text-espresso antialiased">
+        <DemoGuard />
+        {children}
+      </body>
     </html>
   );
 }

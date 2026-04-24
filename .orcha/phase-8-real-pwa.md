@@ -5,15 +5,13 @@
 
 ---
 
-## Open questions (must answer before coding)
+## Decisions (deferred — Phase 8 starts after Phase 7 is merged)
 
-> **Q4 — Audio format for listening items:**  
-> The listening section currently uses browser `SpeechSynthesis` (runtime TTS). For the PWA to work offline, audio must be pre-generated and cached. The Phase 8 plan assumes pre-generated MP3/OGG files in `public/audio/exam/`. Is this the right moment to also generate real OpenAI TTS audio (replacing SpeechSynthesis), or should Phase 8 only add the SW/offline layer and leave TTS generation for a later pass?  
-> **Recommendation:** Do both in one pass — generate the 90 audio files (3 roles × 30 items) via OpenAI TTS while building Phase 8. The SW cache-first strategy for audio is useless if the files don't exist yet.
+> **Q4 — Audio format for listening items:** Deferred to Phase 8 kickoff. Recommendation stands: generate 90 TTS audio files in the same pass as the SW/offline work.
 
-> **Q5 — Offline scope boundary:**  
-> Should the HR dashboard (`/hr/*`) work offline? It requires real-time Supabase data and auth, so meaningful offline support is hard.  
-> **Recommendation:** No. Mark `/hr/*` as network-only in the SW. Only the exam flow (`/exam/*`, `/e/*`) and the landing (`/`) need offline support.
+> **Q5 — Offline scope boundary:** Deferred. Recommendation stands: `/hr/*` is network-only. Only exam flow + landing get offline support.
+
+> **Deployment note (decided 2026-04-24):** Hosting is Netlify (not Vercel). `netlify.toml` with `@netlify/plugin-nextjs` is already committed. Demo branch deploys go to `demo.ingleshotelero.com` with `NEXT_PUBLIC_DEMO_MODE=true`. Production main deploy never has that flag.
 
 ---
 

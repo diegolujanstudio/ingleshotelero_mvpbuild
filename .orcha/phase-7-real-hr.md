@@ -5,26 +5,20 @@
 
 ---
 
-## Open questions (must answer before coding)
+## Decisions (answered 2026-04-24)
 
-> **Q1 — Department-level scoping for HR users:**  
-> Can an HR user be scoped to a *subset* of a property's employees? (e.g., "Food & Beverage manager sees only Restaurant staff.")  
-> **If yes:** add a `hr_users_departments` join table before writing any RLS.  
-> **If no:** property is the minimum access unit and we proceed with the model below.  
-> **Recommendation:** No for now. Enforce at query-filter level (UI filter), not at RLS level. Add RLS column-scoping in Phase 9 if a chain customer demands it.
+> **Q1 — Department-level scoping for HR users:** **No.** Property is the minimum access unit. Schema stays flexible for a future additive `department_scope` column on `hr_users` if a chain customer demands it — but no RLS, no join table, no UI for it now.
 
-> **Q2 — Employee–exam linking contract:**  
-> When an employee submits the entry form at `/e/[slug]`, should the system:  
-> (a) Auto-create an `employees` row on first exam (email is the dedup key), or  
-> (b) Require HR to pre-seed the employee roster before the exam URL goes out?  
-> **Current behavior:** `/api/exams` creates `exam_sessions` with no guaranteed `employees` row.  
-> **Recommendation:** Option (a). Auto-upsert `employees(email, property_id)` in `/api/exams` POST. HR can enrich the row (shift, department) later. Dedup key: `UNIQUE(property_id, email)`.
+> **Q2 — Employee–exam linking contract:** **Auto-upsert with tweaks.**
+> - Unique constraint: `UNIQUE(property_id, LOWER(TRIM(email)))` where email IS NOT NULL.
+> - When email is missing (null), always create a new row — no name-based dedupe.
+> - Add `employees.source` column: `self_registered | hr_invited | csv_imported`.
+> - Include a "merge duplicates" action on the HR dashboard within Phase 7 scope.
 
-> **Q3 — Demo mode strategy:**  
-> Should `Entrar en modo demo` and `src/lib/demo-data.ts` be:  
-> (a) Completely deleted — demos use a real `hotel-piloto` property seeded in Supabase, or  
-> (b) Kept but env-gated (`NEXT_PUBLIC_DEMO_ENABLED=true` in Vercel Preview only)?  
-> **Recommendation:** Option (b). Env-gate it. Zero demo code in Production env. Add a runtime assertion that throws if demo-data is imported without the flag.
+> **Q3 — Demo mode strategy:** **Env-gate + hostname-gate, both.**
+> - Demo surface lives on `demo.ingleshotelero.com` (Netlify branch deploy) with `NEXT_PUBLIC_DEMO_MODE=true`.
+> - Production `main` branch deploy never has that flag.
+> - Runtime assertion in root layout: if `NEXT_PUBLIC_DEMO_MODE === 'true'` AND `window.location.hostname === 'ingleshotelero.com'`, throw before rendering. Belt-and-suspenders so demo data physically cannot render on the production domain even if someone accidentally flips the env var on main.
 
 ---
 
@@ -117,26 +111,27 @@ GET /hr (Server Component)
 | `src/app/api/hr/invite/route.ts` | POST: validate caller role, send auth invite, insert hr_users row |
 | `supabase/migrations/0002_rls_hardening.sql` | Complete + correct all 15-table RLS policies using the helper function pattern |
 | `supabase/migrations/0003_indexes_scale.sql` | Composite indexes for 100K+ employee queries |
-| `supabase/migrations/0004_employees_unique_email.sql` | `UNIQUE(property_id, email)` on employees; `invite_sent_at` column on hr_users |
+| `supabase/migrations/0004_employees_source_unique.sql` | Add `employees.source` column (`self_registered\|hr_invited\|csv_imported`), functional unique index `UNIQUE(property_id, LOWER(TRIM(email))) WHERE email IS NOT NULL`, `invite_sent_at` column on hr_users |
 | `supabase/tests/rls.test.sql` | RLS test suite (see RLS test strategy section) |
 
 ### Modified files
 | File | Change |
 |------|--------|
-| `src/lib/supabase/types.ts` | Add all 15 tables (currently only 6 are typed) |
+| `src/lib/supabase/types.ts` | Already done — all 15 tables typed with `Relationships: []` for GenericSchema |
 | `src/app/hr/layout.tsx` | Remove demo guard; rely on middleware for auth |
-| `src/app/hr/login/page.tsx` | Remove "Entrar en modo demo" button unless `NEXT_PUBLIC_DEMO_ENABLED=true` |
+| `src/app/hr/login/page.tsx` | Remove "Entrar en modo demo" button unless `NEXT_PUBLIC_DEMO_MODE=true` |
 | `src/app/hr/page.tsx` | Replace `demo-data.ts` import with real Supabase aggregate queries |
-| `src/app/hr/employees/page.tsx` | Replace `demo-data.ts` with paginated real employee + session queries |
+| `src/app/hr/employees/page.tsx` | Replace `demo-data.ts` with paginated real employee + session queries; add "Unificar duplicados" merge action |
 | `src/app/hr/employees/[id]/page.tsx` | Replace `demo-data.ts` with real employee detail, transcripts, speaking_recordings |
 | `src/app/hr/reports/page.tsx` | Replace `demo-data.ts` with real cohort/level aggregate queries |
-| `src/app/api/exams/route.ts` | Auto-upsert `employees` row on exam creation (per Q2 recommendation) |
+| `src/app/api/exams/route.ts` | Auto-upsert `employees` row with `source: 'self_registered'` on exam creation |
+| `src/app/layout.tsx` | Add hostname-gate assertion: throw if `NEXT_PUBLIC_DEMO_MODE=true` AND hostname is `ingleshotelero.com` |
 | `next.config.mjs` | Add production domain to `serverActions.allowedOrigins` |
 
-### Env-gated (not deleted)
+### Env-gated + hostname-gated (not deleted)
 | File | Change |
 |------|--------|
-| `src/lib/demo-data.ts` | Add runtime assertion: throws in production if `NEXT_PUBLIC_DEMO_ENABLED` not set |
+| `src/lib/demo-data.ts` | Add runtime assertion: throws if `NEXT_PUBLIC_DEMO_MODE !== 'true'` OR if hostname is `ingleshotelero.com` |
 
 ---
 

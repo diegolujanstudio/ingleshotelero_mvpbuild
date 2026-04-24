@@ -29,6 +29,8 @@ export default function HRLoginPage() {
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
     process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0;
 
+  const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -123,23 +125,27 @@ export default function HRLoginPage() {
           )}
         </form>
 
-        <HairlineRule className="my-10" />
+        {demoMode && (
+          <>
+            <HairlineRule className="my-10" />
 
-        <div className="rounded-md border border-hair bg-white p-6">
-          <p className="caps mb-3">Para demostraciones</p>
-          <p className="font-sans text-t-body text-espresso-soft">
-            Si está mostrando el producto a un prospecto, entre en modo demo.
-            Verá un panel con empleados de ejemplo y cualquier evaluación que
-            alguien haya tomado en este navegador en vivo.
-          </p>
-          <button
-            type="button"
-            onClick={handleDemo}
-            className="mt-4 font-mono text-[0.75rem] uppercase tracking-[0.14em] text-ink hover:text-ink-deep"
-          >
-            Entrar en modo demo →
-          </button>
-        </div>
+            <div className="rounded-md border border-hair bg-white p-6">
+              <p className="caps mb-3">Para demostraciones</p>
+              <p className="font-sans text-t-body text-espresso-soft">
+                Si está mostrando el producto a un prospecto, entre en modo demo.
+                Verá un panel con empleados de ejemplo y cualquier evaluación que
+                alguien haya tomado en este navegador en vivo.
+              </p>
+              <button
+                type="button"
+                onClick={handleDemo}
+                className="mt-4 font-mono text-[0.75rem] uppercase tracking-[0.14em] text-ink hover:text-ink-deep"
+              >
+                Entrar en modo demo →
+              </button>
+            </div>
+          </>
+        )}
       </section>
     </main>
   );

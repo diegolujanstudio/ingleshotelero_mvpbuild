@@ -30,6 +30,7 @@ export type ExamStatus =
 export type ScoringStatus = "pending" | "processing" | "complete" | "failed";
 export type HRRole = "super_admin" | "org_admin" | "property_admin" | "viewer";
 export type Shift = "morning" | "afternoon" | "night";
+export type EmployeeSource = "self_registered" | "hr_invited" | "csv_imported";
 
 export interface Database {
   public: {
@@ -122,6 +123,7 @@ export interface Database {
           role: HRRole;
           is_active: boolean;
           last_login_at: string | null;
+          invite_sent_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -133,6 +135,7 @@ export interface Database {
           role: HRRole;
           is_active?: boolean;
           last_login_at?: string | null;
+          invite_sent_at?: string | null;
         };
         Update: {
           id?: string;
@@ -143,6 +146,7 @@ export interface Database {
           role?: HRRole;
           is_active?: boolean;
           last_login_at?: string | null;
+          invite_sent_at?: string | null;
         };
         Relationships: [];
       };
@@ -159,6 +163,7 @@ export interface Database {
           shift: Shift | null;
           whatsapp_opted_in: boolean;
           is_active: boolean;
+          source: EmployeeSource;
           created_at: string;
           updated_at: string;
         };
@@ -174,6 +179,7 @@ export interface Database {
           shift?: Shift | null;
           whatsapp_opted_in?: boolean;
           is_active?: boolean;
+          source?: EmployeeSource;
         };
         Update: {
           id?: string;
@@ -187,6 +193,7 @@ export interface Database {
           shift?: Shift | null;
           whatsapp_opted_in?: boolean;
           is_active?: boolean;
+          source?: EmployeeSource;
         };
         Relationships: [];
       };

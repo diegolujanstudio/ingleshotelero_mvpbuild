@@ -1,18 +1,19 @@
 /**
- * HR dashboard data loader — merges live local sessions with demo data.
+ * HR dashboard data loader.
  *
- * Called from Client Components. Reads any completed exam sessions from
- * localStorage and fuses them with the DEMO_EMPLOYEES list so the
- * dashboard feels populated in pitches.
+ * In production: returns only live local exam sessions (localStorage).
+ * In demo mode (NEXT_PUBLIC_DEMO_MODE=true): also merges DEMO_EMPLOYEES
+ * so the dashboard looks populated during prospect pitches.
  *
- * When Supabase is wired + an HR user is authenticated, a future version
- * will prefer real DB data over demo. For now: demo + live local.
+ * Once Phase 7 is complete, the HR pages will read from Supabase directly
+ * via Server Components. This file will only power the demo branch.
  */
 
 import { SESSION_KEY_PREFIX, type ExamSessionState } from "./exam";
-import { DEMO_EMPLOYEES, type DemoEmployee } from "./demo-data";
 import { calculateCombinedScore, scoreToLevel } from "./cefr";
 import type { CEFRLevel, RoleModule } from "./supabase/types";
+
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 export interface EmployeeRow {
   id: string;
@@ -91,12 +92,19 @@ function liveSessionToRow(s: ExamSessionState): EmployeeRow | null {
   };
 }
 
-function demoEmployeeToRow(e: DemoEmployee): EmployeeRow {
-  return { ...e, is_live: false };
-}
-
 export function loadEmployees(): EmployeeRow[] {
-  const rows: EmployeeRow[] = [...DEMO_EMPLOYEES.map(demoEmployeeToRow)];
+  const rows: EmployeeRow[] = [];
+
+  // Only include demo data when running in demo mode.
+  if (DEMO_MODE) {
+    try {
+      // Dynamic import so the demo-data module is never bundled in production.
+      const { DEMO_EMPLOYEES } = require("./demo-data");
+      rows.push(...DEMO_EMPLOYEES.map((e: EmployeeRow) => ({ ...e, is_live: false })));
+    } catch {
+      // demo-data not available — fine, skip.
+    }
+  }
 
   if (typeof window !== "undefined") {
     for (let i = 0; i < localStorage.length; i++) {
