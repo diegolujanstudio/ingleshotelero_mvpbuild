@@ -1,0 +1,43 @@
+name: RLS Audit
+
+# Run the RLS audit on every PR that touches migrations or the audit script,
+# and on demand via the Actions tab. Gates merge: any policy regression
+# (cross-tenant leak or missing block) fails the build.
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'scripts/rls-audit.ts'
+      - '.github/workflows/rls.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  rls-audit:
+    name: Cross-tenant RLS assertions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run RLS audit
+        run: npm run rls:audit
+        env:
+          # SUPABASE_DB_URL is the session-mode (port 5432) pooler URL.
+          # Format:
+          #   postgresql://postgres.<ref>:<pwd>@aws-1-us-east-2.pooler.supabase.com:5432/postgres
+          # Add it under repo Settings → Secrets and variables → Actions.
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          # In CI a missing URL is an error, not a skip — block the merge.
+          STRICT_RLS_AUDIT: 'true'
