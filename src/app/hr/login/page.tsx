@@ -10,6 +10,7 @@ import { Logo } from "@/components/brand/Logo";
 import { HairlineRule } from "@/components/ui/HairlineRule";
 import { createClient } from "@/lib/supabase/client";
 import { formatIndex } from "@/lib/utils";
+import { DemoGuard } from "@/components/DemoGuard";
 
 /**
  * HR login.
@@ -125,27 +126,29 @@ export default function HRLoginPage() {
           )}
         </form>
 
-        {demoMode && (
-          <>
-            <HairlineRule className="my-10" />
+        <DemoGuard>
+          {demoMode && (
+            <>
+              <HairlineRule className="my-10" />
 
-            <div className="rounded-md border border-hair bg-white p-6">
-              <p className="caps mb-3">Para demostraciones</p>
-              <p className="font-sans text-t-body text-espresso-soft">
-                Si está mostrando el producto a un prospecto, entre en modo demo.
-                Verá un panel con empleados de ejemplo y cualquier evaluación que
-                alguien haya tomado en este navegador en vivo.
-              </p>
-              <button
-                type="button"
-                onClick={handleDemo}
-                className="mt-4 font-mono text-[0.75rem] uppercase tracking-[0.14em] text-ink hover:text-ink-deep"
-              >
-                Entrar en modo demo →
-              </button>
-            </div>
-          </>
-        )}
+              <div className="rounded-md border border-hair bg-white p-6">
+                <p className="caps mb-3">Para demostraciones</p>
+                <p className="font-sans text-t-body text-espresso-soft">
+                  Si está mostrando el producto a un prospecto, entre en modo demo.
+                  Verá un panel con empleados de ejemplo y cualquier evaluación que
+                  alguien haya tomado en este navegador en vivo.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDemo}
+                  className="mt-4 font-mono text-[0.75rem] uppercase tracking-[0.14em] text-ink hover:text-ink-deep"
+                >
+                  Entrar en modo demo →
+                </button>
+              </div>
+            </>
+          )}
+        </DemoGuard>
       </section>
     </main>
   );
