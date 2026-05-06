@@ -78,7 +78,7 @@ arguing why before changing anything.
 | Region | `us-east-1` | Mexico latency |
 | AI: STT | OpenAI Whisper | Best accent handling, $0.006/min |
 | AI: scoring | Anthropic Claude (sonnet-4-6) | Already integrated, JSON-strict |
-| AI: TTS | OpenAI tts-1-hd, voice "nova" | Quality trumps cost at this scale |
+| AI: TTS | ElevenLabs (per .orcha/proposed-change-001.md) | Pre-generated; quality is the brand-defining surface; cost benign at one-time inventory |
 | Email | Resend | Sender reputation, simple API |
 | Payments | Stripe | Industry default, Mexican CFDI support |
 | WhatsApp | Twilio Business API | Approval cycle started? **CHECK** |
@@ -252,6 +252,8 @@ NEXT_PUBLIC_DEMO_MODE=false   # production. Only true on demo. subdomain.
 
 ## 4. The build sequence — Phases A through G
 
+> NOTE (2026-05-06): Phases E (WhatsApp) and F (Stripe) are DEFERRED post-MVP per founder direction. The product ships as a PWA-first surface; WhatsApp and billing land after the pilot loop is proven. Phases A–D + new Phase H (/masteros) are the active sequence.
+
 Execute in order. Do not start Phase C until B passes its definition of done.
 Commit small, push often.
 
@@ -343,7 +345,24 @@ V0 lives in `/practice/*` already. Replace it with the real loop.
 - Their streak increments correctly across day boundaries.
 - 90 days of distinct drills exist per role × level (270 minimum).
 
-### Phase E — Real WhatsApp delivery (3–4 days code + 1–3 wks Meta approval)
+### Phase H — /masteros (internal admin OS) (5–7 days)
+
+**Deliverable:** A super_admin-only route at `/masteros/*` for the founder + (future) engineer + designer. Surfaces:
+
+- Modules — CRUD for content (drills, listening items, vocab cards) as JSON documents. Bulk export/import.
+- Journey editor — visual builder for the user journey (intro → diagnostic → listening → speaking → results → daily practice).
+- Live metrics — DAU/WAU/MAU, completion rates, level distribution, scoring queue depth, AI cost burn rate (24h, 7d).
+- CRM — orgs + properties + HR users + status (pilot/paid/churned) + notes + CSV export.
+- Cohort console — every cohort across all properties, force-rescore actions.
+- Content audit — last-updated, usage count, flagged items.
+- System health — failed scoring jobs queue, RLS audit results, recent 5xx/4xx, service provider error rates.
+
+**Definition of done:**
+- A non-super_admin user gets a 404 on every /masteros/* route (never a 403 hint).
+- Diego can edit a drill JSON and see it served to the next employee on /practice without a redeploy.
+- Live metrics reflect actual data within 5 minutes.
+
+### Phase E — Real WhatsApp delivery (DEFERRED — post-MVP)
 
 Twilio approval IS the calendar bottleneck. Diego, see §3.5 above — apply now
 even if Claude Code isn't ready.
@@ -366,7 +385,7 @@ even if Claude Code isn't ready.
 - Sending a voice note returns AI-graded feedback within 30 seconds.
 - Twilio webhook signature verification rejects forged requests.
 
-### Phase F — Stripe billing (2 days)
+### Phase F — Stripe billing (DEFERRED — post-MVP)
 
 1. `/hr/billing` page — show current plan, payment history, upcoming invoice.
 2. `/api/billing/checkout` — creates Stripe Checkout session; on success the
