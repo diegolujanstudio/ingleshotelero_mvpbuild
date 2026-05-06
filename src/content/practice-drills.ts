@@ -1,0 +1,451 @@
+/**
+ * Daily practice drill content.
+ *
+ * Per role (bellboy / frontdesk / restaurant), a small pool of drills
+ * the practice engine cycles through. Each drill is a 3-step micro-loop:
+ *   1. listening   — English audio, three Spanish action options
+ *   2. reinforce   — model response shown + spoken back
+ *   3. vocabulary  — three flashcards from the role's inventory
+ *
+ * V1 deliberately omits the speaking step from the daily flow — the
+ * exam already exercises that surface, and adding MediaRecorder here
+ * doubles the implementation cost. Speaking returns in V2 once the
+ * scoring pipeline is wired to the real APIs.
+ *
+ * Drills draw vocabulary only from the role's inventory (this is a
+ * placeholder; the full inventory work belongs in §7 of the brief).
+ */
+
+export type Role = "bellboy" | "frontdesk" | "restaurant";
+
+export type Drill = {
+  id: string;
+  level: "A1" | "A2" | "B1" | "B2";
+  listening: {
+    audio_text: string; // English text the browser SpeechSynthesis speaks
+    options: { emoji: string; text_es: string; correct: boolean }[];
+    explanation_es: string; // shown after answering
+  };
+  reinforce: {
+    title_es: string; // e.g. "Frase modelo"
+    model_en: string; // the gold-standard English response
+    note_es: string; // why this phrasing matters
+  };
+  vocabulary: {
+    word_en: string;
+    word_es: string;
+    example_en: string;
+    example_es: string;
+  }[];
+};
+
+export const DRILLS: Record<Role, Drill[]> = {
+  bellboy: [
+    {
+      id: "b-001",
+      level: "A1",
+      listening: {
+        audio_text: "Hello. I have two suitcases. Can you help me, please?",
+        options: [
+          { emoji: "🧳", text_es: "Ayudar con el equipaje", correct: true },
+          { emoji: "🍽️", text_es: "Llevar al restaurante", correct: false },
+          { emoji: "💳", text_es: "Cobrar la cuenta", correct: false },
+        ],
+        explanation_es:
+          "El huésped pide ayuda con dos maletas. La acción correcta es tomar el equipaje y acompañarlo a su habitación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course, sir. Let me take your luggage to your room.",
+        note_es:
+          "“Of course, sir” es más cálido que “OK”. “Let me take” suena profesional sin sonar sumiso.",
+      },
+      vocabulary: [
+        {
+          word_en: "luggage",
+          word_es: "equipaje",
+          example_en: "I'll take your luggage to room 304.",
+          example_es: "Llevaré su equipaje a la habitación 304.",
+        },
+        {
+          word_en: "elevator",
+          word_es: "elevador",
+          example_en: "The elevator is to your right.",
+          example_es: "El elevador está a su derecha.",
+        },
+        {
+          word_en: "follow me",
+          word_es: "sígame",
+          example_en: "Please follow me, sir.",
+          example_es: "Por favor, sígame.",
+        },
+      ],
+    },
+    {
+      id: "b-002",
+      level: "A2",
+      listening: {
+        audio_text: "Excuse me, where is the gym? Is it open now?",
+        options: [
+          { emoji: "🏋️", text_es: "Indicarle dónde está el gimnasio y si está abierto", correct: true },
+          { emoji: "🛏️", text_es: "Ofrecerle limpieza extra", correct: false },
+          { emoji: "🍳", text_es: "Llevarlo al desayuno", correct: false },
+        ],
+        explanation_es:
+          "Pregunta por la ubicación del gimnasio y su horario. La respuesta da las dos cosas: dónde y a qué hora abre.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "The gym is on the second floor, sir. It's open from 6 a.m. to 10 p.m.",
+        note_es:
+          "Dar la ubicación primero, después el horario, en una sola frase. No deja al huésped esperando una segunda respuesta.",
+      },
+      vocabulary: [
+        {
+          word_en: "second floor",
+          word_es: "segundo piso",
+          example_en: "The pool is on the second floor.",
+          example_es: "La alberca está en el segundo piso.",
+        },
+        {
+          word_en: "open from",
+          word_es: "abierto desde",
+          example_en: "The bar is open from 4 p.m.",
+          example_es: "El bar abre desde las 4 de la tarde.",
+        },
+        {
+          word_en: "right away",
+          word_es: "enseguida",
+          example_en: "I'll bring you towels right away.",
+          example_es: "Le traigo toallas enseguida.",
+        },
+      ],
+    },
+    {
+      id: "b-003",
+      level: "B1",
+      listening: {
+        audio_text:
+          "Sorry to bother you. The Wi-Fi in my room isn't working. Could you check, please?",
+        options: [
+          { emoji: "📶", text_es: "Disculparse y ofrecer revisar / contactar a IT", correct: true },
+          { emoji: "🔑", text_es: "Cambiarle la habitación", correct: false },
+          { emoji: "📞", text_es: "Pasarle la llamada al gerente", correct: false },
+        ],
+        explanation_es:
+          "Una queja simple sobre Wi-Fi. La respuesta correcta es disculparse, ofrecer revisar y dar un siguiente paso claro.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "I'm sorry about that, sir. Let me call IT and we'll have it fixed in a few minutes.",
+        note_es:
+          "“I'm sorry about that” reconoce sin admitir culpa. “In a few minutes” da una expectativa de tiempo concreta.",
+      },
+      vocabulary: [
+        {
+          word_en: "I'm sorry about that",
+          word_es: "lamento eso",
+          example_en: "I'm sorry about that. Let me check.",
+          example_es: "Lamento eso. Permítame revisar.",
+        },
+        {
+          word_en: "fix",
+          word_es: "arreglar",
+          example_en: "We'll have it fixed soon.",
+          example_es: "Lo arreglaremos pronto.",
+        },
+        {
+          word_en: "in a few minutes",
+          word_es: "en unos minutos",
+          example_en: "I'll be there in a few minutes.",
+          example_es: "Estaré allí en unos minutos.",
+        },
+      ],
+    },
+  ],
+
+  frontdesk: [
+    {
+      id: "f-001",
+      level: "A2",
+      listening: {
+        audio_text: "Hi, I have a reservation under the name Smith. Two nights.",
+        options: [
+          { emoji: "📋", text_es: "Buscar la reservación y comenzar el check-in", correct: true },
+          { emoji: "🛎️", text_es: "Llamar al botones", correct: false },
+          { emoji: "🍳", text_es: "Reservar mesa en el restaurante", correct: false },
+        ],
+        explanation_es:
+          "El huésped llega con una reservación. Lo primero es buscarlo en el sistema y confirmar. Pedir identificación viene después.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Welcome, Mr. Smith. I have your reservation right here — two nights, queen room. May I see your ID, please?",
+        note_es:
+          "Confirmar la reservación con detalles que el huésped pueda verificar (noches, tipo de habitación) genera confianza inmediata.",
+      },
+      vocabulary: [
+        {
+          word_en: "reservation",
+          word_es: "reservación",
+          example_en: "Your reservation is for two nights.",
+          example_es: "Su reservación es por dos noches.",
+        },
+        {
+          word_en: "ID",
+          word_es: "identificación",
+          example_en: "May I see your ID, please?",
+          example_es: "¿Me permite su identificación, por favor?",
+        },
+        {
+          word_en: "check-in",
+          word_es: "registro de entrada",
+          example_en: "Check-in starts at 3 p.m.",
+          example_es: "El check-in comienza a las 3 p.m.",
+        },
+      ],
+    },
+    {
+      id: "f-002",
+      level: "B1",
+      listening: {
+        audio_text:
+          "I booked a king suite, but you've given me a regular room. This isn't what I paid for.",
+        options: [
+          { emoji: "🛏️", text_es: "Disculparse, revisar la reservación, ofrecer solución", correct: true },
+          { emoji: "📞", text_es: "Llamar a la limpieza", correct: false },
+          { emoji: "🚪", text_es: "Pedirle que regrese mañana", correct: false },
+        ],
+        explanation_es:
+          "Una queja real con dinero de por medio. La respuesta es: reconocer, verificar, ofrecer alternativa concreta.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "I'm very sorry for the confusion, sir. Let me check your booking and see what we can do — I'll have the right room ready for you in a few minutes.",
+        note_es:
+          "“I'm very sorry for the confusion” es la fórmula correcta — no admite culpa pero reconoce el problema del huésped.",
+      },
+      vocabulary: [
+        {
+          word_en: "confusion",
+          word_es: "confusión",
+          example_en: "I'm sorry for the confusion.",
+          example_es: "Lamento la confusión.",
+        },
+        {
+          word_en: "booking",
+          word_es: "reservación",
+          example_en: "Let me check your booking.",
+          example_es: "Permítame revisar su reservación.",
+        },
+        {
+          word_en: "what we can do",
+          word_es: "qué podemos hacer",
+          example_en: "Let me see what we can do.",
+          example_es: "Déjeme ver qué podemos hacer.",
+        },
+      ],
+    },
+    {
+      id: "f-003",
+      level: "A2",
+      listening: {
+        audio_text: "What time is breakfast, and is it included in my rate?",
+        options: [
+          { emoji: "🍳", text_es: "Decirle el horario y si está incluido en su tarifa", correct: true },
+          { emoji: "🛎️", text_es: "Llamar al chef", correct: false },
+          { emoji: "🛏️", text_es: "Cambiarle la habitación", correct: false },
+        ],
+        explanation_es:
+          "Dos preguntas en una. La respuesta debe contestar ambas: horario y si está incluido.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Breakfast is from 7 to 10 a.m., sir, and yes — it's included in your rate.",
+        note_es:
+          "Responder en el mismo orden de las preguntas. “And yes” es más cálido que solo “yes”.",
+      },
+      vocabulary: [
+        {
+          word_en: "breakfast",
+          word_es: "desayuno",
+          example_en: "Breakfast is from 7 to 10.",
+          example_es: "El desayuno es de 7 a 10.",
+        },
+        {
+          word_en: "included",
+          word_es: "incluido",
+          example_en: "It's included in your rate.",
+          example_es: "Está incluido en su tarifa.",
+        },
+        {
+          word_en: "rate",
+          word_es: "tarifa",
+          example_en: "Your rate is $180 per night.",
+          example_es: "Su tarifa es de $180 por noche.",
+        },
+      ],
+    },
+  ],
+
+  restaurant: [
+    {
+      id: "r-001",
+      level: "A2",
+      listening: {
+        audio_text: "Could we have the menu, please? And some water for the table.",
+        options: [
+          { emoji: "📋", text_es: "Traer menús y agua para la mesa", correct: true },
+          { emoji: "🍷", text_es: "Traer la carta de vinos", correct: false },
+          { emoji: "💳", text_es: "Traer la cuenta", correct: false },
+        ],
+        explanation_es:
+          "Dos cosas en la misma pregunta: menús y agua. Confirmar ambas evita un viaje extra.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Of course. I'll bring the menus and water right away. Still or sparkling?",
+        note_es:
+          "Anticipar la siguiente pregunta (still o sparkling) demuestra atención. Salva un viaje extra.",
+      },
+      vocabulary: [
+        {
+          word_en: "menu",
+          word_es: "menú",
+          example_en: "Here's the menu, sir.",
+          example_es: "Aquí está el menú, señor.",
+        },
+        {
+          word_en: "still water",
+          word_es: "agua sin gas",
+          example_en: "Would you like still or sparkling?",
+          example_es: "¿Le gustaría con o sin gas?",
+        },
+        {
+          word_en: "sparkling water",
+          word_es: "agua con gas",
+          example_en: "Sparkling water for the table.",
+          example_es: "Agua con gas para la mesa.",
+        },
+      ],
+    },
+    {
+      id: "r-002",
+      level: "B1",
+      listening: {
+        audio_text:
+          "I'm allergic to nuts. Are there any dishes I should avoid?",
+        options: [
+          { emoji: "🥜", text_es: "Avisar al chef y revisar el menú con el huésped", correct: true },
+          { emoji: "🍷", text_es: "Recomendar el vino del día", correct: false },
+          { emoji: "🍰", text_es: "Sugerir el postre de chocolate", correct: false },
+        ],
+        explanation_es:
+          "Alergias son un asunto de seguridad. La respuesta correcta avisa al chef y revisa el menú con el huésped — nunca improvisar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Thank you for letting me know. Let me check with the chef — we'll go through the menu together to make sure everything is safe for you.",
+        note_es:
+          "“Thank you for letting me know” es crítico — convierte la advertencia en colaboración, no en queja.",
+      },
+      vocabulary: [
+        {
+          word_en: "allergic",
+          word_es: "alérgico",
+          example_en: "I'm allergic to nuts.",
+          example_es: "Soy alérgico a las nueces.",
+        },
+        {
+          word_en: "the chef",
+          word_es: "el chef",
+          example_en: "Let me check with the chef.",
+          example_es: "Permítame consultar con el chef.",
+        },
+        {
+          word_en: "safe",
+          word_es: "seguro",
+          example_en: "I'll make sure everything is safe.",
+          example_es: "Me aseguraré de que todo sea seguro.",
+        },
+      ],
+    },
+    {
+      id: "r-003",
+      level: "B1",
+      listening: {
+        audio_text: "Could we split the bill, please? Three ways.",
+        options: [
+          { emoji: "💳", text_es: "Confirmar y dividir la cuenta entre tres", correct: true },
+          { emoji: "🍷", text_es: "Traer otra ronda", correct: false },
+          { emoji: "🔄", text_es: "Recoger los platos", correct: false },
+        ],
+        explanation_es:
+          "Pide dividir la cuenta en tres. Confirmar la división evita errores con la propina y los métodos de pago.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Of course. Three ways equally — or would you like to split by what each of you ordered?",
+        note_es:
+          "Confirmar la modalidad de división (parejo o por consumo) antes de procesar evita corregir después.",
+      },
+      vocabulary: [
+        {
+          word_en: "split the bill",
+          word_es: "dividir la cuenta",
+          example_en: "Could we split the bill?",
+          example_es: "¿Podríamos dividir la cuenta?",
+        },
+        {
+          word_en: "equally",
+          word_es: "en partes iguales",
+          example_en: "Three ways equally?",
+          example_es: "¿En tres partes iguales?",
+        },
+        {
+          word_en: "what each ordered",
+          word_es: "lo que cada uno pidió",
+          example_en: "Or split by what each of you ordered?",
+          example_es: "¿O dividir por lo que cada uno pidió?",
+        },
+      ],
+    },
+  ],
+};
+
+/**
+ * Pick today's drill for a given role and level. Strategy:
+ *   - prefer drills that match the employee's current level
+ *   - fall back to lower levels if no match
+ *   - rotate by day-of-year so the same employee doesn't get the same
+ *     drill twice in a row
+ */
+export function pickDrill(role: Role, level: "A1" | "A2" | "B1" | "B2"): Drill {
+  const pool = DRILLS[role];
+
+  // Prefer same-level drills
+  const sameLevel = pool.filter((d) => d.level === level);
+  const fromPool = sameLevel.length > 0 ? sameLevel : pool;
+
+  // Day-of-year rotation
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  return fromPool[dayOfYear % fromPool.length];
+}
+
+export const ROLE_LABELS: Record<Role, string> = {
+  bellboy: "Botones",
+  frontdesk: "Recepción",
+  restaurant: "Restaurante / Bar",
+};

@@ -12,14 +12,21 @@
 export const NAV = [
   { href: "#por-que", label: "Por qué funciona" },
   { href: "#como", label: "Cómo funciona" },
-  { href: "#para-quien", label: "Para quién" },
   { href: "/precios", label: "Precios" },
-  { href: "/demo/conversacion", label: "Ver demo WhatsApp" },
+  { href: "/demo/conversacion", label: "Ver simulador" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
-// Mailto for the free-pilot CTA. Long subject + body makes it friendlier
-// for the founder to reply and for the lead to feel seen.
-export const PILOT_MAILTO =
+// Primary CTA target for "Pedir piloto". Points to the lead capture form
+// at /contacto; the form posts to /api/contacto which stores leads in
+// Supabase + emails Diego via Resend (with graceful fallback).
+//
+// The constant name preserves the original import contract; treat it as
+// "primary pilot CTA href" rather than literally a mailto.
+export const PILOT_MAILTO = "/contacto";
+
+// Backup direct mailto for the FAQ and footer, when a user prefers email.
+export const PILOT_MAILTO_DIRECT =
   "mailto:hola@ingleshotelero.com?subject=Piloto%20gratis%20para%20mi%20hotel&body=Hola%20Diego%2C%0A%0AMe%20interesa%20un%20piloto%20gratis%20para%20un%20departamento.%0A%0ANombre%3A%20%0AHotel%3A%20%0ACiudad%3A%20%0ADepartamento%20que%20me%20interesa%20evaluar%20(recepci%C3%B3n%20%2F%20botones%20%2F%20restaurante)%3A%20%0AN%C3%BAmero%20aproximado%20de%20empleados%3A%20%0A%0AGracias.";
 
 export const HERO = {
