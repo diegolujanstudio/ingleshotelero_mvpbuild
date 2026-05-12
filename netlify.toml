@@ -4,6 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Bump to bust Netlify build cache when new App Router pages aren't
+  # picked up by the @netlify/plugin-nextjs plugin between deploys.
+  CACHE_BUST = "2026-05-12-soporte"
 
 # The Next.js plugin auto-detects forms with `data-netlify="true"` rendered
 # in the static HTML and registers them at deploy time. Our forms render
