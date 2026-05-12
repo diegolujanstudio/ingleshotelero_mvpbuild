@@ -1,256 +1,254 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Printer, ChevronRight } from "lucide-react";
-import { ROLES } from "@/content/roles";
-import { findEmployee, type EmployeeRow } from "@/lib/hr-data";
-import { LevelBadge } from "@/components/ui/Badge";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { requireHRUser } from "@/lib/hr/auth";
+import { loadEmployee, loadEmployeeTranscripts } from "@/lib/hr/data";
+import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { HairlineRule } from "@/components/ui/HairlineRule";
-import {
-  LEVEL_LABEL_ES,
-  LEVEL_DESCRIPTION_ES,
-  scoreToLevel,
-} from "@/lib/cefr";
-import { formatIndex } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
+import { LevelChip } from "@/components/hr/LevelChip";
+import { EmployeeStatusChip } from "@/components/hr/EmployeeStatusChip";
+import { ActivityTimeline, type TimelineEvent } from "@/components/hr/ActivityTimeline";
+import { RecommendationsCard } from "@/components/hr/RecommendationsCard";
+import { EmployeeDetailClient } from "./EmployeeDetailClient";
+import { EMPLOYEE_DETAIL, EMPLOYEES } from "@/content/hr";
+import { ROLES } from "@/content/roles";
+import { LEVEL_LABEL_ES } from "@/lib/cefr";
 
-/**
- * Individual employee detail page.
- *
- * The "Exportar PDF" button triggers the browser's native print dialog,
- * which the user saves as PDF. A print stylesheet (in globals via media
- * query) removes nav and optimizes for letter-size output.
- */
-export default function EmployeeDetailPage({
+export const dynamic = "force-dynamic";
+
+export default async function EmployeeDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const [employee, setEmployee] = useState<EmployeeRow | undefined>();
-  const router = useRouter();
+  const user = await requireHRUser();
+  const employee = await loadEmployee(user, params.id);
+  if (!employee) notFound();
 
-  useEffect(() => {
-    const e = findEmployee(params.id);
-    if (!e) {
-      router.push("/hr/employees");
-      return;
-    }
-    setEmployee(e);
-  }, [params.id, router]);
+  const transcripts = await loadEmployeeTranscripts(user, params.id);
 
-  if (!employee) return null;
-
-  const role = ROLES[employee.hotel_role];
-  const suggestedLevel = scoreToLevel(employee.combined_score);
-  const print = () => window.print();
+  const timeline: TimelineEvent[] = [];
+  if (employee.exam_completed_at) {
+    timeline.push({
+      type: "exam_completed",
+      when_iso: employee.exam_completed_at,
+    });
+  }
+  timeline.push({
+    type: "level_updated",
+    when_iso: employee.updated_at,
+    detail: employee.current_level ?? "—",
+  });
 
   return (
-    <section className="mx-auto max-w-shell px-6 py-12 md:px-12 md:py-16">
-      <nav className="mb-8 flex items-center justify-between print:hidden">
-        <Link
-          href="/hr/employees"
-          className="inline-flex items-center gap-2 caps hover:text-ink"
-        >
-          <ArrowLeft className="h-3 w-3" aria-hidden />
-          Volver a la lista
-        </Link>
-        <Button variant="ghost" onClick={print}>
-          <Printer className="h-4 w-4" aria-hidden />
-          Exportar como PDF
-        </Button>
-      </nav>
+    <section className="mx-auto max-w-shell px-6 py-8 md:px-10 md:py-10">
+      <Link
+        href="/hr/employees"
+        className="mb-4 inline-flex items-center gap-2 caps hover:text-ink"
+      >
+        <ArrowLeft className="h-3 w-3" aria-hidden />
+        {EMPLOYEE_DETAIL.back}
+      </Link>
 
-      <article className="space-y-12 print:space-y-8">
-        {/* ── Print cover ──────────────────── */}
-        <header className="hidden print:block">
-          <p className="caps">Reporte de Evaluación · Inglés Hotelero</p>
-          <p className="mt-4 font-serif text-[2.5rem] font-medium">{employee.name}</p>
-          <p className="mt-1 caps">{role.label_es} · Turno {shiftLabel(employee.shift)}</p>
-          <p className="mt-6 caps">
-            Completado: {new Date(employee.completed_at).toLocaleDateString("es-MX")}
-          </p>
-          <HairlineRule className="mt-6" />
-        </header>
-
-        {/* ── Hero: name + level ───────────── */}
-        <header className="print:hidden">
-          <p className="caps mb-3">
-            {formatIndex(3)} · Empleado · {role.label_es} · Turno{" "}
-            {shiftLabel(employee.shift)}
-          </p>
-          <h1 className="font-serif text-t-h1 font-medium text-espresso">
+      <SectionHeader
+        eyebrow={EMPLOYEE_DETAIL.eyebrow}
+        title={
+          <span className="flex items-center gap-3">
             {employee.name}
-          </h1>
-        </header>
+            <LevelChip level={employee.current_level} />
+            <EmployeeStatusChip status={employee.status} />
+          </span>
+        }
+        sub={`${ROLES[employee.hotel_role].label_es} · ${employee.department ?? "—"}`}
+        actions={
+          <EmployeeDetailClient employee={employee} />
+        }
+      />
 
-        {/* Big level card */}
-        <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12">
-          <div className="rounded-md border border-hair bg-white p-8">
-            <p className="caps mb-4">Nivel actual</p>
-            <div className="flex items-baseline gap-4">
-              <span className="font-serif text-[clamp(4rem,12vw,6rem)] font-medium leading-none tracking-tight text-espresso">
-                {employee.current_level}
-              </span>
-              <LevelBadge level={employee.current_level} />
-            </div>
-            <p className="mt-3 font-serif text-t-h3 font-medium">
-              {LEVEL_LABEL_ES[employee.current_level]}
-            </p>
-            <p className="mt-2 font-sans text-t-body text-espresso-soft">
-              {LEVEL_DESCRIPTION_ES[employee.current_level]}
-            </p>
-            {suggestedLevel !== employee.current_level && (
-              <p className="mt-4 caps text-warn">
-                Fronterizo con {suggestedLevel} — candidato a re-evaluación en 30 días
-              </p>
-            )}
-          </div>
+      {/* Contact info */}
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
+        <ContactCard employee={employee} />
+        <ScoreCard employee={employee} />
+      </div>
 
-          <dl className="rounded-md border border-hair bg-white divide-y divide-hair">
-            <ScoreRow
-              label="Puntaje combinado"
-              value={`${employee.combined_score} / 100`}
-              note="60% habla + 40% escucha"
-              strong
-            />
-            <ScoreRow label="Comprensión auditiva" value={`${employee.listening_score} / 100`} />
-            <ScoreRow label="Expresión oral" value={`${employee.speaking_score} / 100`} />
-            <ScoreRow
-              label="Racha de práctica"
-              value={
-                employee.streak > 0
-                  ? `${employee.streak} días consecutivos`
-                  : "Sin racha activa"
-              }
-            />
-            <ScoreRow
-              label="Completitud"
-              value={`${employee.practice_completion_pct}%`}
-            />
-            <ScoreRow
-              label="Última actividad"
-              value={
-                employee.last_active_days_ago === 0
-                  ? "hoy"
-                  : `hace ${employee.last_active_days_ago} días`
-              }
-            />
-          </dl>
-        </div>
+      <HairlineRule className="my-8" />
 
-        {/* Strengths + opportunities */}
-        <div className="grid gap-6 md:grid-cols-2 md:gap-12">
-          <section>
-            <p className="caps mb-3">{formatIndex(4)} · Fortalezas</p>
-            <ul className="space-y-3">
-              {employee.strengths.map((s, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-3 rounded-md border border-hair bg-white p-4"
-                >
-                  <ChevronRight className="mt-1 h-3 w-3 shrink-0 text-success" aria-hidden />
-                  <span className="font-sans text-t-body text-espresso">{s}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section>
-            <p className="caps mb-3">{formatIndex(5)} · Áreas a desarrollar</p>
-            <ul className="space-y-3">
-              {employee.areas_to_improve.map((s, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-3 rounded-md border border-hair bg-white p-4"
-                >
-                  <ChevronRight className="mt-1 h-3 w-3 shrink-0 text-ink" aria-hidden />
-                  <span className="font-sans text-t-body text-espresso">{s}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
+      {/* Practice */}
+      <SectionTitle index="02" title={EMPLOYEE_DETAIL.sections.practice} />
+      <div className="grid gap-3 md:grid-cols-4">
+        <Tile label={EMPLOYEE_DETAIL.practice.streak} value={employee.streak > 0 ? `${employee.streak}d` : "—"} />
+        <Tile label={EMPLOYEE_DETAIL.practice.completion} value={`${employee.practice_completion_pct}%`} />
+        <Tile
+          label={EMPLOYEE_DETAIL.practice.drills30}
+          value={Math.min(30, Math.round(employee.practice_completion_pct * 0.3))}
+        />
+        <Tile
+          label="Última actividad"
+          value={
+            employee.last_active_days_ago === 0
+              ? "hoy"
+              : employee.last_active_days_ago > 99
+                ? "—"
+                : `hace ${employee.last_active_days_ago}d`
+          }
+        />
+      </div>
 
-        {/* Transcripts */}
-        {employee.transcripts.length > 0 && (
-          <section>
-            <p className="caps mb-3">
-              {formatIndex(6)} · Respuestas habladas evaluadas por IA
-            </p>
-            <ul className="divide-y divide-hair rounded-md border border-hair bg-white">
-              {employee.transcripts.map((t, i) => (
-                <li key={i} className="p-5">
-                  <div className="flex items-baseline justify-between gap-4">
-                    <div>
-                      <span className="caps">
-                        Escenario {formatIndex(t.prompt_index + 1)} · {t.level}
-                      </span>
-                      <p className="mt-1 font-sans text-t-body text-espresso">
-                        {t.scenario_es}
+      <HairlineRule className="my-8" />
+
+      {/* Transcripts */}
+      {transcripts.length > 0 && (
+        <>
+          <SectionTitle index="03" title={EMPLOYEE_DETAIL.exam.transcripts} />
+          <ul className="divide-y divide-hair rounded-md border border-hair bg-white">
+            {transcripts.map((t, i) => (
+              <li key={i} className="px-5 py-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="caps">
+                      {t.scenario_es} · {t.level}
+                    </p>
+                    {t.transcript && (
+                      <p className="mt-2 rounded-sm bg-ivory-soft p-3 font-mono text-[0.75rem] text-espresso-soft">
+                        &ldquo;{t.transcript}&rdquo;
                       </p>
-                    </div>
-                    <span className="font-mono text-[0.8125rem] text-espresso">
-                      {t.ai_score_total} / 100
-                    </span>
+                    )}
                   </div>
-                  <p className="mt-3 rounded-sm bg-ivory-soft p-3 font-mono text-[0.75rem] text-espresso-soft">
-                    Transcripción: &ldquo;{t.transcript_en}&rdquo;
-                  </p>
+                  {t.score_total !== null && (
+                    <span className="font-mono text-[0.8125rem] text-espresso">
+                      {t.score_total}/100
+                    </span>
+                  )}
+                </div>
+                {t.feedback_es && (
                   <p className="mt-3 font-sans text-t-body text-ink">
-                    <em>Retroalimentación:</em> {t.ai_feedback_es}
+                    <em>Retroalimentación:</em> {t.feedback_es}
                   </p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+                )}
+              </li>
+            ))}
+          </ul>
+          <HairlineRule className="my-8" />
+        </>
+      )}
 
-        {/* Recommendation */}
-        <section className="rounded-md border border-hair bg-ivory-soft p-6 md:p-8">
-          <p className="caps mb-3">{formatIndex(7)} · Recomendación</p>
-          <h2 className="font-serif text-t-h2 font-medium text-espresso">
-            {recommendationTitle(employee)}
-          </h2>
-          <p className="mt-3 font-sans text-t-body text-espresso-soft">
-            {recommendationBody(employee, role.label_es)}
-          </p>
-        </section>
+      {/* Recommendations */}
+      <SectionTitle index="04" title={EMPLOYEE_DETAIL.sections.recommendations} />
+      <RecommendationsCard
+        current_level={employee.current_level}
+        hotel_role={employee.hotel_role}
+        combined_score={employee.combined_score}
+        streak={employee.streak}
+        practice_completion_pct={employee.practice_completion_pct}
+        name={employee.name}
+      />
 
-        {/* Print footer */}
-        <footer className="hidden print:block">
-          <HairlineRule className="mb-6" />
-          <p className="caps">
-            Reporte generado automáticamente por Inglés Hotelero · {new Date().toLocaleDateString("es-MX")}
-          </p>
-        </footer>
-      </article>
+      <HairlineRule className="my-8" />
+
+      {/* Timeline */}
+      <SectionTitle index="05" title={EMPLOYEE_DETAIL.sections.timeline} />
+      <ActivityTimeline events={timeline} />
     </section>
   );
 }
 
-function ScoreRow({
+function SectionTitle({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="mb-3 flex items-baseline justify-between">
+      <h2 className="font-serif text-t-h2 font-medium text-espresso">{title}</h2>
+      <p className="caps">Sección {index}</p>
+    </div>
+  );
+}
+
+function ContactCard({
+  employee,
+}: {
+  employee: Awaited<ReturnType<typeof loadEmployee>>;
+}) {
+  if (!employee) return null;
+  return (
+    <div className="rounded-md border border-hair bg-white">
+      <div className="border-b border-hair bg-ivory-soft px-5 py-2.5">
+        <p className="caps">{EMPLOYEE_DETAIL.sections.contact}</p>
+      </div>
+      <dl className="divide-y divide-hair">
+        <Row label={EMPLOYEE_DETAIL.contact.email} value={employee.email ?? EMPLOYEE_DETAIL.contact.none} />
+        <Row label={EMPLOYEE_DETAIL.contact.phone} value={employee.phone ?? EMPLOYEE_DETAIL.contact.none} />
+        <Row label={EMPLOYEE_DETAIL.contact.department} value={employee.department ?? EMPLOYEE_DETAIL.contact.none} />
+        <Row
+          label={EMPLOYEE_DETAIL.contact.shift}
+          value={employee.shift ? EMPLOYEES.shift[employee.shift] : EMPLOYEE_DETAIL.contact.none}
+        />
+        <Row
+          label={EMPLOYEE_DETAIL.contact.source}
+          value={EMPLOYEES.source[employee.source]}
+        />
+        <Row
+          label={EMPLOYEE_DETAIL.contact.createdAt}
+          value={new Date(employee.created_at).toLocaleDateString("es-MX")}
+        />
+      </dl>
+    </div>
+  );
+}
+
+function ScoreCard({
+  employee,
+}: {
+  employee: Awaited<ReturnType<typeof loadEmployee>>;
+}) {
+  if (!employee) return null;
+  if (!employee.exam_completed_at) {
+    return (
+      <div className="rounded-md border border-hair bg-white p-5">
+        <p className="caps mb-2">{EMPLOYEE_DETAIL.sections.exam}</p>
+        <p className="font-sans text-t-body text-espresso-muted">
+          {EMPLOYEE_DETAIL.exam.none}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-md border border-hair bg-white">
+      <div className="border-b border-hair bg-ivory-soft px-5 py-2.5">
+        <p className="caps">
+          {EMPLOYEE_DETAIL.sections.exam} · {EMPLOYEE_DETAIL.exam.rubric}
+        </p>
+      </div>
+      <dl className="divide-y divide-hair">
+        <Row label={EMPLOYEE_DETAIL.exam.combined} value={`${employee.combined_score}/100`} strong />
+        <Row label={EMPLOYEE_DETAIL.exam.listening} value={`${employee.listening_score}/100`} />
+        <Row label={EMPLOYEE_DETAIL.exam.speaking} value={`${employee.speaking_score}/100`} />
+        <Row
+          label={EMPLOYEE_DETAIL.exam.completedAt}
+          value={new Date(employee.exam_completed_at).toLocaleDateString("es-MX")}
+        />
+        {employee.current_level && (
+          <Row label="Nivel CEFR" value={`${employee.current_level} · ${LEVEL_LABEL_ES[employee.current_level]}`} />
+        )}
+      </dl>
+    </div>
+  );
+}
+
+function Row({
   label,
   value,
-  note,
   strong,
 }: {
   label: string;
-  value: string;
-  note?: string;
+  value: string | number;
   strong?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between px-5 py-4">
-      <div>
-        <dt className="font-sans text-t-body text-espresso-muted">{label}</dt>
-        {note && <p className="caps">{note}</p>}
-      </div>
+    <div className="flex items-baseline justify-between gap-3 px-5 py-3">
+      <dt className="font-sans text-t-body text-espresso-muted">{label}</dt>
       <dd
         className={
           strong
-            ? "font-serif text-t-h2 font-medium text-espresso"
-            : "font-mono text-t-body-lg text-espresso"
+            ? "font-serif text-t-h3 font-medium text-espresso"
+            : "font-mono text-t-label text-espresso"
         }
       >
         {value}
@@ -259,23 +257,13 @@ function ScoreRow({
   );
 }
 
-function shiftLabel(s: "morning" | "afternoon" | "night"): string {
-  return s === "morning" ? "Matutino" : s === "afternoon" ? "Vespertino" : "Nocturno";
-}
-
-function recommendationTitle(e: EmployeeRow): string {
-  if (e.current_level === "B2") return "Listo para mentoría interna";
-  if (e.current_level === "B1") return "Candidato al módulo B2 (3 meses)";
-  if (e.current_level === "A2") return "Candidato al módulo B1 (3 meses)";
-  return "Prioridad alta · Módulo A2 completo";
-}
-
-function recommendationBody(e: EmployeeRow, roleLabel: string): string {
-  if (e.current_level === "B2")
-    return `${e.name.split(" ")[0]} puede mentorar a colegas del mismo puesto (${roleLabel}) y eventualmente liderar la certificación "Propiedad Bilingüe" de su hotel.`;
-  if (e.current_level === "B1")
-    return `Un módulo de 3 meses enfocado en escenarios complejos (quejas, negociación, huéspedes VIP) elevaría a ${e.name.split(" ")[0]} a nivel B2 con alta probabilidad.`;
-  if (e.current_level === "A2")
-    return `Módulo ${roleLabel} de 3 meses cubriendo vocabulario específico + práctica diaria de 5 min vía WhatsApp. Meta: B1 al cierre del trimestre.`;
-  return `Prioridad alta. ${e.name.split(" ")[0]} necesita el módulo completo ${roleLabel} desde cero para alcanzar comunicación funcional (A2) antes de poder atender huéspedes internacionales sin supervisión.`;
+function Tile({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md border border-hair bg-white p-4">
+      <p className="caps mb-2">{label}</p>
+      <p className="font-serif text-[1.5rem] font-medium leading-none text-espresso">
+        {value}
+      </p>
+    </div>
+  );
 }

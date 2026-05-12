@@ -1,148 +1,163 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { ROLES } from "@/content/roles";
-import {
-  loadEmployees,
-  aggregateLevels,
-  aggregateRoles,
-  averageScore,
-  activeThisWeek,
-  type EmployeeRow,
-} from "@/lib/hr-data";
-import { LevelBadge } from "@/components/ui/Badge";
+import { AlertTriangle, ArrowRight, Clock } from "lucide-react";
+import { requireHRUser } from "@/lib/hr/auth";
+import { loadEmployees, loadOverview } from "@/lib/hr/data";
+import { SectionHeader } from "@/components/masteros/SectionHeader";
+import { MetricCard } from "@/components/masteros/MetricCard";
 import { HairlineRule } from "@/components/ui/HairlineRule";
-import { formatIndex } from "@/lib/utils";
-import type { CEFRLevel } from "@/lib/supabase/types";
+import { OVERVIEW, COMMON } from "@/content/hr";
+import { OverviewCharts } from "./OverviewCharts";
+import { LevelChip } from "@/components/hr/LevelChip";
 
-const LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2"];
+export const dynamic = "force-dynamic";
 
-export default function HRDashboardPage() {
-  const [rows, setRows] = useState<EmployeeRow[]>([]);
-  useEffect(() => {
-    setRows(loadEmployees());
-    const poll = setInterval(() => setRows(loadEmployees()), 4000);
-    return () => clearInterval(poll);
-  }, []);
-
-  const levels = useMemo(() => aggregateLevels(rows), [rows]);
-  const roles = useMemo(() => aggregateRoles(rows), [rows]);
-  const avg = useMemo(() => averageScore(rows), [rows]);
-  const active = useMemo(() => activeThisWeek(rows), [rows]);
-
-  const maxLevel = Math.max(...LEVELS.map((l) => levels[l]), 1);
-
-  const topPerformers = [...rows]
-    .sort((a, b) => b.combined_score - a.combined_score)
-    .slice(0, 3);
-  const needAttention = [...rows]
-    .sort((a, b) => a.last_active_days_ago - b.last_active_days_ago)
-    .reverse()
-    .slice(0, 3);
+export default async function HROverviewPage() {
+  const user = await requireHRUser();
+  const employees = await loadEmployees(user);
+  const stats = await loadOverview(user, employees);
 
   return (
-    <section className="mx-auto max-w-shell px-6 py-12 md:px-12 md:py-16">
-      <div className="mb-12">
-        <p className="caps mb-3">{formatIndex(1)} · Resumen</p>
-        <h1 className="font-serif text-t-h1 font-medium text-espresso">
-          Su equipo, <em>en números</em>.
-        </h1>
-      </div>
+    <section className="mx-auto max-w-shell px-6 py-8 md:px-10 md:py-10">
+      <SectionHeader
+        eyebrow={OVERVIEW.eyebrow}
+        title={
+          <>
+            {OVERVIEW.headline.before}
+            <em>{OVERVIEW.headline.em}</em>
+            {OVERVIEW.headline.after}
+          </>
+        }
+        sub={OVERVIEW.sub}
+        actions={
+          stats.isDemo && (
+            <span className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-warn">
+              {COMMON.demoBadge}
+            </span>
+          )
+        }
+      />
 
-      {/* Top stats row */}
-      <div className="grid gap-5 md:grid-cols-4">
-        <Stat label="Empleados evaluados" value={rows.length} />
-        <Stat label="Nivel promedio" value={`${avg}/100`} />
-        <Stat label="Activos esta semana" value={`${active}/${rows.length}`} />
-        <Stat
-          label="Tasa de participación"
-          value={`${rows.length > 0 ? Math.round((active / rows.length) * 100) : 0}%`}
+      <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          eyebrow={OVERVIEW.metrics.activeEmployees.eyebrow}
+          value={stats.activeEmployees}
+          caption={OVERVIEW.metrics.activeEmployees.caption}
+        />
+        <MetricCard
+          eyebrow={OVERVIEW.metrics.examsLast30.eyebrow}
+          value={stats.examsLast30}
+          caption={OVERVIEW.metrics.examsLast30.caption}
+        />
+        <MetricCard
+          eyebrow={OVERVIEW.metrics.inProgress.eyebrow}
+          value={stats.inProgress}
+          caption={OVERVIEW.metrics.inProgress.caption}
+        />
+        <MetricCard
+          eyebrow={OVERVIEW.metrics.avgLevel.eyebrow}
+          value={stats.avgLevel}
+          caption={OVERVIEW.metrics.avgLevel.caption}
         />
       </div>
 
-      <HairlineRule className="my-12" />
+      <div className="mt-6">
+        <OverviewCharts
+          levelDistribution={stats.levelDistribution}
+          byRole={stats.byRole}
+          weeklyExams={stats.weeklyExams}
+        />
+      </div>
 
-      {/* Level distribution + role breakdown */}
-      <div className="grid gap-10 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:gap-16">
+      <HairlineRule className="my-8" />
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div>
-          <div className="mb-6 flex items-baseline justify-between">
-            <h2 className="font-serif text-t-h2 font-medium">Distribución de niveles</h2>
-            <span className="caps">CEFR adaptado a hotelería</span>
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="font-serif text-t-h2 font-medium text-espresso">
+              {OVERVIEW.attention.title}
+            </h2>
+            <p className="caps">{OVERVIEW.attention.sub}</p>
           </div>
-          <div className="space-y-3">
-            {LEVELS.map((level) => {
-              const count = levels[level];
-              const pct = rows.length > 0 ? Math.round((count / rows.length) * 100) : 0;
-              const barPct = Math.round((count / maxLevel) * 100);
-              return (
-                <div key={level} className="flex items-center gap-4">
-                  <div className="w-12">
-                    <LevelBadge level={level} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-7 w-full rounded-xs bg-ivory-deep">
-                      <div
-                        className="flex h-7 items-center justify-end rounded-xs bg-ink px-2 font-mono text-[0.625rem] text-white transition-all duration-500 ease-editorial"
-                        style={{ width: `${Math.max(barPct, 8)}%` }}
+          <div className="space-y-2">
+            <AttentionStat
+              label={OVERVIEW.attention.inactiveLabel}
+              value={stats.attention.inactive.length}
+            />
+            <AttentionStat
+              label={OVERVIEW.attention.failedLabel}
+              value={stats.attention.failed}
+            />
+            <AttentionStat
+              label={OVERVIEW.attention.overdueCohortLabel}
+              value={stats.attention.overdueCohorts}
+            />
+          </div>
+          {stats.attention.inactive.length > 0 && (
+            <div className="mt-4">
+              <ul className="divide-y divide-hair rounded-md border border-hair bg-white">
+                {stats.attention.inactive.map((e) => (
+                  <li key={e.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/hr/employees/${e.id}`}
+                        className="font-serif text-t-body font-medium text-espresso hover:text-ink"
                       >
-                        {count}
-                      </div>
+                        {e.name}
+                      </Link>
+                      <p className="caps">
+                        {e.last_active_days_ago > 99 ? "sin actividad" : `hace ${e.last_active_days_ago}d`}
+                      </p>
                     </div>
-                  </div>
-                  <div className="w-12 text-right font-mono text-[0.75rem] text-espresso-muted">
-                    {pct}%
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <HairlineRule className="my-10" />
-
-          <div className="mb-6 flex items-baseline justify-between">
-            <h3 className="font-serif text-t-h3 font-medium">Por departamento</h3>
-          </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            {(Object.keys(ROLES) as (keyof typeof ROLES)[]).map((key) => (
-              <div
-                key={key}
-                className="rounded-md border border-hair bg-white p-5"
-              >
-                <p className="caps mb-1">{ROLES[key].label_es}</p>
-                <p className="font-serif text-t-h2 font-medium text-espresso">
-                  {roles[key]}
-                </p>
-                <p className="caps mt-2">empleados evaluados</p>
-              </div>
-            ))}
-          </div>
+                    <LevelChip level={e.current_level} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {stats.attention.inactive.length === 0 && stats.attention.failed === 0 && stats.attention.overdueCohorts === 0 && (
+            <p className="mt-4 font-sans text-t-body text-espresso-muted">
+              {OVERVIEW.attention.none}
+            </p>
+          )}
         </div>
 
-        {/* Right column — top performers + need attention */}
-        <aside className="space-y-10">
-          <div>
-            <h3 className="mb-4 font-serif text-t-h3 font-medium">Destacan</h3>
-            <ul className="divide-y divide-hair rounded-md border border-hair bg-white">
-              {topPerformers.map((e) => (
-                <EmployeeMiniRow key={e.id} e={e} />
+        <aside>
+          <h2 className="mb-3 font-serif text-t-h2 font-medium text-espresso">
+            {OVERVIEW.recentActivity.title}
+          </h2>
+          {stats.recentActivity.length === 0 ? (
+            <p className="font-sans text-t-body text-espresso-muted">
+              {OVERVIEW.recentActivity.none}
+            </p>
+          ) : (
+            <ol className="divide-y divide-hair rounded-md border border-hair bg-white">
+              {stats.recentActivity.slice(0, 8).map((e, i) => (
+                <li key={i} className="flex items-center gap-3 px-4 py-3">
+                  <span className="rounded-pill bg-ivory-soft p-1.5 text-ink">
+                    <Clock className="h-3 w-3" aria-hidden />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-sans text-t-body text-espresso">
+                      {e.employee_name}
+                    </p>
+                    <p className="caps">
+                      {e.type === "exam_completed" ? "completó examen" : e.type === "exam_started" ? "inició examen" : "completó drill"}
+                    </p>
+                  </div>
+                  <span className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-muted">
+                    {new Date(e.when_iso).toLocaleDateString("es-MX", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
+                  </span>
+                </li>
               ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 font-serif text-t-h3 font-medium">Necesitan atención</h3>
-            <ul className="divide-y divide-hair rounded-md border border-hair bg-white">
-              {needAttention.map((e) => (
-                <EmployeeMiniRow key={e.id} e={e} showInactivity />
-              ))}
-            </ul>
-          </div>
+            </ol>
+          )}
         </aside>
       </div>
 
-      <HairlineRule className="my-12" />
+      <HairlineRule className="my-8" />
 
       <Link
         href="/hr/employees"
@@ -155,47 +170,15 @@ export default function HRDashboardPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+function AttentionStat({ label, value }: { label: string; value: number }) {
+  const tone = value === 0 ? "text-espresso-muted" : "text-warn";
   return (
-    <div className="rounded-md border border-hair bg-white p-6">
-      <p className="caps mb-2">{label}</p>
-      <p className="font-serif text-[2.5rem] font-medium leading-none tracking-tight text-espresso">
-        {value}
-      </p>
+    <div className="flex items-center justify-between rounded-md border border-hair bg-white px-4 py-3">
+      <div className="flex items-center gap-2.5">
+        <AlertTriangle className={`h-3.5 w-3.5 ${tone}`} aria-hidden />
+        <span className="font-sans text-t-body text-espresso">{label}</span>
+      </div>
+      <span className={`font-mono text-t-label ${tone}`}>{value}</span>
     </div>
-  );
-}
-
-function EmployeeMiniRow({
-  e,
-  showInactivity,
-}: {
-  e: EmployeeRow;
-  showInactivity?: boolean;
-}) {
-  return (
-    <li className="p-4">
-      <Link
-        href={`/hr/employees/${e.id}`}
-        className="flex items-center justify-between gap-4 hover:text-ink"
-      >
-        <div className="min-w-0">
-          <p className="truncate font-serif text-t-h3 font-medium">{e.name}</p>
-          <p className="caps">{ROLES[e.hotel_role].label_es}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {showInactivity ? (
-            <span className="font-mono text-[0.625rem] uppercase tracking-[0.08em] text-warn">
-              {e.last_active_days_ago}d inactivo
-            </span>
-          ) : (
-            <span className="font-mono text-[0.75rem] text-espresso">
-              {e.combined_score}
-            </span>
-          )}
-          <LevelBadge level={e.current_level} />
-        </div>
-      </Link>
-    </li>
   );
 }

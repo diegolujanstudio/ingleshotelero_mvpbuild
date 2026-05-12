@@ -1,28 +1,28 @@
 import { requireHRUser } from "@/lib/hr/auth";
-import { loadEmployees } from "@/lib/hr/data";
+import { loadCohorts } from "@/lib/hr/data";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
-import { EMPLOYEES, COMMON } from "@/content/hr";
-import { EmployeesClient } from "./EmployeesClient";
+import { COHORTS, COMMON } from "@/content/hr";
+import { CohortsClient } from "./CohortsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function EmployeesPage() {
+export default async function CohortsPage() {
   const user = await requireHRUser();
-  const employees = await loadEmployees(user);
-  const isDemo = employees.length > 0 && employees[0].is_demo;
+  const cohorts = await loadCohorts(user);
+  const isDemo = cohorts.length > 0 && cohorts[0].is_demo;
 
   return (
     <section className="mx-auto max-w-shell px-6 py-8 md:px-10 md:py-10">
       <SectionHeader
-        eyebrow={EMPLOYEES.eyebrow}
+        eyebrow={COHORTS.eyebrow}
         title={
           <>
-            {EMPLOYEES.headline.before}
-            <em>{EMPLOYEES.headline.em}</em>
-            {EMPLOYEES.headline.after}
+            {COHORTS.headline.before}
+            <em>{COHORTS.headline.em}</em>
+            {COHORTS.headline.after}
           </>
         }
-        sub={EMPLOYEES.sub}
+        sub={COHORTS.sub}
         actions={
           isDemo && (
             <span className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-warn">
@@ -31,9 +31,8 @@ export default async function EmployeesPage() {
           )
         }
       />
-
       <div className="mt-6">
-        <EmployeesClient initial={employees} />
+        <CohortsClient initial={cohorts} />
       </div>
     </section>
   );
