@@ -31,6 +31,7 @@ export type ScoringStatus = "pending" | "processing" | "complete" | "failed";
 export type HRRole = "super_admin" | "org_admin" | "property_admin" | "viewer";
 export type Shift = "morning" | "afternoon" | "night";
 export type EmployeeSource = "self_registered" | "hr_invited" | "csv_imported";
+export type RecordingType = "exam" | "practice";
 
 export interface Database {
   public: {
@@ -265,6 +266,7 @@ export interface Database {
           ai_level_estimate: CEFRLevel | null;
           scoring_status: ScoringStatus;
           scoring_attempts: number;
+          recording_type: RecordingType;
           created_at: string;
           scored_at: string | null;
         };
@@ -286,6 +288,7 @@ export interface Database {
           ai_level_estimate?: CEFRLevel | null;
           scoring_status?: ScoringStatus;
           scoring_attempts?: number;
+          recording_type?: RecordingType;
           scored_at?: string | null;
         };
         Update: {
@@ -306,7 +309,66 @@ export interface Database {
           ai_level_estimate?: CEFRLevel | null;
           scoring_status?: ScoringStatus;
           scoring_attempts?: number;
+          recording_type?: RecordingType;
           scored_at?: string | null;
+        };
+        Relationships: [];
+      };
+      drill_history: {
+        Row: {
+          id: string;
+          employee_id: string;
+          drill_id: string;
+          level: CEFRLevel;
+          module: RoleModule;
+          listening_correct: boolean | null;
+          speaking_score: number | null;
+          vocab_known: number;
+          duration_seconds: number | null;
+          completed_at: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          drill_id: string;
+          level: CEFRLevel;
+          module: RoleModule;
+          listening_correct?: boolean | null;
+          speaking_score?: number | null;
+          vocab_known?: number;
+          duration_seconds?: number | null;
+          completed_at?: string;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          drill_id?: string;
+          level?: CEFRLevel;
+          module?: RoleModule;
+          listening_correct?: boolean | null;
+          speaking_score?: number | null;
+          vocab_known?: number;
+          duration_seconds?: number | null;
+          completed_at?: string;
+        };
+        Relationships: [];
+      };
+      idempotency_keys: {
+        Row: {
+          key: string;
+          response: Json;
+          status_code: number;
+          created_at: string;
+        };
+        Insert: {
+          key: string;
+          response: Json;
+          status_code?: number;
+        };
+        Update: {
+          key?: string;
+          response?: Json;
+          status_code?: number;
         };
         Relationships: [];
       };
