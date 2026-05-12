@@ -5,6 +5,12 @@ import { isSupabaseConfigured } from "@/lib/supabase/client-or-service";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 import { captureException } from "@/lib/server/sentry";
 import { log } from "@/lib/server/log";
+import {
+  readIdempotencyKey,
+  lookupIdempotent,
+  storeIdempotent,
+} from "@/lib/server/idempotency";
+import type { Json } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
 
@@ -52,18 +58,29 @@ export async function POST(req: Request) {
     );
   }
 
+  // Idempotency-Key header replay (best-effort).
+  const idemKey = readIdempotencyKey(req);
+  if (idemKey) {
+    const cached = await lookupIdempotent(idemKey);
+    if (cached) {
+      return NextResponse.json(cached.body, { status: cached.status });
+    }
+  }
+
   // Demo mode: no Supabase → return the client-supplied id (or a fresh uuid)
   // and let the client run from localStorage.
   if (!isSupabaseConfigured()) {
     const id = parsed.data.client_session_id ?? crypto.randomUUID();
     log.info({ route: "POST /api/exams", mode: "demo" }, "exam.demo.passthrough");
-    return NextResponse.json({
+    const responseBody = {
       session_id: id,
       current_step: "diagnostic",
       employee_id: id, // placeholder — client doesn't use it in demo
       resumed: false,
       mode: "local-only",
-    });
+    };
+    if (idemKey) await storeIdempotent(idemKey, responseBody as Json, 200);
+    return NextResponse.json(responseBody);
   }
 
   try {
@@ -74,7 +91,9 @@ export async function POST(req: Request) {
       exam_type: parsed.data.exam_type,
       consent_version: parsed.data.consent_version,
     });
-    return NextResponse.json({ ...result, mode: "persisted" });
+    const responseBody = { ...result, mode: "persisted" as const };
+    if (idemKey) await storeIdempotent(idemKey, responseBody as unknown as Json, 200);
+    return NextResponse.json(responseBody);
   } catch (err) {
     const code = (err as Error & { code?: string }).code;
     if (code === "PROPERTY_NOT_FOUND") {

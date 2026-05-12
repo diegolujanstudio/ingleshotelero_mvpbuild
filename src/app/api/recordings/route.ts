@@ -8,6 +8,11 @@ import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 import { captureException } from "@/lib/server/sentry";
 import { log } from "@/lib/server/log";
 import { scoreOne } from "@/lib/server/scoring";
+import {
+  readIdempotencyKey,
+  lookupIdempotent,
+  storeIdempotent,
+} from "@/lib/server/idempotency";
 import type { Json } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
@@ -67,6 +72,13 @@ export async function POST(req: Request) {
   }
 
   const { session_id, prompt_index, level_tag, audio_duration_seconds } = parsed.data;
+
+  // Idempotency-Key replay (best-effort).
+  const idemKey = readIdempotencyKey(req);
+  if (idemKey) {
+    const cached = await lookupIdempotent(idemKey);
+    if (cached) return NextResponse.json(cached.body, { status: cached.status });
+  }
 
   // Demo mode: return a synthetic id so the client keeps flowing.
   if (!isSupabaseConfigured()) {
@@ -196,12 +208,14 @@ export async function POST(req: Request) {
       );
     });
 
-    return NextResponse.json({
+    const responseBody = {
       recording_id: row.id,
-      mode: "persisted",
-      scoring_status: "pending",
+      mode: "persisted" as const,
+      scoring_status: "pending" as const,
       signed_url,
-    });
+    };
+    if (idemKey) await storeIdempotent(idemKey, responseBody as unknown as Json, 200);
+    return NextResponse.json(responseBody);
   } catch (err) {
     captureException(err, {
       route: "POST /api/recordings",
