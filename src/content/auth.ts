@@ -2,30 +2,105 @@
  * Sign-in / app-entry copy — Inglés Hotelero, Spanish MX.
  *
  * The product app at `/` is the front door. Marketing lives separately
- * on Astro at ingleshotelero.com — that site is editorial. This page is
- * functional: HR sign-in is the primary action, employee entry the
- * secondary, and PWA install is the new dominant onboarding lever.
+ * on Astro at ingleshotelero.com. This page is functional, single-
+ * purpose, and EMPLOYEE-FIRST: the dominant action is for an employee
+ * to start their exam. HR sign-in is a small secondary link.
  *
- * Voice: editorial, dry, observed. Match the tone of src/content/landing.ts
- * but cut the marketing rhetoric — this is a door, not a hero.
- *
+ * Voice: warm, direct, "you" (tú) — employees are the users.
  * `<em>` is rendered globally as non-italic, weight 500, ink-blue.
  */
 
 export const META = {
-  title: "Inglés Hotelero · Acceso",
+  title: "Inglés Hotelero · Entrar",
   description:
-    "Plataforma de evaluación y capacitación de inglés hotelero. Acceso para Recursos Humanos y empleados con un enlace de su hotel.",
+    "Plataforma de evaluación y capacitación de inglés hotelero. Toma tu examen, practica cinco minutos al día.",
 };
 
+// ── Top utility bar ───────────────────────────────────────────
+export const TOPBAR = {
+  installCta: "Instalar app",
+};
+
+// ── Primary surface — Employee ───────────────────────────────
+export const EMPLOYEE = {
+  eyebrow: "Empleado",
+  headline: {
+    before: "Empieza tu ",
+    em: "examen",
+    after: ".",
+  },
+  sub: "Quince minutos. Funciona en tu celular.",
+  inputLabel: "Código de tu hotel",
+  inputPlaceholder: "ej. gran-hotel-cancun",
+  submit: "Empezar",
+  hint: "¿No tienes el código? Pídelo en Recursos Humanos o recepción.",
+  invalid: "El código solo lleva letras minúsculas, números y guiones.",
+};
+
+// ── Secondary surface — HR ───────────────────────────────────
+export const HR = {
+  eyebrow: "Recursos Humanos",
+  body: "¿Eres del equipo de RH y quieres ver el panel?",
+  cta: "Entrar al panel",
+};
+
+// ── Install prompt block ─────────────────────────────────────
+export const INSTALL = {
+  eyebrow: "Instalar",
+  headline: {
+    before: "Tenla siempre a la mano. ",
+    em: "Sin tienda.",
+    after: "",
+  },
+  sub: "Funciona como app — sin internet, sin anuncios, sin descargar de la tienda.",
+  cta: "Instalar en mi teléfono",
+  ctaInstalled: "Ya está instalada",
+};
+
+// ── Instruction sheets per platform ──────────────────────────
+export const SHEET = {
+  close: "Cerrar",
+  shareIconAria: "Ícono Compartir",
+  ios: {
+    title: "Instalar en iPhone o iPad",
+    intro: "Tres pasos en Safari:",
+    steps: [
+      "Toca el botón de Compartir en la barra inferior.",
+      "Elige Añadir a Inicio.",
+      "Confirma el nombre y toca Añadir.",
+    ],
+    note: "Si no usas Safari, abre este enlace en Safari primero — Chrome en iPhone no permite instalar apps.",
+  },
+  android: {
+    title: "Instalar en Android",
+    intro: "Tres pasos en Chrome:",
+    steps: [
+      "Toca el menú de tres puntos arriba a la derecha.",
+      "Elige Instalar app o Añadir a pantalla de inicio.",
+      "Confirma el nombre y toca Instalar.",
+    ],
+    note: "Si tu navegador es otro, busca la opción Añadir a pantalla de inicio en su menú.",
+  },
+  desktop: {
+    title: "Instalar en computadora",
+    intro: "Dos pasos en Chrome o Edge:",
+    steps: [
+      "Toca el ícono de instalar a la derecha de la barra de direcciones.",
+      "Confirma con Instalar.",
+    ],
+    note: "Si no aparece el ícono, abre el menú de tres puntos y busca Instalar Inglés Hotelero.",
+  },
+};
+
+// ── HR sign-in (the dedicated page at /hr/login) ─────────────
 export const HR_SIGNIN = {
   eyebrow: "Acceso · Recursos Humanos",
   headline: {
-    before: "Inglés ",
-    em: "Hotelero",
+    before: "Bienvenido ",
+    em: "de vuelta",
     after: ".",
   },
-  sub: "El panel donde ve el inglés de su equipo. Acceso por invitación de su organización.",
+  sub: "Inicia sesión para ver los resultados de tu equipo.",
   emailLabel: "Correo",
   emailPlaceholder: "rh@suhotel.com",
   passwordLabel: "Contraseña",
@@ -33,61 +108,37 @@ export const HR_SIGNIN = {
   submit: "Iniciar sesión",
   submitting: "Iniciando sesión…",
   magicLink: "Enviar enlace mágico",
-  magicLinkComing: "El acceso por enlace mágico estará disponible próximamente. Use su contraseña por ahora.",
-  forgot: "¿Olvidó su contraseña?",
-  footer: "Solo para usuarios autorizados. Pida una invitación a su organización.",
-  errorGeneric: "No se pudo iniciar sesión. Verifique su correo y contraseña.",
+  magicLinkComing:
+    "El acceso por enlace mágico estará disponible próximamente. Usa tu contraseña por ahora.",
+  forgot: "¿Olvidaste tu contraseña?",
+  footer: "Solo para usuarios autorizados.",
+  errorGeneric:
+    "No se pudo iniciar sesión. Verifica tu correo y contraseña.",
   notConfigured:
-    "Autenticación real disponible cuando Supabase esté configurado. Ver SETUP.md.",
+    "Autenticación real disponible cuando Supabase esté configurado.",
 };
 
-export const EMPLOYEE_ENTRY = {
-  eyebrow: "Empleado · Tomar el examen",
-  body: "Si tiene un enlace de su hotel, ábralo desde su WhatsApp o navegador. Si conoce el código de su hotel, escríbalo aquí:",
-  inputLabel: "Código del hotel",
-  inputPlaceholder: "gran-hotel-cancun",
-  submit: "Ir",
-  invalid: "El código solo lleva letras minúsculas, números y guiones.",
-};
+// Legacy export kept for /hr/login imports — narrowed to what it needs.
+export const EMPLOYEE_ENTRY = EMPLOYEE;
 
-export const INSTALL = {
-  eyebrow: "Instalar",
-  headline: {
-    before: "Funciona como una app. ",
-    em: "Sin tienda.",
-    after: "",
-  },
-  body: "Para no depender del navegador, instálela en su teléfono o computadora. Ocupa menos de 2 MB. Funciona sin internet.",
-  cta: "Instalar como app",
-  ctaPending: "Preparando instalación…",
-  alreadyInstalled: "Ya está instalada en este dispositivo.",
-};
-
+// Legacy export kept for any IOS-only callers — points at the unified sheet.
 export const IOS_SHEET = {
-  title: "Cómo instalar en iPhone o iPad",
-  step1: {
-    label: "1",
-    body: "Toque el botón de Compartir en la barra inferior de Safari.",
-  },
-  step2: {
-    label: "2",
-    body: "Elija la opción Añadir a Inicio.",
-  },
-  step3: {
-    label: "3",
-    body: "Confirme el nombre y toque Añadir. Aparecerá en su pantalla de inicio como una app más.",
-  },
-  close: "Cerrar",
-  shareIconAria: "Ícono Compartir de iOS",
+  title: SHEET.ios.title,
+  step1: { label: "1", body: SHEET.ios.steps[0] },
+  step2: { label: "2", body: SHEET.ios.steps[1] },
+  step3: { label: "3", body: SHEET.ios.steps[2] },
+  close: SHEET.close,
+  shareIconAria: SHEET.shareIconAria,
 };
 
+// ── Footer ───────────────────────────────────────────────────
 export const FOOTER = {
-  line: "Funciona sin internet · Cero anuncios · Datos bajo LFPDPPP",
-  copyright: "© 2026 · Inglés Hotelero · México",
+  line: "Funciona sin internet · Datos bajo LFPDPPP",
+  copyright: "© 2026 · Inglés Hotelero",
   marketingHref: "https://ingleshotelero.com",
   marketingLabel: "ingleshotelero.com →",
   links: [
-    { href: "/aviso-de-privacidad", label: "Aviso de privacidad" },
+    { href: "/aviso-de-privacidad", label: "Privacidad" },
     { href: "/terminos", label: "Términos" },
     { href: "mailto:hola@ingleshotelero.com", label: "Soporte" },
   ],

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDownToLine } from "lucide-react";
+import { ArrowDownToLine, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { INSTALL } from "@/content/auth";
-import { IOSShareSheet } from "./IOSShareSheet";
+import {
+  InstallInstructionsSheet,
+  type InstallPlatform,
+} from "./InstallInstructionsSheet";
 import {
   hasInstallPrompt,
   isIOS,
@@ -14,91 +17,127 @@ import {
 } from "@/lib/pwa/install";
 
 /**
- * Install lever on the sign-in home.
+ * Install lever — always actionable, never stuck on "preparing".
  *
- * Three branches:
- *   1. Chromium / Edge / Android Chrome — captured `beforeinstallprompt`
- *      lives in the `src/lib/pwa/install` singleton (registered at the
- *      root layout). Click → fires `tryShowInstallPrompt()` once.
- *   2. iOS Safari — no `beforeinstallprompt`. Open the share-sheet
- *      instructions overlay.
- *   3. Already installed (`display-mode: standalone`) OR no service
- *      worker support — render nothing.
+ * On click:
+ *   1. If we have a deferred prompt (Android/desktop Chrome that hit
+ *      the engagement threshold) → fire it natively.
+ *   2. Otherwise → open the platform-specific instructions sheet
+ *      (iOS share-sheet steps, Android menu steps, desktop address-
+ *      bar icon steps).
  *
- * The capture itself happens in `<PWABoot />` at root mount, so this
- * component is safe to mount/unmount without losing the deferred event.
- * The same singleton is also read from `/exam/[id]/speaking` (Phase 8
- * timing) — there is no double-firing because `tryShowInstallPrompt`
- * clears the prompt synchronously on first call.
+ * If the page is already running standalone (added to home screen) we
+ * render a small "Ya está instalada" pill instead of a CTA. If the
+ * browser doesn't support service workers at all, we hide the button.
  */
-export function InstallButton({ className }: { className?: string }) {
+export function InstallButton({
+  className,
+  variant = "primary",
+  size = "lg",
+  label,
+}: {
+  className?: string;
+  variant?: "primary" | "accent" | "ghost";
+  size?: "md" | "lg";
+  label?: string;
+}) {
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [iOS, setIOS] = useState(false);
+  const [installed, setInstalled] = useState(false);
   const [hasPrompt, setHasPrompt] = useState(false);
+  const [platform, setPlatform] = useState<InstallPlatform>("desktop");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window === "undefined") return;
 
     const swSupported = "serviceWorker" in window.navigator;
-    if (isStandalone() || !swSupported) {
+    if (!swSupported) {
       setHidden(true);
       return;
     }
-    setIOS(isIOS());
+    if (isStandalone()) {
+      setInstalled(true);
+      return;
+    }
+
+    setPlatform(detectPlatform());
     setHasPrompt(hasInstallPrompt());
 
     const unsubscribe = subscribeToInstall(() => {
       setHasPrompt(hasInstallPrompt());
-      if (isStandalone()) setHidden(true);
+      if (isStandalone()) setInstalled(true);
     });
     return unsubscribe;
   }, []);
 
   if (!mounted || hidden) return null;
 
-  // iOS — no native prompt, open the share-sheet instructions.
-  if (iOS) {
+  if (installed) {
     return (
-      <>
-        <Button
-          type="button"
-          variant="primary"
-          size="lg"
-          onClick={() => setSheetOpen(true)}
-          className={className}
-        >
-          <ArrowDownToLine className="h-4 w-4" aria-hidden />
-          {INSTALL.cta}
-        </Button>
-        <IOSShareSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
-      </>
+      <span
+        className={[
+          "inline-flex items-center gap-1.5 rounded-pill border border-hair bg-ivory-soft px-4 py-2 font-sans text-t-label text-espresso-muted",
+          className ?? "",
+        ].join(" ")}
+      >
+        <Check className="h-3.5 w-3.5" aria-hidden />
+        {INSTALL.ctaInstalled}
+      </span>
     );
   }
 
-  // Chromium / Edge / Android — fire the deferred prompt once.
+  const handleClick = async () => {
+    // Try native prompt first if available — best UX on Android Chrome.
+    if (hasPrompt) {
+      const outcome = await tryShowInstallPrompt();
+      if (outcome === "accepted") {
+        setInstalled(true);
+        return;
+      }
+      if (outcome === "dismissed") {
+        // Even after a native dismiss, fall through to the sheet so the
+        // user can still see how to install manually if they change their
+        // mind in 5 seconds.
+        setSheetOpen(true);
+        return;
+      }
+      // outcome === "unavailable" — fall through to the sheet.
+    }
+    // No native prompt → instructional sheet.
+    setSheetOpen(true);
+  };
+
   return (
-    <Button
-      type="button"
-      variant="primary"
-      size="lg"
-      disabled={!hasPrompt || busy}
-      onClick={async () => {
-        if (!hasPrompt || busy) return;
-        setBusy(true);
-        const outcome = await tryShowInstallPrompt();
-        if (outcome === "accepted") setHidden(true);
-        // After a successful or dismissed call the singleton is empty,
-        // so the subscription will set hasPrompt to false. Reset busy.
-        setBusy(false);
-      }}
-      className={className}
-    >
-      <ArrowDownToLine className="h-4 w-4" aria-hidden />
-      {hasPrompt ? INSTALL.cta : INSTALL.ctaPending}
-    </Button>
+    <>
+      <Button
+        type="button"
+        variant={variant}
+        size={size}
+        onClick={handleClick}
+        className={className}
+      >
+        <ArrowDownToLine className="h-4 w-4" aria-hidden />
+        {label ?? INSTALL.cta}
+      </Button>
+      <InstallInstructionsSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        platform={platform}
+      />
+    </>
   );
+}
+
+function detectPlatform(): InstallPlatform {
+  if (typeof window === "undefined") return "desktop";
+  if (isIOS()) return "ios";
+  const ua = window.navigator.userAgent || "";
+  // Android UA always contains "Android"; some tablets too.
+  if (/Android/i.test(ua)) return "android";
+  // Mobile Chrome on Windows / Linux is rare; treat anything with mobile
+  // hint as android steps (closer than desktop).
+  if (/Mobi|Tablet/i.test(ua)) return "android";
+  return "desktop";
 }

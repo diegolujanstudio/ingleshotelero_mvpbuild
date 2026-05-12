@@ -99,6 +99,12 @@ async function ensureMasterProperty(orgId: string): Promise<string> {
 }
 
 async function findOrCreateAuthUser(email: string): Promise<string | null> {
+  // Optional shared password override for first-run provisioning. If set,
+  // newly-created users get this password AND existing users get their
+  // password reset to it (so the operator always knows the credentials).
+  // Use forgot-password to rotate after first sign-in.
+  const sharedPassword = process.env.SUPER_ADMIN_PASSWORD;
+
   // Paginated search of auth.users by email. For early-scale usage one page
   // is plenty; if we ever cross 200 admins this needs a loop.
   const { data: list, error: listErr } = await supabase.auth.admin.listUsers({
@@ -112,14 +118,35 @@ async function findOrCreateAuthUser(email: string): Promise<string | null> {
   const found = list.users.find(
     (u) => (u.email || "").toLowerCase() === email,
   );
-  if (found) return found.id;
+  if (found) {
+    // If a shared password was provided, sync the existing user's password
+    // to it so the operator can sign in even on a re-run.
+    if (sharedPassword) {
+      const { error: updErr } = await supabase.auth.admin.updateUserById(
+        found.id,
+        { password: sharedPassword, email_confirm: true },
+      );
+      if (updErr) {
+        console.warn(
+          `[promote-super-admin] could not sync password for ${email}:`,
+          updErr.message,
+        );
+      } else {
+        console.log(
+          `[promote-super-admin] Reset ${email} password to SUPER_ADMIN_PASSWORD.`,
+        );
+      }
+    }
+    return found.id;
+  }
 
-  const tempPassword = `IH-${globalThis.crypto.randomUUID()}`;
+  const password =
+    sharedPassword ?? `IH-${globalThis.crypto.randomUUID()}`;
   const { data: created, error: createErr } =
     await supabase.auth.admin.createUser({
       email,
       email_confirm: true,
-      password: tempPassword,
+      password,
       user_metadata: { name: email.split("@")[0] },
     });
   if (createErr) {
@@ -129,9 +156,15 @@ async function findOrCreateAuthUser(email: string): Promise<string | null> {
     );
     return null;
   }
-  console.log(
-    `[promote-super-admin] Created auth user for ${email}. One-time temp password (use forgot-password to reset): ${tempPassword}`,
-  );
+  if (sharedPassword) {
+    console.log(
+      `[promote-super-admin] Created ${email} with the shared SUPER_ADMIN_PASSWORD.`,
+    );
+  } else {
+    console.log(
+      `[promote-super-admin] Created ${email}. Temp password (rotate via forgot-password): ${password}`,
+    );
+  }
   return created.user?.id ?? null;
 }
 
