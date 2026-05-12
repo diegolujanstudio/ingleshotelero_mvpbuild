@@ -1,70 +1,98 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
-import type { CEFRLevel, Json } from "@/lib/supabase/types";
+import { z } from "zod";
+import {
+  recordDiagnosticAnswer,
+  recordListeningAnswer,
+} from "@/lib/server/exam";
+import { isSupabaseConfigured } from "@/lib/supabase/client-or-service";
+import { captureException } from "@/lib/server/sentry";
 
-/**
- * POST /api/exams/[id]/answer
- * Idempotent upsert of a diagnostic or listening answer by (session, index).
- * Supabase optional — returns ok regardless so the exam keeps flowing.
- */
+export const runtime = "nodejs";
+
+const idSchema = z.string().uuid();
+
+const baseSchema = z.object({
+  question_index: z.number().int().min(0).max(50),
+});
+
+const diagnosticSchema = baseSchema.extend({
+  kind: z.literal("diagnostic"),
+  answer_value: z.unknown(),
+});
+
+const listeningSchema = baseSchema.extend({
+  kind: z.literal("listening"),
+  selected_option: z.number().int().min(0).max(10),
+  is_correct: z.boolean(),
+  level_tag: z.enum(["A1", "A2", "B1", "B2"]),
+  response_time_ms: z.number().int().min(0).max(600_000).optional().nullable(),
+  replay_count: z.number().int().min(0).max(20).optional(),
+});
+
+const schema = z.discriminatedUnion("kind", [diagnosticSchema, listeningSchema]);
+
 export async function POST(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const body = (await req.json().catch(() => ({}))) as {
-    kind?: "diagnostic" | "listening";
-    question_index?: number;
-    answer_value?: unknown; // for diagnostic (string or string[])
-    selected_option?: number; // for listening
-    is_correct?: boolean;
-    level_tag?: CEFRLevel;
-    response_time_ms?: number;
-    replay_count?: number;
-  };
-
-  if (!body.kind || typeof body.question_index !== "number") {
-    return NextResponse.json({ error: "invalid" }, { status: 400 });
+  const idCheck = idSchema.safeParse(params.id);
+  if (!idCheck.success) {
+    return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   }
 
-  // No Supabase: acknowledge without persisting.
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    return NextResponse.json({ ok: true, mode: "local-only" });
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid_input", issues: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ ok: true, persisted: false, mode: "local-only" });
   }
 
   try {
-    const supabase = createServiceClient();
-    if (body.kind === "diagnostic") {
-      await supabase
-        .from("diagnostic_answers")
-        .upsert(
-          {
+    const result =
+      parsed.data.kind === "diagnostic"
+        ? await recordDiagnosticAnswer({
             session_id: params.id,
-            question_index: body.question_index,
-            answer_value: body.answer_value as Json,
-          },
-          { onConflict: "session_id,question_index" },
-        );
-    } else {
-      await supabase
-        .from("listening_answers")
-        .upsert(
-          {
+            question_index: parsed.data.question_index,
+            answer_value: parsed.data.answer_value,
+          })
+        : await recordListeningAnswer({
             session_id: params.id,
-            question_index: body.question_index,
-            selected_option: body.selected_option ?? 0,
-            is_correct: Boolean(body.is_correct),
-            level_tag: body.level_tag ?? "A1",
-            response_time_ms: body.response_time_ms ?? null,
-            replay_count: body.replay_count ?? 0,
-          },
-          { onConflict: "session_id,question_index" },
-        );
+            question_index: parsed.data.question_index,
+            selected_option: parsed.data.selected_option,
+            is_correct: parsed.data.is_correct,
+            level_tag: parsed.data.level_tag,
+            response_time_ms: parsed.data.response_time_ms ?? null,
+            replay_count: parsed.data.replay_count ?? 0,
+          });
+    return NextResponse.json({
+      ok: true,
+      persisted: result.persisted,
+      mode: "persisted",
+    });
+  } catch (err) {
+    const code = (err as Error & { code?: string }).code;
+    if (code === "SESSION_NOT_FOUND") {
+      return NextResponse.json({ error: "session_not_found" }, { status: 404 });
     }
-    return NextResponse.json({ ok: true, mode: "persisted" });
-  } catch {
-    return NextResponse.json({ ok: true, mode: "local-only" });
+    if (code === "INVALID_STATUS") {
+      return NextResponse.json({ error: "invalid_status" }, { status: 409 });
+    }
+    captureException(err, {
+      route: "POST /api/exams/:id/answer",
+      data: { id: params.id, kind: parsed.data.kind, question_index: parsed.data.question_index },
+    });
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

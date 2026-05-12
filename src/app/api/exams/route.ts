@@ -1,109 +1,89 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
-import type { RoleModule } from "@/lib/supabase/types";
+import { z } from "zod";
+import { createSession } from "@/lib/server/exam";
+import { isSupabaseConfigured } from "@/lib/supabase/client-or-service";
+import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { captureException } from "@/lib/server/sentry";
+import { log } from "@/lib/server/log";
 
-/**
- * POST /api/exams
- * Create a new exam session tied to a property slug + employee identity.
- * Returns `{ id }`. Client redirects to `/exam/[id]/diagnostic`.
- *
- * Falls back to a "mock" success when Supabase isn't configured so the
- * entry form still works end-to-end in demos.
- */
+export const runtime = "nodejs";
+
+const schema = z.object({
+  property_slug: z.string().min(1).max(120),
+  employee: z.object({
+    name: z.string().min(1).max(200),
+    email: z.string().email().max(200).optional().nullable(),
+    phone: z.string().max(40).optional().nullable(),
+    hotel_role: z.enum(["bellboy", "frontdesk", "restaurant"]),
+    department: z.string().max(80).optional().nullable(),
+    shift: z.enum(["morning", "afternoon", "night"]).optional().nullable(),
+    whatsapp_opted_in: z.boolean().optional(),
+  }),
+  module: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  exam_type: z.enum(["placement", "monthly", "final"]).optional(),
+  consent_version: z.string().max(40).optional(),
+  // Demo-mode passthrough so the client can keep its localStorage id stable.
+  client_session_id: z.string().uuid().optional(),
+});
+
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => ({}))) as {
-    property_slug?: string;
-    name?: string;
-    email?: string;
-    phone?: string;
-    module?: RoleModule;
-    shift?: "morning" | "afternoon" | "night";
-    client_session_id?: string;
-  };
-
-  if (!body.property_slug || !body.name || !body.module) {
+  // Rate limit (best-effort).
+  const ip = getClientIp(req);
+  const rl = await checkRateLimit("exams", ip);
+  if (!rl.ok) {
     return NextResponse.json(
-      { error: "Missing required fields: property_slug, name, module" },
+      { error: "rate_limited" },
+      { status: 429, headers: { "retry-after": "60" } },
+    );
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid_input", issues: parsed.error.flatten() },
       { status: 400 },
     );
   }
 
-  // No Supabase → return the client-generated id so the flow continues locally.
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
+  // Demo mode: no Supabase → return the client-supplied id (or a fresh uuid)
+  // and let the client run from localStorage.
+  if (!isSupabaseConfigured()) {
+    const id = parsed.data.client_session_id ?? crypto.randomUUID();
+    log.info({ route: "POST /api/exams", mode: "demo" }, "exam.demo.passthrough");
     return NextResponse.json({
-      id: body.client_session_id ?? crypto.randomUUID(),
+      session_id: id,
+      current_step: "diagnostic",
+      employee_id: id, // placeholder — client doesn't use it in demo
+      resumed: false,
       mode: "local-only",
     });
   }
 
   try {
-    const supabase = createServiceClient();
-
-    // Resolve property by slug.
-    const { data: property, error: propErr } = await supabase
-      .from("properties")
-      .select("id")
-      .eq("slug", body.property_slug)
-      .maybeSingle();
-
-    if (propErr || !property) {
-      // Unknown slug → still allow demo flow to continue.
-      return NextResponse.json({
-        id: body.client_session_id ?? crypto.randomUUID(),
-        mode: "local-only",
-      });
-    }
-
-    // Create or reuse employee by (property_id, email or name).
-    const { data: employee } = await supabase
-      .from("employees")
-      .insert({
-        property_id: property.id,
-        name: body.name,
-        email: body.email ?? null,
-        phone: body.phone ?? null,
-        hotel_role: body.module,
-        shift: body.shift ?? null,
-        whatsapp_opted_in: Boolean(body.phone),
-      })
-      .select("id")
-      .single();
-
-    if (!employee) {
-      return NextResponse.json({
-        id: body.client_session_id ?? crypto.randomUUID(),
-        mode: "local-only",
-      });
-    }
-
-    // Create exam session.
-    const { data: session, error: sessErr } = await supabase
-      .from("exam_sessions")
-      .insert({
-        employee_id: employee.id,
-        module: body.module,
-        exam_type: "placement",
-        status: "in_progress",
-        current_step: "diagnostic",
-      })
-      .select("id")
-      .single();
-
-    if (sessErr || !session) {
-      return NextResponse.json({
-        id: body.client_session_id ?? crypto.randomUUID(),
-        mode: "local-only",
-      });
-    }
-
-    return NextResponse.json({ id: session.id, mode: "persisted" });
-  } catch {
-    return NextResponse.json({
-      id: body.client_session_id ?? crypto.randomUUID(),
-      mode: "local-only",
+    const result = await createSession({
+      property_slug: parsed.data.property_slug,
+      employee: parsed.data.employee,
+      module: parsed.data.module,
+      exam_type: parsed.data.exam_type,
+      consent_version: parsed.data.consent_version,
     });
+    return NextResponse.json({ ...result, mode: "persisted" });
+  } catch (err) {
+    const code = (err as Error & { code?: string }).code;
+    if (code === "PROPERTY_NOT_FOUND") {
+      return NextResponse.json({ error: "property_not_found" }, { status: 404 });
+    }
+    captureException(err, {
+      route: "POST /api/exams",
+      data: { property_slug: parsed.data.property_slug, module: parsed.data.module },
+    });
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
