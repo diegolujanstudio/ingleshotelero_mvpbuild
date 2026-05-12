@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mic, Square, ArrowRight, RefreshCcw } from "lucide-react";
+import { Mic, Square, ArrowRight, RefreshCcw, ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ProgressHeader } from "@/components/exam/ProgressHeader";
 import { cn } from "@/lib/utils";
@@ -13,8 +13,26 @@ import {
   SPEAKING_TOTAL,
   type ExamSessionState,
 } from "@/lib/exam";
+import { postRecording } from "@/lib/pwa/api-client";
+import {
+  createSupportedRecorder,
+  getSupportedAudioMimeType,
+  isMediaRecorderAvailable,
+} from "@/lib/pwa/media-recorder";
+import {
+  hasInstallPrompt,
+  isIOS,
+  isStandalone,
+  subscribeToInstall,
+  tryShowInstallPrompt,
+} from "@/lib/pwa/install";
+import { IOSShareSheet } from "@/components/site/IOSShareSheet";
+import { INSTALL } from "@/content/auth";
+import { INSTALL_HINT } from "@/content/pwa";
 
 type RecorderState = "idle" | "requesting" | "recording" | "recorded" | "uploading";
+
+const INSTALL_PROMPT_FLAG = "ih.install.prompt.shown.v1";
 
 export default function SpeakingPage({
   params,
@@ -27,13 +45,21 @@ export default function SpeakingPage({
   const [state, setState] = useState<RecorderState>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [retries, setRetries] = useState<Record<number, number>>({});
+  const [recorderAvailable, setRecorderAvailable] = useState<boolean | null>(null);
+
+  // Install-prompt UX (Phase 8 timing — fire on first speaking-section mount).
+  const [showInstallNudge, setShowInstallNudge] = useState(false);
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
+  const [iosSheetOpen, setIosSheetOpen] = useState(false);
 
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const blobRef = useRef<Blob | null>(null);
+  const mimeRef = useRef<string>("");
 
+  // Load session.
   useEffect(() => {
     const s = loadSession(params.id);
     if (!s) {
@@ -44,6 +70,61 @@ export default function SpeakingPage({
     const answered = s.speaking_recordings?.length ?? 0;
     setIdx(Math.min(answered, SPEAKING_TOTAL - 1));
   }, [params.id, router]);
+
+  // Feature-gate MediaRecorder availability.
+  useEffect(() => {
+    setRecorderAvailable(isMediaRecorderAvailable());
+  }, []);
+
+  // Install-prompt timing — first speaking-section mount, once per device.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isStandalone()) return;
+    let shown = false;
+    try {
+      shown = localStorage.getItem(INSTALL_PROMPT_FLAG) === "1";
+    } catch {
+      shown = false;
+    }
+    if (shown) return;
+
+    setIsIOSDevice(isIOS());
+
+    if (isIOS()) {
+      // iOS path — surface the share-sheet nudge inline (manual install).
+      setShowInstallNudge(true);
+      return;
+    }
+
+    // Chromium path — wait for the deferred prompt to be available, then
+    // show the nudge. Subscribe so we update if the prompt arrives late.
+    if (hasInstallPrompt()) {
+      setShowInstallNudge(true);
+    }
+    const unsubscribe = subscribeToInstall(() => {
+      if (hasInstallPrompt()) setShowInstallNudge(true);
+    });
+    return unsubscribe;
+  }, []);
+
+  const dismissInstallNudge = () => {
+    setShowInstallNudge(false);
+    try {
+      localStorage.setItem(INSTALL_PROMPT_FLAG, "1");
+    } catch {
+      // ignore — flag is best-effort
+    }
+  };
+
+  const fireInstallPrompt = async () => {
+    const outcome = await tryShowInstallPrompt();
+    // Whether accepted or dismissed, retire the nudge — Chrome won't
+    // re-fire the deferred event for ~90 days after a dismiss.
+    dismissInstallNudge();
+    if (outcome === "unavailable") {
+      // No deferred prompt (e.g. came from page reload). Nothing to do.
+    }
+  };
 
   const prompts = useMemo(
     () => (session ? getSpeaking(session.module) : []),
@@ -62,28 +143,58 @@ export default function SpeakingPage({
 
   if (!session || !current) return null;
 
+  // Feature gate — hard block if the browser can't record.
+  if (recorderAvailable === false) {
+    return (
+      <section className="mx-auto max-w-prose px-6 py-16 md:px-12 md:py-24">
+        <p className="caps mb-3">03 · Expresión oral</p>
+        <h1 className="font-serif text-t-h2 font-medium text-espresso">
+          Su navegador no puede grabar audio.
+        </h1>
+        <p className="mt-4 font-sans text-t-body-lg text-espresso-soft">
+          Para terminar la evaluación, abra este enlace en{" "}
+          <em>Safari</em> (iPhone) o <em>Chrome</em> (Android, computadora).
+          La parte de comprensión auditiva ya quedó guardada — su Recursos
+          Humanos puede continuar el examen desde otro dispositivo.
+        </p>
+        <p className="caps mt-10">Ya puede cerrar esta pestaña.</p>
+      </section>
+    );
+  }
+  if (recorderAvailable === null) {
+    // Probing — render nothing for one tick so we don't flash.
+    return null;
+  }
+
   const startRecording = async () => {
     setState("requesting");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const mr = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
-      mediaRef.current = mr;
+      const built = createSupportedRecorder(stream);
+      if (!built) {
+        setState("idle");
+        alert(
+          "No se pudo iniciar la grabación. Cierre y abra otra vez la página.",
+        );
+        return;
+      }
+      const { recorder, mimeType } = built;
+      mediaRef.current = recorder;
+      mimeRef.current = mimeType || getSupportedAudioMimeType() || "audio/webm";
       chunksRef.current = [];
-      mr.addEventListener("dataavailable", (e) => {
+      recorder.addEventListener("dataavailable", (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       });
-      mr.addEventListener("stop", () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+      recorder.addEventListener("stop", () => {
+        const blob = new Blob(chunksRef.current, {
+          type: mimeRef.current || "audio/webm",
+        });
         blobRef.current = blob;
         setState("recorded");
         streamRef.current?.getTracks().forEach((t) => t.stop());
       });
-      mr.start();
+      recorder.start();
       setState("recording");
       setElapsed(0);
       tickRef.current = setInterval(() => {
@@ -95,7 +206,7 @@ export default function SpeakingPage({
           return e + 1;
         });
       }, 1000);
-    } catch (err) {
+    } catch {
       setState("idle");
       alert(
         "No se pudo acceder al micrófono. Revise los permisos en su navegador y vuelva a intentar.",
@@ -119,42 +230,32 @@ export default function SpeakingPage({
     if (!blobRef.current) return;
     setState("uploading");
 
-    // Base64 fallback for localStorage persistence.
+    const blob = blobRef.current;
+
+    // Base64 fallback for localStorage persistence (used by demo-mode
+    // scoring + the results page).
     let dataUrl: string | null = null;
     try {
       dataUrl = await new Promise<string>((resolve, reject) => {
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result as string);
         fr.onerror = reject;
-        fr.readAsDataURL(blobRef.current!);
+        fr.readAsDataURL(blob);
       });
     } catch {
       dataUrl = null;
     }
 
-    // Upload with retry.
-    const form = new FormData();
-    form.append("session_id", params.id);
-    form.append("prompt_index", String(idx));
-    form.append("level_tag", current.level);
-    form.append("duration_seconds", String(elapsed));
-    form.append("audio", blobRef.current, `prompt-${idx}.webm`);
+    // Upload via the offline-aware client. On 5xx / network failure it
+    // stores the Blob in IDB and queues the recording for replay; the
+    // user never sees "upload failed".
+    await postRecording(params.id, idx, blob, {
+      level_tag: current.level,
+      audio_duration_seconds: elapsed,
+    });
 
-    let uploaded = false;
-    for (let attempt = 0; attempt < 3 && !uploaded; attempt++) {
-      try {
-        const res = await fetch("/api/recordings", { method: "POST", body: form });
-        if (res.ok) {
-          uploaded = true;
-          break;
-        }
-      } catch {
-        // retry
-      }
-      await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
-    }
-
-    // Persist locally regardless.
+    // Persist locally regardless. Includes the data URL so demo-mode
+    // scoring on the results page works without a server round-trip.
     const rec = {
       prompt_index: idx,
       audio_data_url: dataUrl,
@@ -164,12 +265,15 @@ export default function SpeakingPage({
     };
     const existing = session.speaking_recordings ?? [];
     const filtered = existing.filter((r) => r.prompt_index !== idx);
-    const next = [...filtered, rec].sort((a, b) => a.prompt_index - b.prompt_index);
+    const next = [...filtered, rec].sort(
+      (a, b) => a.prompt_index - b.prompt_index,
+    );
     const updated = updateSession(params.id, { speaking_recordings: next });
     if (updated) setSession(updated);
 
-    // Kick off scoring (fire-and-forget — the results page polls).
-    fetch("/api/score-speaking", {
+    // Best-effort scoring kickoff for the demo path. Persisted-mode
+    // scoring is triggered server-side from /api/recordings.
+    void fetch("/api/score-speaking", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -180,7 +284,7 @@ export default function SpeakingPage({
         model_response_en: current.model_response_en,
         level_tag: current.level,
         module: session.module,
-        audio_data_url: dataUrl, // for local-only scoring
+        audio_data_url: dataUrl,
       }),
     }).catch(() => {});
 
@@ -191,7 +295,7 @@ export default function SpeakingPage({
       setState("idle");
     } else {
       updateSession(params.id, { current_step: "results" });
-      fetch(`/api/exams/${params.id}`, {
+      void fetch(`/api/exams/${params.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ current_step: "results", status: "speaking_done" }),
@@ -210,8 +314,56 @@ export default function SpeakingPage({
         title={current.scenario_es}
         current={idx + 1}
         total={SPEAKING_TOTAL}
-        note={`Responda en inglés. Puede grabar hasta 45 segundos. ${retriesForThis > 0 ? "Ya usó su regrabación." : "Tiene una regrabación disponible."}`}
+        note={`Responda en inglés. Puede grabar hasta 45 segundos. ${
+          retriesForThis > 0
+            ? "Ya usó su regrabación."
+            : "Tiene una regrabación disponible."
+        }`}
       />
+
+      {/* Install nudge — Phase 8 timing. Once per device, dismissible. */}
+      {showInstallNudge && (
+        <div className="mb-8 rounded-md border border-hair bg-ivory-soft p-4">
+          <p className="font-sans text-t-body text-espresso-soft">
+            {isIOSDevice
+              ? INSTALL_HINT.fallbackIOS
+              : INSTALL_HINT.beforeFirstPrompt}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            <Button
+              type="button"
+              variant="accent"
+              size="md"
+              onClick={() => {
+                if (isIOSDevice) {
+                  setIosSheetOpen(true);
+                } else {
+                  void fireInstallPrompt();
+                }
+              }}
+            >
+              <ArrowDownToLine className="h-4 w-4" aria-hidden />
+              {INSTALL.cta}
+            </Button>
+            <button
+              type="button"
+              onClick={dismissInstallNudge}
+              className="caps text-espresso-muted hover:text-espresso"
+            >
+              Ahora no
+            </button>
+          </div>
+        </div>
+      )}
+      {iosSheetOpen && (
+        <IOSShareSheet
+          open={iosSheetOpen}
+          onClose={() => {
+            setIosSheetOpen(false);
+            dismissInstallNudge();
+          }}
+        />
+      )}
 
       <div className="rounded-md border border-hair bg-white p-6 md:p-8">
         <p className="caps mb-4">Su respuesta en inglés</p>
@@ -245,7 +397,9 @@ export default function SpeakingPage({
         {state === "recorded" && (
           <div className="flex flex-wrap items-center gap-4">
             <Button variant="primary" size="lg" onClick={submit}>
-              {idx === SPEAKING_TOTAL - 1 ? "Ver mis resultados" : "Enviar y continuar"}
+              {idx === SPEAKING_TOTAL - 1
+                ? "Ver mis resultados"
+                : "Enviar y continuar"}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
             <button
@@ -262,7 +416,7 @@ export default function SpeakingPage({
 
         {state === "uploading" && (
           <p className="font-sans text-t-body text-espresso-muted">
-            Subiendo su respuesta…
+            Guardando su respuesta…
           </p>
         )}
       </div>

@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Volume2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Volume2 } from "lucide-react";
 import { ProgressHeader } from "@/components/exam/ProgressHeader";
 import { cn } from "@/lib/utils";
 import { getListening } from "@/content/exam";
@@ -17,6 +16,7 @@ import {
   LISTENING_TOTAL,
   type ExamSessionState,
 } from "@/lib/exam";
+import { finalizeListening, postExamAnswer } from "@/lib/pwa/api-client";
 
 const MAX_REPLAYS = 2;
 
@@ -67,7 +67,8 @@ export default function ListeningPage({
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "en-US";
-    utter.rate = current?.level === "A1" ? 0.85 : current?.level === "A2" ? 0.9 : 1.0;
+    utter.rate =
+      current?.level === "A1" ? 0.85 : current?.level === "A2" ? 0.9 : 1.0;
     utter.onstart = () => setSpeaking(true);
     utter.onend = () => setSpeaking(false);
     utter.onerror = () => setSpeaking(false);
@@ -95,19 +96,16 @@ export default function ListeningPage({
     const updated = updateSession(params.id, { listening_answers: next });
     if (updated) setSession(updated);
 
-    fetch(`/api/exams/${params.id}/answer`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        kind: "listening",
-        question_index: idx,
-        selected_option: optIdx,
-        is_correct: isCorrect,
-        level_tag: current.level,
-        response_time_ms: ms,
-        replay_count: replayCount,
-      }),
-    }).catch(() => {});
+    // Server upsert via the offline-aware client. Auto-queues on failure.
+    void postExamAnswer(params.id, {
+      kind: "listening",
+      question_index: idx,
+      selected_option: optIdx,
+      is_correct: isCorrect,
+      level_tag: current.level,
+      response_time_ms: ms,
+      replay_count: replayCount,
+    });
 
     setSelected(optIdx);
 
@@ -115,7 +113,7 @@ export default function ListeningPage({
       if (idx < LISTENING_TOTAL - 1) {
         setIdx(idx + 1);
       } else {
-        // Compute listening score + advance.
+        // Compute listening score locally + advance.
         const results: ListeningItemResult[] = next.map((a) => ({
           level: a.level_tag,
           correct: a.is_correct,
@@ -125,15 +123,9 @@ export default function ListeningPage({
           listening_score: score,
           current_step: "speaking",
         });
-        fetch(`/api/exams/${params.id}`, {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            current_step: "speaking",
-            listening_score: score,
-            status: "listening_done",
-          }),
-        }).catch(() => {});
+        // Server-side finalize — also computes the score from persisted
+        // answers and flips status to `listening_done`. Queues on failure.
+        void finalizeListening(params.id);
         router.push(`/exam/${params.id}/speaking`);
       }
     }, 650);
@@ -173,7 +165,11 @@ export default function ListeningPage({
               <Volume2 className="h-5 w-5" aria-hidden />
             </span>
             <span className="font-serif text-t-h3 text-espresso">
-              {speaking ? "Reproduciendo…" : replayCount === 0 ? "Tocar para reproducir" : "Repetir audio"}
+              {speaking
+                ? "Reproduciendo…"
+                : replayCount === 0
+                  ? "Tocar para reproducir"
+                  : "Repetir audio"}
             </span>
           </div>
           <span className="caps">
@@ -200,13 +196,13 @@ export default function ListeningPage({
                     "border-hair bg-white text-espresso hover:border-espresso/30",
                   revealCorrect && "border-success bg-success/5 text-espresso",
                   revealWrong && "border-error bg-error/5 text-espresso",
-                  selected !== null && !isSel && !opt.is_correct && "opacity-60",
+                  selected !== null &&
+                    !isSel &&
+                    !opt.is_correct &&
+                    "opacity-60",
                 )}
               >
-                <span
-                  className="text-2xl"
-                  aria-hidden
-                >
+                <span className="text-2xl" aria-hidden>
                   {opt.emoji}
                 </span>
                 <span>{opt.label_es}</span>

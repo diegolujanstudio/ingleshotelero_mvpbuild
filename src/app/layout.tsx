@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { DemoGuard } from "@/components/DemoGuard";
+import { PWABoot } from "@/components/pwa/PWABoot";
+import { SWUpdateToast } from "@/components/pwa/SWUpdateToast";
 import "./globals.css";
 
 /**
@@ -70,8 +72,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-MX" className={`${jakarta.variable} ${mono.variable}`}>
       <body className="min-h-screen bg-ivory text-espresso antialiased">
+        {/*
+          PWA bootstrap — captures `beforeinstallprompt` the moment the page
+          mounts (Chrome only fires it once and won't re-fire for ~90 days
+          after a dismiss), and wires the SW `controllerchange` listener
+          that drives <SWUpdateToast />. Both home and exam read from the
+          same install singleton; neither double-fires.
+        */}
+        <PWABoot />
         <DemoGuard />
         {children}
+        <SWUpdateToast />
       </body>
     </html>
   );

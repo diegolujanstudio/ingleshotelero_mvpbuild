@@ -8,12 +8,18 @@ import { ProgressHeader } from "@/components/exam/ProgressHeader";
 import { cn } from "@/lib/utils";
 import { DIAGNOSTIC_QUESTIONS } from "@/content/exam";
 import { loadSession, updateSession, DIAGNOSTIC_TOTAL } from "@/lib/exam";
+import { postExamAnswer } from "@/lib/pwa/api-client";
 
 /**
  * /exam/[id]/diagnostic — 13 questions, one per screen.
  *
- * Saves the active answer to both localStorage (immediate) and the server
- * (best-effort). Back button and resume both work via the saved state.
+ * Saves the active answer to:
+ *   1. localStorage (immediate, sync) — drives back-button + resume.
+ *   2. The server via `postExamAnswer` (best-effort, queues offline).
+ *
+ * The UI advances on `Continuar` regardless of whether the API call
+ * persisted, queued, or failed. The offline queue replays everything on
+ * reconnect; the server is idempotent on `(session_id, question_index)`.
  */
 export default function DiagnosticPage({
   params,
@@ -43,8 +49,12 @@ export default function DiagnosticPage({
   const selectOption = (value: string) => {
     setAnswers((prev) => {
       if (question.type === "multi") {
-        const arr = Array.isArray(prev[question.id]) ? (prev[question.id] as string[]) : [];
-        const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+        const arr = Array.isArray(prev[question.id])
+          ? (prev[question.id] as string[])
+          : [];
+        const next = arr.includes(value)
+          ? arr.filter((v) => v !== value)
+          : [...arr, value];
         const updated = { ...prev, [question.id]: next };
         persist(idx, updated);
         return updated;
@@ -60,16 +70,13 @@ export default function DiagnosticPage({
       diagnostic_answers: all,
       current_step: "diagnostic",
     });
-    // Fire-and-forget server upsert.
-    fetch(`/api/exams/${params.id}/answer`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        kind: "diagnostic",
-        question_index: qIdx,
-        answer_value: all[DIAGNOSTIC_QUESTIONS[qIdx].id] ?? null,
-      }),
-    }).catch(() => {});
+    // Server upsert via the offline-aware client. Don't block the UI on
+    // the response — it auto-queues on network failure.
+    void postExamAnswer(params.id, {
+      kind: "diagnostic",
+      question_index: qIdx,
+      answer_value: all[DIAGNOSTIC_QUESTIONS[qIdx].id] ?? null,
+    });
   };
 
   const hasAnswer = Array.isArray(selected)
@@ -81,7 +88,10 @@ export default function DiagnosticPage({
       setIdx(idx + 1);
     } else {
       updateSession(params.id, { current_step: "listening" });
-      fetch(`/api/exams/${params.id}`, {
+      // Best-effort PATCH for the step transition. Not queued — it's
+      // purely a UX hint for resume; the listening page reads from
+      // localStorage primarily.
+      void fetch(`/api/exams/${params.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ current_step: "listening" }),
@@ -144,7 +154,9 @@ export default function DiagnosticPage({
           disabled={!hasAnswer}
           onClick={goNext}
         >
-          {idx === DIAGNOSTIC_QUESTIONS.length - 1 ? "Continuar a escucha" : "Continuar"}
+          {idx === DIAGNOSTIC_QUESTIONS.length - 1
+            ? "Continuar a escucha"
+            : "Continuar"}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Button>
       </div>

@@ -16,6 +16,7 @@ import {
 } from "@/lib/cefr";
 import { loadSession, updateSession, type ExamSessionState } from "@/lib/exam";
 import type { CEFRLevel } from "@/lib/supabase/types";
+import { drainQueue } from "@/lib/offline/sync";
 
 export default function ResultsPage({
   params,
@@ -24,6 +25,21 @@ export default function ResultsPage({
 }) {
   const [session, setSession] = useState<ExamSessionState | null>(null);
   const [tick, setTick] = useState(0);
+
+  // Drain the offline queue on mount — non-blocking. Anything queued
+  // during a flaky-network exam (answers, recordings, finalize-listening)
+  // gets one more chance to land before scoring kicks off. The
+  // <SyncStatusChip /> in the footer surfaces any remaining items.
+  useEffect(() => {
+    void drainQueue({
+      onProgress: (result) => {
+        if (typeof window === "undefined") return;
+        window.dispatchEvent(
+          new CustomEvent("ih:sync-progress", { detail: result }),
+        );
+      },
+    });
+  }, []);
 
   // Load session, and kick off scoring for any pending recordings.
   useEffect(() => {

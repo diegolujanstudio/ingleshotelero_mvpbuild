@@ -5,91 +5,63 @@ import { ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { INSTALL } from "@/content/auth";
 import { IOSShareSheet } from "./IOSShareSheet";
+import {
+  hasInstallPrompt,
+  isIOS,
+  isStandalone,
+  subscribeToInstall,
+  tryShowInstallPrompt,
+} from "@/lib/pwa/install";
 
 /**
- * Web App `BeforeInstallPromptEvent` (Chromium). Not in lib.dom yet.
- */
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-}
-
-/**
- * The install lever on the sign-in home.
+ * Install lever on the sign-in home.
  *
  * Three branches:
+ *   1. Chromium / Edge / Android Chrome — captured `beforeinstallprompt`
+ *      lives in the `src/lib/pwa/install` singleton (registered at the
+ *      root layout). Click → fires `tryShowInstallPrompt()` once.
+ *   2. iOS Safari — no `beforeinstallprompt`. Open the share-sheet
+ *      instructions overlay.
+ *   3. Already installed (`display-mode: standalone`) OR no service
+ *      worker support — render nothing.
  *
- *   1. Chromium / Edge / Android Chrome → captures `beforeinstallprompt`.
- *      Click calls `.prompt()` directly. After the user picks, the deferred
- *      event is one-shot — we drop it.
- *
- *   2. iOS Safari → no `beforeinstallprompt`. Show a bottom sheet with the
- *      Share Sheet → Add to Home Screen instructions.
- *
- *   3. Already installed (display-mode: standalone) OR no SW support →
- *      hide the button entirely.
- *
- * We render `null` until the first effect tick to avoid hydration drift,
- * since the install state is window-only.
+ * The capture itself happens in `<PWABoot />` at root mount, so this
+ * component is safe to mount/unmount without losing the deferred event.
+ * The same singleton is also read from `/exam/[id]/speaking` (Phase 8
+ * timing) — there is no double-firing because `tryShowInstallPrompt`
+ * clears the prompt synchronously on first call.
  */
 export function InstallButton({ className }: { className?: string }) {
   const [mounted, setMounted] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isIOS, setIsIOS] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [iOS, setIOS] = useState(false);
+  const [hasPrompt, setHasPrompt] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [installed, setInstalled] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-
     if (typeof window === "undefined") return;
 
-    // Already running as an installed PWA, or in iOS Safari standalone mode,
-    // or the platform has no service worker support. Hide the lever.
-    const standalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      // iOS exposes its own legacy bool on navigator
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     const swSupported = "serviceWorker" in window.navigator;
-
-    if (standalone || !swSupported) {
+    if (isStandalone() || !swSupported) {
       setHidden(true);
       return;
     }
+    setIOS(isIOS());
+    setHasPrompt(hasInstallPrompt());
 
-    // Detect iOS Safari (iPhone, iPad, iPod). iPad on iOS 13+ identifies as
-    // Macintosh with touch — we add the `maxTouchPoints` heuristic.
-    const ua = window.navigator.userAgent.toLowerCase();
-    const isAppleMobile =
-      /iphone|ipod/.test(ua) ||
-      (ua.includes("mac") && (window.navigator.maxTouchPoints ?? 0) > 1);
-    setIsIOS(isAppleMobile);
-
-    // Capture the install prompt for non-iOS platforms.
-    const onBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-
-    // If the install completes mid-session, hide the lever.
-    const onInstalled = () => {
-      setInstalled(true);
-      setDeferredPrompt(null);
-    };
-    window.addEventListener("appinstalled", onInstalled);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", onInstalled);
-    };
+    const unsubscribe = subscribeToInstall(() => {
+      setHasPrompt(hasInstallPrompt());
+      if (isStandalone()) setHidden(true);
+    });
+    return unsubscribe;
   }, []);
 
-  if (!mounted || hidden || installed) return null;
+  if (!mounted || hidden) return null;
 
   // iOS — no native prompt, open the share-sheet instructions.
-  if (isIOS) {
+  if (iOS) {
     return (
       <>
         <Button
@@ -107,26 +79,26 @@ export function InstallButton({ className }: { className?: string }) {
     );
   }
 
-  // Chromium / Edge / Android — fire the deferred prompt.
+  // Chromium / Edge / Android — fire the deferred prompt once.
   return (
     <Button
       type="button"
       variant="primary"
       size="lg"
-      disabled={!deferredPrompt}
+      disabled={!hasPrompt || busy}
       onClick={async () => {
-        if (!deferredPrompt) return;
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
-        if (choice.outcome === "accepted") {
-          setInstalled(true);
-        }
-        setDeferredPrompt(null);
+        if (!hasPrompt || busy) return;
+        setBusy(true);
+        const outcome = await tryShowInstallPrompt();
+        if (outcome === "accepted") setHidden(true);
+        // After a successful or dismissed call the singleton is empty,
+        // so the subscription will set hasPrompt to false. Reset busy.
+        setBusy(false);
       }}
       className={className}
     >
       <ArrowDownToLine className="h-4 w-4" aria-hidden />
-      {deferredPrompt ? INSTALL.cta : INSTALL.ctaPending}
+      {hasPrompt ? INSTALL.cta : INSTALL.ctaPending}
     </Button>
   );
 }
