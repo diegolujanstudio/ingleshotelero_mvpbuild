@@ -147,11 +147,32 @@ h6 {
    Utilities
    ──────────────────────────────────────────────────────────── */
 
-/* 10px uppercase mono caption — the "caps" pattern from the DS. */
+/*
+ * Section eyebrow / small label.
+ *
+ * We were using mono 10px @ 0.2em — looks beautiful in print, hard to read
+ * on screen. New Spirit + Plus Jakarta Sans carry the editorial weight on
+ * the actual important information; the eyebrow is a SECONDARY signal, so
+ * we use sans at a readable size with restrained tracking + capitals.
+ *
+ * If you want the original mono flourish for a specific surface (file
+ * paths, technical labels, an IDE-feel place), use `.caps-mono`.
+ */
 .caps {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.7125rem; /* 11.4px — readable, still distinct from body */
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--espresso-muted);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Original mono treatment, retained as an opt-in for technical contexts. */
+.caps-mono {
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
-  font-size: 0.625rem; /* 10px */
-  letter-spacing: 0.2em;
+  font-size: 0.6875rem; /* 11px — bumped from 10 for legibility */
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--espresso-muted);
   font-weight: 500;

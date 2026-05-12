@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { EmployeeSlugForm } from "@/components/site/EmployeeSlugForm";
 import { InstallButton } from "@/components/site/InstallButton";
-import { META, EMPLOYEE, HR, INSTALL, FOOTER, TOPBAR } from "@/content/auth";
+import { META, EMPLOYEE, HR, INSTALL, FOOTER, TOPBAR, SUPPORT_LINK } from "@/content/auth";
 
 /**
  * `/` — product entry point.
@@ -66,17 +66,39 @@ export default function AppEntry() {
           </div>
         </div>
 
-        {/* ── HR (secondary, small link) ───────────────────── */}
-        <div className="mt-10 flex flex-col items-start gap-2 border-t border-hair pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-sans text-t-caption text-espresso-muted">
-            <span className="caps mr-2 text-espresso-muted">{HR.eyebrow}</span>
+        {/* ── HR (secondary card) ─────────────────────────────────── */}
+        <div className="mt-10 rounded-md border border-hair bg-white p-5 sm:p-7">
+          <p className="caps mb-2">{HR.eyebrow}</p>
+          <h2 className="font-serif text-[clamp(1.375rem,3.5vw,1.75rem)] font-medium leading-[1.15] tracking-[-0.018em] text-espresso">
+            {HR.headline.before}
+            <em>{HR.headline.em}</em>
+            {HR.headline.after}
+          </h2>
+          <p className="mt-2 font-sans text-t-body text-espresso-soft">
             {HR.body}
           </p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <Link
+              href="/hr/login"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-ink px-6 font-sans text-t-label font-medium text-white transition-colors hover:bg-ink-deep"
+            >
+              {HR.cta}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+            <p className="font-sans text-t-caption text-espresso-muted">
+              {HR.footnote}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Support link (small, below HR card) ─────────────────── */}
+        <div className="mt-6 flex items-center gap-3">
+          <span className="caps text-espresso-muted">{SUPPORT_LINK.caption}</span>
           <Link
-            href="/hr/login"
+            href={SUPPORT_LINK.href}
             className="inline-flex items-center gap-1 font-mono text-[0.75rem] uppercase tracking-[0.14em] text-ink hover:text-ink-deep"
           >
-            {HR.cta}
+            {SUPPORT_LINK.cta}
             <ArrowRight className="h-3 w-3" aria-hidden />
           </Link>
         </div>

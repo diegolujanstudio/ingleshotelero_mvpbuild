@@ -63,7 +63,7 @@ const config: Config = {
         "t-body": ["0.875rem", { lineHeight: "1.55" }], // 14 (base)
         "t-label": ["0.8125rem", { lineHeight: "1.3" }], // 13
         "t-caption": ["0.75rem", { lineHeight: "1.4" }], // 12
-        "t-mono": ["0.625rem", { lineHeight: "1", letterSpacing: "0.2em" }], // 10 · 0.2em tracking · uppercase
+        "t-mono": ["0.6875rem", { lineHeight: "1.2", letterSpacing: "0.12em" }], // 11px · 0.12em — bumped from 10/0.2 for legibility per founder QA
       },
       borderRadius: {
         // Editorial scale — nothing larger than 12px except pill.

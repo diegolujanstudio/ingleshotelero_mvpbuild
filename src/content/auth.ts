@@ -40,8 +40,21 @@ export const EMPLOYEE = {
 // ── Secondary surface — HR ───────────────────────────────────
 export const HR = {
   eyebrow: "Recursos Humanos",
-  body: "¿Eres del equipo de RH y quieres ver el panel?",
+  headline: {
+    before: "¿Eres ",
+    em: "de RH",
+    after: "?",
+  },
+  body: "Entra al panel para ver el inglés de tu equipo. Toma decisiones con datos, no con corazonadas.",
   cta: "Entrar al panel",
+  footnote: "¿No tienes acceso? Pide una invitación a tu organización.",
+};
+
+// ── Support link (small, below HR card) ──────────────────────
+export const SUPPORT_LINK = {
+  caption: "¿Necesitas ayuda?",
+  cta: "Soporte · escríbenos",
+  href: "/soporte",
 };
 
 // ── Install prompt block ─────────────────────────────────────
@@ -140,6 +153,5 @@ export const FOOTER = {
   links: [
     { href: "/aviso-de-privacidad", label: "Privacidad" },
     { href: "/terminos", label: "Términos" },
-    { href: "mailto:hola@ingleshotelero.com", label: "Soporte" },
   ],
 };
