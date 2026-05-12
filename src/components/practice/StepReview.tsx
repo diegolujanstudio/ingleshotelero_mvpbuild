@@ -175,7 +175,7 @@ export function StepReview({
         <div className="mt-8 flex justify-end">
           <span className="caps text-espresso-muted">
             <ArrowRight className="mr-1 inline h-3 w-3" aria-hidden />
-            Toque "{STEP.reveal}" para continuar
+            Toque &ldquo;{STEP.reveal}&rdquo; para continuar
           </span>
         </div>
       ) : null}

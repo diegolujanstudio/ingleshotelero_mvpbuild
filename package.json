@@ -5,7 +5,8 @@
   "description": "Hotel English training & placement for Latin American hospitality staff.",
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/promote-super-admin.ts || true && next build",
+    "prebuild": "tsx scripts/promote-super-admin.ts || true",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",

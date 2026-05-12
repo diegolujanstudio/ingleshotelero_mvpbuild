@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { HairlineRule } from "@/components/ui/HairlineRule";
 import { HRSignInForm } from "@/components/site/HRSignInForm";
@@ -58,7 +59,9 @@ export default function AppEntry() {
 
             <HairlineRule className="my-7" />
 
-            <HRSignInForm />
+            <Suspense fallback={<div className="h-44" aria-hidden />}>
+              <HRSignInForm />
+            </Suspense>
           </div>
 
           {/* RIGHT — secondary employee entry */}

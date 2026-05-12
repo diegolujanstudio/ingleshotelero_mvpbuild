@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { TERMS_VERSION, TERMS_EFFECTIVE_DATE } from "@/content/legal";
 
 /**
  * /terminos — Términos del servicio.
  *
  * v0.1 — drafted as a working baseline. A Mexican commercial attorney
  * should review before signing the first paid hotel contract.
+ *
+ * Version constants live in @/content/legal so they can be exported (Next
+ * 14 forbids non-component named exports from page.tsx).
  */
-
-export const TERMS_VERSION = "1.0";
-export const TERMS_EFFECTIVE_DATE = "1 de mayo de 2026";
 
 export const metadata: Metadata = {
   title: "Términos del servicio",

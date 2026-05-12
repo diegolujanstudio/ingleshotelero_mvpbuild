@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { PRIVACY_VERSION, PRIVACY_EFFECTIVE_DATE } from "@/content/legal";
 
 /**
  * /aviso-de-privacidad — LFPDPPP-compliant privacy notice.
@@ -10,12 +11,10 @@ import { Logo } from "@/components/brand/Logo";
  * intended as a working draft. Before signing the first paid contract,
  * a Mexican attorney should review and certify this notice.
  *
- * The version field below is tracked per-employee at consent time so
- * any future edits don't invalidate prior consents.
+ * Version constants live in @/content/legal so they can be exported (Next
+ * 14 forbids non-component named exports from page.tsx). They're tracked
+ * per-employee at consent time so future edits don't invalidate consents.
  */
-
-export const PRIVACY_VERSION = "1.0";
-export const PRIVACY_EFFECTIVE_DATE = "1 de mayo de 2026";
 
 export const metadata: Metadata = {
   title: "Aviso de privacidad",
