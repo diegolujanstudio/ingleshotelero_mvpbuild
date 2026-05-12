@@ -5,5 +5,41 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# The Next.js plugin auto-detects forms with `data-netlify="true"` rendered
+# in the static HTML and registers them at deploy time. Our forms render
+# from Server Components in:
+#   - src/app/contacto/ContactForm.tsx   (form name: "pilot")
+#   - src/app/soporte/SupportForm.tsx    (form name: "soporte")
+# Both forms use a hidden honeypot field named `bot-field`.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# ──────────────────────────────────────────────────────────────────────
+# Netlify Forms — outgoing webhook
+#
+# Every submission to either `pilot` or `soporte` should fire an outgoing
+# webhook to /api/netlify/forms-webhook on this site, which:
+#   1. Persists the submission to the public.leads table (Supabase).
+#   2. Emails victor.lujan@gmail.com + diego@diegolujanstudio.com via Resend.
+#
+# Outgoing-webhook URLs are PER-ENVIRONMENT and cannot be pinned in
+# netlify.toml. Diego must add them once via the Netlify dashboard:
+#
+#   Site → Forms → Settings & usage → Form notifications →
+#     Add notification → Outgoing webhook
+#       Event:  "New form submission"
+#       Form:   "pilot"     (then repeat for "soporte")
+#       URL:    https://<site>/api/netlify/forms-webhook
+#       JWS secret:  <copy to NETLIFY_WEBHOOK_SECRET env var>
+#
+# Required env vars in Netlify → Site → Environment variables:
+#   - SUPABASE_URL                   (so leads can be persisted)
+#   - SUPABASE_SERVICE_ROLE_KEY      (server-only, bypasses RLS)
+#   - RESEND_API_KEY                 (so emails can be sent)
+#   - RESEND_FROM_EMAIL              (defaults to hola@ingleshotelero.com)
+#   - NETLIFY_WEBHOOK_SECRET         (optional but recommended in prod)
+#
+# Native per-form email notifications can ALSO be configured in the same
+# dashboard panel — they're additive and not strictly necessary because
+# the webhook already emails Diego + Victor.
+# ──────────────────────────────────────────────────────────────────────

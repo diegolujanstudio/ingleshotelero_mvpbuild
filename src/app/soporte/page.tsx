@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { Footer } from "@/components/site/Footer";
-import { PILOT } from "@/content/forms";
-import { ContactForm } from "./ContactForm";
+import { SOPORTE } from "@/content/forms";
+import { SupportForm } from "./SupportForm";
 
 export const metadata: Metadata = {
-  title: PILOT.meta.title,
-  description: PILOT.meta.description,
+  title: SOPORTE.meta.title,
+  description: SOPORTE.meta.description,
 };
 
-export default function ContactoPage() {
+export default function SoportePage() {
   return (
     <main className="bg-ivory text-espresso">
       <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
@@ -27,21 +27,21 @@ export default function ContactoPage() {
         <div className="grid gap-12 md:grid-cols-[1fr_minmax(0,1.2fr)] md:gap-20">
           {/* ─── Left rail · context ─────────────────────────────── */}
           <div>
-            <p className="caps mb-6">{PILOT.eyebrow}</p>
-            <h1 className="max-w-[16ch] font-serif text-[clamp(2rem,5vw,3rem)] font-medium leading-[1.05] tracking-[-0.02em]">
-              {PILOT.headline.before}
-              <em>{PILOT.headline.em}</em>
-              {PILOT.headline.after}
+            <p className="caps mb-6">{SOPORTE.eyebrow}</p>
+            <h1 className="max-w-[18ch] font-serif text-[clamp(2rem,5vw,3rem)] font-medium leading-[1.05] tracking-[-0.02em]">
+              {SOPORTE.headline.before}
+              <em>{SOPORTE.headline.em}</em>
+              {SOPORTE.headline.after}
             </h1>
             <p className="mt-6 max-w-prose font-sans text-t-body-lg text-espresso-soft">
-              {PILOT.sub}
+              {SOPORTE.sub}
             </p>
             <p className="mt-6 max-w-prose font-sans text-t-body text-espresso-soft">
-              {PILOT.body}
+              {SOPORTE.body}
             </p>
 
             <div className="mt-12 space-y-7 border-t border-hair pt-10">
-              {PILOT.details.map((d) => (
+              {SOPORTE.details.map((d) => (
                 <Detail key={d.num} num={d.num} label={d.label} body={d.body} />
               ))}
             </div>
@@ -49,7 +49,7 @@ export default function ContactoPage() {
 
           {/* ─── Right rail · form ───────────────────────────────── */}
           <div className="md:pt-2">
-            <ContactForm />
+            <SupportForm />
           </div>
         </div>
       </section>
