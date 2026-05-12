@@ -11,6 +11,15 @@ coverage/
 .next/
 out/
 
+# next-pwa generated service worker + workbox runtime (regenerated per build)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/swe-worker-*.js
+public/swe-worker-*.js.map
+public/fallback-*.js
+
 # Production
 build/
 
