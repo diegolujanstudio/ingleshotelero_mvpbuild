@@ -90,7 +90,7 @@ async function upsertEmployee(propertyId: string): Promise<string> {
       name: NAME,
       email: normalizedEmail,
       hotel_role: ROLE,
-      source: "manual",
+      source: "hr_invited",
       is_active: true,
     })
     .select("id")
