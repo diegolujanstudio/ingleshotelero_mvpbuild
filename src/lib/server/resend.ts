@@ -3,19 +3,23 @@ import "server-only";
 /**
  * Resend transactional-email helper.
  *
- * Guarded init so dev / demo deployments without RESEND_API_KEY simply
- * no-op (rather than crashing the route). Used by the Netlify-Forms
- * webhook to notify Diego + Victor on every lead/support submission.
+ * Direct REST call to Resend's API — no SDK, no peer-dep on
+ * `@react-email/render` (which the resend npm package requires at v6+
+ * and which silently broke the Netlify build for many commits).
+ *
+ * Guarded so dev / demo deployments without RESEND_API_KEY simply no-op
+ * (rather than crashing the route). Used by the Netlify-Forms webhook
+ * to notify Diego + Victor on every lead/support submission.
  *
  * NEVER add secrets, raw transcripts, or audio to email bodies — only
  * the human-supplied form fields, which the user already typed.
  */
 
-import { Resend } from "resend";
 import { log } from "./log";
 
 const KEY = process.env.RESEND_API_KEY;
 const FROM = process.env.RESEND_FROM_EMAIL || "hola@ingleshotelero.com";
+const RESEND_API_URL = "https://api.resend.com/emails";
 
 /**
  * Recipients for every lead/support notification. Hardcoded by design —
@@ -26,15 +30,6 @@ export const RECIPIENTS = [
   "victor.lujan@gmail.com",
   "diego@diegolujanstudio.com",
 ] as const;
-
-let _client: Resend | null = null;
-
-export function resend(): Resend | null {
-  if (!KEY) return null;
-  if (_client) return _client;
-  _client = new Resend(KEY);
-  return _client;
-}
 
 export type LeadEmailPayload = Record<string, unknown>;
 
@@ -51,8 +46,7 @@ export async function sendLeadNotification(
   formName: string,
   lead: LeadEmailPayload,
 ): Promise<SendLeadResult> {
-  const r = resend();
-  if (!r) {
+  if (!KEY) {
     log.warn({ formName }, "resend.skipped.no_key");
     return { skipped: true };
   }
@@ -61,27 +55,36 @@ export async function sendLeadNotification(
   const html = renderLeadHtml(formName, lead);
   const replyTo =
     typeof lead.email === "string" && lead.email.length > 0
-      ? lead.email
+      ? (lead.email as string)
       : undefined;
 
-  try {
-    const result = await r.emails.send({
-      from: `Inglés Hotelero <${FROM}>`,
-      to: [...RECIPIENTS],
-      subject,
-      html,
-      replyTo,
-    });
+  const body: Record<string, unknown> = {
+    from: `Inglés Hotelero <${FROM}>`,
+    to: [...RECIPIENTS],
+    subject,
+    html,
+  };
+  if (replyTo) body.reply_to = replyTo;
 
-    if (result.error) {
+  try {
+    const resp = await fetch(RESEND_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${KEY}`,
+      },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
       log.error(
-        { err: String(result.error), formName },
+        { status: resp.status, formName, body: text.slice(0, 200) },
         "resend.send.error",
       );
-      return { ok: false, error: String(result.error) };
+      return { ok: false, error: `resend ${resp.status}: ${text.slice(0, 100)}` };
     }
-
-    return { ok: true, id: result.data?.id };
+    const json = (await resp.json().catch(() => ({}))) as { id?: string };
+    return { ok: true, id: json.id };
   } catch (err) {
     log.error({ err: String(err), formName }, "resend.failed");
     return { ok: false, error: String(err) };
