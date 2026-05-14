@@ -43,8 +43,14 @@ export default function AppEntry() {
           {EMPLOYEE.sub}
         </p>
 
+        {/* Fallback for employees who don't have a personal link yet */}
         <div className="mt-7 rounded-md border border-hair bg-white p-5 sm:p-7">
-          <EmployeeSlugForm />
+          <p className="font-sans text-t-body text-espresso-soft">
+            {EMPLOYEE.fallbackHint}
+          </p>
+          <div className="mt-3">
+            <EmployeeSlugForm />
+          </div>
           <p className="mt-4 font-sans text-t-caption text-espresso-muted">
             {EMPLOYEE.hint}
           </p>

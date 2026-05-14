@@ -22,18 +22,35 @@ export const TOPBAR = {
 };
 
 // ── Primary surface — Employee ───────────────────────────────
+//
+// Two ways an employee gets in:
+//
+//   1. Personal link (the easy path). HR sends them a URL like
+//      `/i/{token}` via WhatsApp, email, or SMS. They tap it once and
+//      they're in — no password, no code to type. The link sets a
+//      session cookie that lasts a year. They can bookmark and re-tap
+//      any time.
+//
+//   2. Hotel code (the fallback). If they don't have a personal link
+//      yet, they enter their hotel's short code (slug) and start the
+//      anonymous flow at `/e/{slug}`. The system creates an employee
+//      record with the name + email they type.
+//
+// The home leads with #1 — it's how 95% of users will actually arrive.
 export const EMPLOYEE = {
   eyebrow: "Empleado",
   headline: {
-    before: "Empieza tu ",
-    em: "examen",
+    before: "Tu equipo te dio un ",
+    em: "enlace",
     after: ".",
   },
-  sub: "Quince minutos. Funciona en tu celular.",
+  sub: "Ábrelo desde tu WhatsApp o correo. Te lleva directo a tu práctica.",
+  fallbackHint:
+    "¿No tienes enlace? Escribe el código de tu hotel y comienza así:",
   inputLabel: "Código de tu hotel",
   inputPlaceholder: "ej. gran-hotel-cancun",
   submit: "Empezar",
-  hint: "¿No tienes el código? Pídelo en Recursos Humanos o recepción.",
+  hint: "Si no sabes el código, pídelo en Recursos Humanos o recepción.",
   invalid: "El código solo lleva letras minúsculas, números y guiones.",
 };
 
