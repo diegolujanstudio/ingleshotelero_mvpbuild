@@ -22,9 +22,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Build-fingerprint marker — Diego greps for this string in the live HTML
+// to verify Netlify is deploying our pushes. Bumped on every deploy probe.
+// If you see this comment in production HTML, that build IS live.
+const BUILD_MARKER = "ih-build-2026-05-14-resend-fix-b61d926";
+
 export default function AppEntry() {
   return (
-    <main className="flex min-h-screen flex-col bg-ivory text-espresso">
+    <main className="flex min-h-screen flex-col bg-ivory text-espresso" data-build={BUILD_MARKER}>
       {/* ── Top utility bar ─────────────────────────────────── */}
       <header className="mx-auto flex w-full max-w-shell items-center justify-between gap-4 px-5 pt-5 sm:px-8 sm:pt-7">
         <Logo />
