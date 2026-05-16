@@ -15,7 +15,7 @@ import "server-only";
  */
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,10 +32,10 @@ export async function GET(req: Request) {
     .filter((c) => c.name.startsWith("sb-"))
     .map((c) => ({ name: c.name, len: c.value.length, head: c.value.slice(0, 12) }));
 
-  let userResult: unknown = null;
+  let userResult: { id: string; email?: string } | null = null;
   let userError: string | null = null;
+  const supabase = createServerClient();
   try {
-    const supabase = createServerClient();
     const { data, error } = await supabase.auth.getUser();
     userResult = data?.user
       ? { id: data.user.id, email: data.user.email }
@@ -45,11 +45,43 @@ export async function GET(req: Request) {
     userError = `threw: ${String(e)}`;
   }
 
+  // Reproduce getHRUser()'s profile lookup BOTH ways to isolate the 307.
+  let rlsRow: unknown = "skipped";
+  let rlsErr: string | null = null;
+  let svcRow: unknown = "skipped";
+  let svcErr: string | null = null;
+  if (userResult?.id) {
+    try {
+      const { data, error } = await supabase
+        .from("hr_users")
+        .select("id, email, role, is_active")
+        .eq("id", userResult.id)
+        .single();
+      rlsRow = data ?? null;
+      rlsErr = error ? `${error.code ?? ""}: ${error.message}` : null;
+    } catch (e) {
+      rlsErr = `threw: ${String(e)}`;
+    }
+    try {
+      const svc = createServiceClient();
+      const { data, error } = await svc
+        .from("hr_users")
+        .select("id, email, role, is_active")
+        .eq("id", userResult.id)
+        .single();
+      svcRow = data ?? null;
+      svcErr = error ? `${error.code ?? ""}: ${error.message}` : null;
+    } catch (e) {
+      svcErr = `threw: ${String(e)}`;
+    }
+  }
+
   return NextResponse.json({
     cookieCount: all.length,
     sbCookies,
     userResult,
     userError,
+    hrLookup: { rlsRow, rlsErr, svcRow, svcErr },
     env: {
       hasUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
       hasAnon: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
