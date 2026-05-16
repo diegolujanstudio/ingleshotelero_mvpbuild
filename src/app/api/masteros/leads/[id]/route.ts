@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSuperAdminAPI } from "@/lib/masteros/auth";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
-import { updateLeadStatus } from "@/lib/server/leads";
+import { updateLeadStatus, deleteLead } from "@/lib/server/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -101,4 +101,31 @@ export async function PATCH(
     // Migration missing → degrade.
     return NextResponse.json({ ok: true, demo: true, _err: e instanceof Error ? e.message : "unknown" });
   }
+}
+
+/**
+ * DELETE /api/masteros/leads/[id]
+ *
+ * Permanently removes a lead (spam / test cleanup). Super-admin only.
+ * Demo mode (no Supabase) → ok+demo so the UI can drop the row anyway.
+ */
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } },
+) {
+  const user = await requireSuperAdminAPI();
+  if (!user) return notFound();
+  if (!params.id || params.id.length > 64) {
+    return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+  }
+  const sb = createServiceClient();
+  if (!sb) return NextResponse.json({ ok: true, demo: true });
+  const res = await deleteLead(params.id);
+  if (!res.ok) {
+    return NextResponse.json(
+      { error: res.error ?? "delete_failed" },
+      { status: 500 },
+    );
+  }
+  return NextResponse.json({ ok: true });
 }

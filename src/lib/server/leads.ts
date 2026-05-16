@@ -225,6 +225,24 @@ export async function updateLeadStatus(
   return { ok: true };
 }
 
+/**
+ * Permanently remove a lead. Super-admin only (enforced at the route).
+ * Used to clear spam / test rows from the Inbox.
+ */
+export async function deleteLead(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supa = createServiceClient();
+  if (!supa) return { ok: false, error: "no_supabase" };
+  const { error } = await (supa as any).from("leads").delete().eq("id", id);
+  if (error) {
+    log.error({ err: String(error), id }, "leads.delete.failed");
+    return { ok: false, error: String(error) };
+  }
+  log.info({ id }, "leads.delete.ok");
+  return { ok: true };
+}
+
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import {
   Phone,
   RefreshCcw,
   ShieldAlert,
+  Trash2,
 } from "lucide-react";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { DenseDataTable } from "@/components/masteros/DenseDataTable";
@@ -129,6 +130,14 @@ export function LeadsClient({
       headers: { "content-type": "application/json" },
       body: JSON.stringify(patch),
     }).catch(() => undefined);
+  }
+
+  async function deleteRow(id: string) {
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setDrawer(null);
+    await fetch(`/api/masteros/leads/${id}`, { method: "DELETE" }).catch(
+      () => undefined,
+    );
   }
 
   const exportHref = useMemo(() => {
@@ -337,6 +346,7 @@ export function LeadsClient({
           lead={drawer}
           onClose={() => setDrawer(null)}
           onPatch={(patch) => patchLead(drawer.id, patch)}
+          onDelete={() => deleteRow(drawer.id)}
         />
       )}
     </section>
@@ -347,10 +357,12 @@ function LeadDrawer({
   lead,
   onClose,
   onPatch,
+  onDelete,
 }: {
   lead: LeadRow;
   onClose: () => void;
   onPatch: (patch: { status?: LeadStatus; notes?: string | null }) => Promise<void> | void;
+  onDelete: () => Promise<void> | void;
 }) {
   const [notes, setNotes] = useState<string>(lead.notes ?? "");
   const [statusLocal, setStatusLocal] = useState<LeadStatus>(lead.status);
@@ -582,13 +594,31 @@ function LeadDrawer({
           )}
         </div>
 
-        <footer className="flex items-center justify-end gap-2 border-t border-hair bg-ivory-soft px-5 py-3">
-          <Button variant="ghost" onClick={onClose}>
-            {LEADS.drawer.close}
-          </Button>
-          <Button variant="primary" onClick={save} disabled={!dirty || saving}>
-            {saving ? LEADS.drawer.saving : LEADS.drawer.save}
-          </Button>
+        <footer className="flex items-center justify-between gap-2 border-t border-hair bg-ivory-soft px-5 py-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                window.confirm(
+                  `¿Eliminar este lead${lead.name ? ` de ${lead.name}` : ""}? Esta acción no se puede deshacer.`,
+                )
+              ) {
+                void onDelete();
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-pill border border-error/30 bg-white px-3 py-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-error hover:bg-error/5"
+          >
+            <Trash2 className="h-3 w-3" aria-hidden />
+            Eliminar
+          </button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={onClose}>
+              {LEADS.drawer.close}
+            </Button>
+            <Button variant="primary" onClick={save} disabled={!dirty || saving}>
+              {saving ? LEADS.drawer.saving : LEADS.drawer.save}
+            </Button>
+          </div>
         </footer>
       </div>
     </div>
