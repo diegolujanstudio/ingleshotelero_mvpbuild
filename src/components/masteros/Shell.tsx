@@ -10,6 +10,8 @@ import {
   Database,
   Users,
   Inbox,
+  ListTodo,
+  StickyNote,
   Map as MapIcon,
   GitBranch,
   ShieldCheck,
@@ -40,6 +42,8 @@ export function MasterosShell({ email, children }: ShellProps) {
     { label: SHELL.nav.modules, href: "/masteros/modules", icon: Database, active: pathname.startsWith("/masteros/modules") },
     { label: SHELL.nav.crm, href: "/masteros/crm", icon: Users, active: pathname.startsWith("/masteros/crm") },
     { label: "Leads", href: "/masteros/leads", icon: Inbox, active: pathname.startsWith("/masteros/leads") },
+    { label: "Tareas", href: "/masteros/tasks", icon: ListTodo, active: pathname.startsWith("/masteros/tasks") },
+    { label: "Recursos", href: "/masteros/resources", icon: StickyNote, active: pathname.startsWith("/masteros/resources") },
   ];
   const soon: Array<{ label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { label: SHELL.nav.journey, icon: MapIcon },
