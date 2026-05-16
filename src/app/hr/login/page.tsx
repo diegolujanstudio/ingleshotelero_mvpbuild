@@ -48,7 +48,6 @@ export default function HRLoginPage() {
       ? "/hr"
       : safeReturnTo(new URLSearchParams(window.location.search).get("returnTo")),
   );
-  const forMasterOS = returnTo === "/masteros" || returnTo.startsWith("/masteros/");
 
   const supabaseConfigured =
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
@@ -109,18 +108,13 @@ export default function HRLoginPage() {
 
       <section className="mx-auto max-w-prose px-6 py-24 md:px-12 md:py-32">
         <p className="caps mb-6">
-          {formatIndex(1)} ·{" "}
-          {forMasterOS
-            ? "Acceso al equipo · Master OS"
-            : "Acceso para Recursos Humanos"}
+          {formatIndex(1)} · Acceso para Recursos Humanos
         </p>
         <h1 className="font-serif text-t-h1 font-medium text-espresso">
           Bienvenido <em>de vuelta</em>.
         </h1>
         <p className="mt-4 font-sans text-t-body-lg text-espresso-soft">
-          {forMasterOS
-            ? "Inicie sesión para entrar a la consola interna del equipo."
-            : "Inicie sesión para ver los resultados de su equipo."}
+          Inicie sesión para ver los resultados de su equipo.
         </p>
 
         <HairlineRule className="my-10" />

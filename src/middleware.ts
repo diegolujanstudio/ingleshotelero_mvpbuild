@@ -107,6 +107,7 @@ export function middleware(request: NextRequest) {
   if (
     pathname === "/hr/login" ||
     pathname === "/hr/accept-invite" ||
+    pathname === "/masteros/login" ||
     pathname.startsWith("/api/auth/")
   ) {
     return NextResponse.next();
