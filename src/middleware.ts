@@ -104,69 +104,6 @@ function readSessionCookie(request: NextRequest): {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // TEMPORARY Edge-side diagnostic — remove after the HR-auth bug is fixed.
-  // GET any path with ?mwdebug=ihdebug to see EXACTLY what the Netlify Edge
-  // middleware observes for cookies + decode, from the Edge runtime itself.
-  if (request.nextUrl.searchParams.get("mwdebug") === "ihdebug") {
-    const all = request.cookies.getAll();
-    const base = all.find(
-      (c) => /^sb-.*-auth-token$/.test(c.name) && !/\.\d+$/.test(c.name),
-    );
-    const chunks = all
-      .filter((c) => /^sb-.*-auth-token\.\d+$/.test(c.name))
-      .sort(
-        (a, b) =>
-          Number(a.name.split(".").pop()) - Number(b.name.split(".").pop()),
-      );
-    let decodeReason = "no-cookie";
-    let decoded: { valid: boolean; sub?: string } = { valid: false };
-    let sessionShape: string[] = [];
-    let rawHead = "";
-    try {
-      const rawVal = base
-        ? base.value
-        : chunks.length
-          ? chunks.map((c) => c.value).join("")
-          : undefined;
-      if (rawVal) {
-        rawHead = rawVal.slice(0, 16);
-        let json = rawVal;
-        if (rawVal.startsWith("base64-")) {
-          json = b64ToUtf8(rawVal.slice("base64-".length));
-          decodeReason = "base64-prefixed";
-        } else {
-          decodeReason = "raw-json";
-        }
-        const sess = JSON.parse(json) as Record<string, unknown>;
-        sessionShape = Object.keys(sess);
-        decoded = decodeSupabaseCookie(rawVal);
-      }
-    } catch (e) {
-      decodeReason = `threw: ${String(e)}`;
-    }
-    return new NextResponse(
-      JSON.stringify(
-        {
-          edgeRuntime: true,
-          cookieCount: all.length,
-          cookieNames: all.map((c) => c.name),
-          baseCookie: base
-            ? { name: base.name, len: base.value.length }
-            : null,
-          chunkCount: chunks.length,
-          rawHead,
-          decodeReason,
-          sessionShape,
-          decoded,
-          nowSec: Math.floor(Date.now() / 1000),
-        },
-        null,
-        2,
-      ),
-      { status: 200, headers: { "content-type": "application/json" } },
-    );
-  }
-
   if (
     pathname === "/hr/login" ||
     pathname === "/hr/accept-invite" ||
