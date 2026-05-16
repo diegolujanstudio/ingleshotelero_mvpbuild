@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/brand/Logo";
 import { HairlineRule } from "@/components/ui/HairlineRule";
-import { createClient } from "@/lib/supabase/client";
 import { formatIndex } from "@/lib/utils";
 import { DemoGuard } from "@/components/DemoGuard";
 
@@ -37,19 +36,39 @@ export default function HRLoginPage() {
     setError(null);
     setBusy(true);
     try {
-      const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Server-side sign-in: the route sets the auth cookie on its
+      // response (reliable) and verifies the hr_users profile with the
+      // service client (no RLS race). Then a HARD navigation so the
+      // cookie rides the next request and middleware sees the session.
+      // (Client-side signInWithPassword + router.push raced the
+      // middleware and bounced back to /.)
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password, return_to: "/hr" }),
       });
-      if (err) {
-        setError(err.message);
-      } else {
-        router.push("/hr");
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        redirect_to?: string;
+        error?: { message?: string };
+      };
+      if (!res.ok || !json.ok) {
+        setError(
+          json.error?.message ??
+            "No se pudo iniciar sesión. Verifique su correo y contraseña.",
+        );
+        setBusy(false);
+        return;
       }
+      const dest =
+        json.redirect_to &&
+        json.redirect_to.startsWith("/") &&
+        !json.redirect_to.startsWith("//")
+          ? json.redirect_to
+          : "/hr";
+      window.location.assign(dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de autenticación");
-    } finally {
       setBusy(false);
     }
   };
