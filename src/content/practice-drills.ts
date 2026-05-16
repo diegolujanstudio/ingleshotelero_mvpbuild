@@ -164,6 +164,92 @@ export const DRILLS: Record<Role, Drill[]> = {
         },
       ],
     },
+    {
+      id: "b-004",
+      level: "A1",
+      listening: {
+        audio_text: "Good morning. A taxi to the airport, please.",
+        options: [
+          { emoji: "🚕", text_es: "Pedir un taxi al aeropuerto", correct: true },
+          { emoji: "🧳", text_es: "Subir su equipaje a la habitación", correct: false },
+          { emoji: "🍳", text_es: "Llevarlo al desayuno", correct: false },
+        ],
+        explanation_es:
+          "El huésped pide un taxi al aeropuerto. La acción correcta es confirmar y llamarlo de inmediato.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Right away, sir. A taxi to the airport — it will be here in five minutes.",
+        note_es:
+          "“Right away” transmite acción inmediata. Dar un tiempo concreto (“five minutes”) tranquiliza al huésped.",
+      },
+      vocabulary: [
+        {
+          word_en: "taxi",
+          word_es: "taxi",
+          example_en: "I'll call a taxi for you.",
+          example_es: "Le llamaré un taxi.",
+        },
+        {
+          word_en: "airport",
+          word_es: "aeropuerto",
+          example_en: "The airport is thirty minutes away.",
+          example_es: "El aeropuerto está a treinta minutos.",
+        },
+        {
+          word_en: "right away",
+          word_es: "de inmediato",
+          example_en: "I'll do it right away.",
+          example_es: "Lo haré de inmediato.",
+        },
+      ],
+    },
+    {
+      id: "b-005",
+      level: "B2",
+      listening: {
+        audio_text:
+          "We have an early flight tomorrow and three heavy suitcases. Can someone help us at 4 a.m. and store our bags until then?",
+        options: [
+          {
+            emoji: "🛎️",
+            text_es: "Confirmar ayuda a las 4 a.m. y ofrecer guardar el equipaje",
+            correct: true,
+          },
+          { emoji: "🚪", text_es: "Decirle que el servicio empieza a las 7 a.m.", correct: false },
+          { emoji: "📞", text_es: "Pedirle que llame a un taxi por su cuenta", correct: false },
+        ],
+        explanation_es:
+          "Una petición compuesta: ayuda temprana + resguardo de equipaje. Una buena respuesta confirma ambas cosas y se anticipa.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Of course. I'll arrange a bellman for 4 a.m. sharp, and we'll keep your luggage in the secure store room overnight — I'll have it ready by the door.",
+        note_es:
+          "Responder a cada parte de la petición y añadir un detalle proactivo (“ready by the door”) es nivel B2 de servicio.",
+      },
+      vocabulary: [
+        {
+          word_en: "arrange",
+          word_es: "coordinar / organizar",
+          example_en: "I'll arrange a wake-up call for you.",
+          example_es: "Le coordinaré una llamada despertador.",
+        },
+        {
+          word_en: "store room",
+          word_es: "cuarto de resguardo",
+          example_en: "Your bags are safe in the store room.",
+          example_es: "Sus maletas están seguras en el cuarto de resguardo.",
+        },
+        {
+          word_en: "overnight",
+          word_es: "durante la noche",
+          example_en: "We can hold it overnight.",
+          example_es: "Podemos guardarlo durante la noche.",
+        },
+      ],
+    },
   ],
 
   frontdesk: [
