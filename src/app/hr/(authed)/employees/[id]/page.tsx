@@ -10,6 +10,7 @@ import { EmployeeStatusChip } from "@/components/hr/EmployeeStatusChip";
 import { ActivityTimeline, type TimelineEvent } from "@/components/hr/ActivityTimeline";
 import { RecommendationsCard } from "@/components/hr/RecommendationsCard";
 import { EmployeeDetailClient } from "./EmployeeDetailClient";
+import { AccessLinkPanel } from "@/components/hr/AccessLinkPanel";
 import { EMPLOYEE_DETAIL, EMPLOYEES } from "@/content/hr";
 import { ROLES } from "@/content/roles";
 import { LEVEL_LABEL_ES } from "@/lib/cefr";
@@ -69,6 +70,16 @@ export default async function EmployeeDetailPage({
       <div className="mt-6 grid gap-3 md:grid-cols-2">
         <ContactCard employee={employee} />
         <ScoreCard employee={employee} />
+      </div>
+
+      {/* Personal access link — how the employee actually signs in */}
+      <div className="mt-6">
+        <AccessLinkPanel
+          employeeId={employee.id}
+          employeeName={employee.name}
+          employeePhone={employee.phone}
+          employeeEmail={employee.email}
+        />
       </div>
 
       <HairlineRule className="my-8" />
