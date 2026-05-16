@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { log } from "@/lib/server/log";
 import { upsertLead, type LeadFormName, type UpsertLeadInput } from "@/lib/server/leads";
-import { sendLeadNotification } from "@/lib/server/resend";
 
 /**
  * POST /api/netlify/forms-webhook
@@ -164,15 +163,10 @@ export async function POST(request: Request) {
     "netlify.webhook.upserted",
   );
 
-  // ── 6. Notify (best-effort; do not block the webhook on email failure).
-  if (result.created) {
-    const emailPayload = {
-      ...input,
-      ...(typeof data.topic === "string" ? { topic: data.topic } : {}),
-    };
-    const notify = await sendLeadNotification(formName, emailPayload);
-    log.info({ formName, notify }, "netlify.webhook.notify.done");
-  }
+  // ── 6. Email is handled NATIVELY by Netlify Forms (Forms →
+  // Notifications → Email, to victor + diego) — NOT by this webhook and
+  // NOT by Resend. This webhook's only job is to persist the lead so it
+  // shows in /masteros. (Diego: use Netlify, not Resend.)
 
   return NextResponse.json({ ok: true, id: result.id, created: result.created });
 }

@@ -6,7 +6,6 @@ import {
   type LeadFormName,
   type UpsertLeadInput,
 } from "@/lib/server/leads";
-import { sendLeadNotification } from "@/lib/server/resend";
 
 /**
  * POST /api/forms/submit  —  first-party form intake.
@@ -23,10 +22,11 @@ import { sendLeadNotification } from "@/lib/server/resend";
  * So we own the whole path here, no Netlify interception required:
  *   1. parse the urlencoded form body
  *   2. honeypot drop
- *   3. upsertLead()           → persists to `leads` (powers /masteros/leads)
- *   4. sendLeadNotification() → emails victor.lujan@gmail.com +
- *                               diego@diegolujanstudio.com via Resend
- *   5. 303 redirect to the per-form thank-you page
+ *   3. upsertLead() → persists to `leads` (powers /masteros/leads)
+ *   4. 303 redirect to the per-form thank-you page
+ *
+ * Email is NOT sent here. The public marketing landing uses native
+ * Netlify Forms email (victor + diego). No Resend anywhere.
  *
  * The visitor ALWAYS lands on the gracias page — persistence/email are
  * best-effort and never block or 500 the human.
@@ -193,18 +193,11 @@ export async function POST(request: Request) {
     log.error({ err: String(err), formName }, "forms.submit.upsert.threw");
   }
 
-  // Notify victor + diego — best effort, only on a genuinely new lead.
-  if (created) {
-    try {
-      const notify = await sendLeadNotification(formName, {
-        ...input,
-        ...(topic ? { topic } : {}),
-      });
-      log.info({ formName, notify }, "forms.submit.notified");
-    } catch (err) {
-      log.error({ err: String(err), formName }, "forms.submit.notify.threw");
-    }
-  }
+  // Email is NOT sent here. The public landing uses native Netlify
+  // Forms email (to victor + diego). This first-party route only
+  // persists (the PWA's own /soporte etc. are visible in /masteros).
+  // No Resend. (Diego: use Netlify, not Resend.)
+  void created;
 
   return done();
 }
