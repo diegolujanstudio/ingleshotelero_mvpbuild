@@ -1,34 +1,96 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Auth front door for the product app.
  *
- * Protects four families of routes:
+ * Protects:
+ *   /hr/*  /api/hr/*          — any authenticated, active HR user
+ *   /masteros/*  /api/masteros/* — super_admin only
  *
- *   /hr/*         — HR dashboard. Requires any authenticated, active HR user.
- *   /api/hr/*     — HR API surface. Same gate.
- *   /masteros/*   — internal admin OS. Requires super_admin.
- *   /api/masteros/* — internal admin API. Same gate.
+ * Public exceptions: /hr/login, /hr/accept-invite, /api/auth/*.
  *
- * Public exceptions (still inside /hr/*) — `/hr/login` and
- * `/hr/accept-invite` remain reachable without a session.
+ * WHY A LOCAL COOKIE CHECK (not supabase.auth.getUser):
+ * The middleware runs on Netlify's Edge runtime. supabase.auth.getUser()
+ * makes a network revalidation call to GoTrue that is unreliable from
+ * Edge (proven in QA: getUser() returns the user fine from a Node
+ * route — /api/debug/whoami — with the exact same cookie, but null
+ * from Edge middleware, bouncing every authenticated request).
  *
- * For unauthenticated requests to a protected route, we redirect to `/`
- * (the new sign-in home) with `?returnTo=<original-path>` so the user
- * lands back where they were after signing in.
- *
- * For `/masteros/*` requests by a non–super_admin user, we deliberately
- * REWRITE to a not-found surface rather than returning 403 — the goal is
- * to never hint that the route exists.
- *
- * If Supabase env vars are missing (local dev / pure demo mode), the
- * middleware does not gate anything — the in-page demo bypass takes over.
+ * Supabase's own guidance: do the authoritative check with getUser()
+ * in the page/route (Node runtime), and keep middleware to a cheap
+ * gate. So here we only verify a NON-EXPIRED Supabase session cookie
+ * is present + decode its `sub`/role-free payload locally (no network).
+ * The page-level requireHRUser() / requireSuperAdmin() (Node runtime,
+ * getUser works there) perform the real identity + role enforcement,
+ * including the super_admin → /__notfound rewrite for /masteros.
  */
-export async function middleware(request: NextRequest) {
+
+function decodeSupabaseCookie(raw: string | undefined): {
+  valid: boolean;
+  sub?: string;
+} {
+  if (!raw) return { valid: false };
+  try {
+    // @supabase/ssr 0.5.x stores the session as `base64-<base64(JSON)>`.
+    let json = raw;
+    if (raw.startsWith("base64-")) {
+      json = Buffer.from(raw.slice("base64-".length), "base64").toString(
+        "utf-8",
+      );
+    }
+    const session = JSON.parse(json) as {
+      access_token?: string;
+      expires_at?: number;
+    };
+    if (!session.access_token) return { valid: false };
+
+    // Trust expires_at when present; otherwise decode the JWT exp.
+    let exp = session.expires_at;
+    if (!exp) {
+      const payload = session.access_token.split(".")[1];
+      if (!payload) return { valid: false };
+      const decoded = JSON.parse(
+        Buffer.from(
+          payload.replace(/-/g, "+").replace(/_/g, "/"),
+          "base64",
+        ).toString("utf-8"),
+      ) as { exp?: number; sub?: string };
+      exp = decoded.exp;
+      if (decoded.sub) return { valid: !!exp && exp * 1000 > Date.now(), sub: decoded.sub };
+    }
+    const nowSec = Math.floor(Date.now() / 1000);
+    return { valid: typeof exp === "number" && exp > nowSec };
+  } catch {
+    return { valid: false };
+  }
+}
+
+function readSessionCookie(request: NextRequest): {
+  valid: boolean;
+} {
+  // Single cookie, or chunked into .0/.1 when large. Reassemble.
+  const all = request.cookies.getAll();
+  const base = all.find(
+    (c) => /^sb-.*-auth-token$/.test(c.name) && !/\.\d+$/.test(c.name),
+  );
+  if (base) return decodeSupabaseCookie(base.value);
+
+  const chunks = all
+    .filter((c) => /^sb-.*-auth-token\.\d+$/.test(c.name))
+    .sort((a, b) => {
+      const ai = Number(a.name.split(".").pop());
+      const bi = Number(b.name.split(".").pop());
+      return ai - bi;
+    });
+  if (chunks.length > 0) {
+    return decodeSupabaseCookie(chunks.map((c) => c.value).join(""));
+  }
+  return { valid: false };
+}
+
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always-public exceptions inside protected prefixes.
   if (
     pathname === "/hr/login" ||
     pathname === "/hr/accept-invite" ||
@@ -41,12 +103,10 @@ export async function middleware(request: NextRequest) {
   const isMaster =
     pathname.startsWith("/masteros") || pathname.startsWith("/api/masteros");
 
-  if (!isHR && !isMaster) {
-    return NextResponse.next();
-  }
+  if (!isHR && !isMaster) return NextResponse.next();
 
-  // No Supabase configured — let the page render. The login page's demo
-  // bypass and DemoGuard will handle gating in pure-demo deployments.
+  // Pure-demo deployments (no Supabase env) — don't gate; in-page
+  // DemoGuard / demo bypass handles it.
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -54,46 +114,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  let response = NextResponse.next({
-    request: { headers: request.headers },
-  });
+  const { valid } = readSessionCookie(request);
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(
-          cookiesToSet: Array<{
-            name: string;
-            value: string;
-            options?: Record<string, unknown>;
-          }>,
-        ) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options as never),
-          );
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Unauthenticated → bounce to the sign-in home with the original path.
-  if (!user) {
-    // For API routes, return 401 JSON instead of an HTML redirect.
+  if (!valid) {
     if (pathname.startsWith("/api/")) {
       return new NextResponse(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
@@ -107,38 +130,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(home);
   }
 
-  // /masteros/* — must be an active super_admin. Rewrite to /not-found
-  // (Next's built-in 404 surface) for everyone else; never emit a 403
-  // because that would confirm the route exists.
-  if (isMaster) {
-    const { data: hrUser } = await supabase
-      .from("hr_users")
-      .select("role, is_active")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const allowed =
-      !!hrUser && hrUser.is_active === true && hrUser.role === "super_admin";
-
-    if (!allowed) {
-      if (pathname.startsWith("/api/")) {
-        // Same posture for the API surface — pretend it isn't there.
-        return new NextResponse(JSON.stringify({ error: "not_found" }), {
-          status: 404,
-          headers: { "content-type": "application/json" },
-        });
-      }
-      const notFound = request.nextUrl.clone();
-      notFound.pathname = "/__notfound";
-      return NextResponse.rewrite(notFound);
-    }
-  }
-
-  return response;
+  // Authenticated session present. The authoritative identity + role
+  // check (incl. super_admin gating for /masteros and the
+  // /__notfound rewrite) happens in the page/route via
+  // requireHRUser() / requireSuperAdmin(), which run on the Node
+  // runtime where supabase.auth.getUser() is reliable.
+  return NextResponse.next();
 }
 
 export const config = {
-  // Skip static assets, public icons, audio, manifest, fonts, favicons.
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons|audio|fonts|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf)$).*)",
   ],

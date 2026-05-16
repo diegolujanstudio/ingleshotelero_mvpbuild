@@ -377,6 +377,93 @@ export const DRILLS: Record<Role, Drill[]> = {
         },
       ],
     },
+    {
+      id: "f-004",
+      level: "A1",
+      listening: {
+        audio_text: "Hello. What is the Wi-Fi password?",
+        options: [
+          { emoji: "📶", text_es: "Darle la contraseña del Wi-Fi", correct: true },
+          { emoji: "🛏️", text_es: "Ofrecerle cambiar de habitación", correct: false },
+          { emoji: "🧳", text_es: "Llamar al botones", correct: false },
+        ],
+        explanation_es:
+          "Pregunta directa por la contraseña del Wi-Fi. Se da la información de forma clara y amable.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "Of course. The network is Hotel-Guest and the password is welcome2026, all lowercase.",
+        note_es:
+          "Decir la red y la contraseña juntas, y aclarar “all lowercase”, evita una segunda pregunta.",
+      },
+      vocabulary: [
+        {
+          word_en: "password",
+          word_es: "contraseña",
+          example_en: "The Wi-Fi password is on your key card.",
+          example_es: "La contraseña del Wi-Fi está en su tarjeta llave.",
+        },
+        {
+          word_en: "network",
+          word_es: "red",
+          example_en: "Connect to the Hotel-Guest network.",
+          example_es: "Conéctese a la red Hotel-Guest.",
+        },
+        {
+          word_en: "lowercase",
+          word_es: "minúsculas",
+          example_en: "It's all lowercase.",
+          example_es: "Es todo en minúsculas.",
+        },
+      ],
+    },
+    {
+      id: "f-005",
+      level: "B2",
+      listening: {
+        audio_text:
+          "I was charged twice for the minibar and I never opened it. I'd like this corrected before I check out, and frankly I'm not happy.",
+        options: [
+          {
+            emoji: "🧾",
+            text_es: "Disculparse, revisar el cargo y corregirlo antes del check-out",
+            correct: true,
+          },
+          { emoji: "🤷", text_es: "Decir que el minibar siempre se cobra", correct: false },
+          { emoji: "📞", text_es: "Pedirle que llame más tarde a facturación", correct: false },
+        ],
+        explanation_es:
+          "Queja con dinero y emoción. La respuesta B2 reconoce el sentimiento, asume la acción y da un plazo claro.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "I completely understand, and I'm sorry for the inconvenience. I'll review the minibar charges right now and remove anything you didn't use — you'll see the corrected total before you check out.",
+        note_es:
+          "“I completely understand” valida la molestia sin discutir. Comprometer un resultado y un plazo concreto desactiva la queja.",
+      },
+      vocabulary: [
+        {
+          word_en: "charged twice",
+          word_es: "cobrado dos veces",
+          example_en: "You were charged twice — I'll fix that.",
+          example_es: "Le cobraron dos veces — lo voy a corregir.",
+        },
+        {
+          word_en: "inconvenience",
+          word_es: "inconveniente / molestia",
+          example_en: "I'm sorry for the inconvenience.",
+          example_es: "Lamento el inconveniente.",
+        },
+        {
+          word_en: "corrected total",
+          word_es: "total corregido",
+          example_en: "Here is your corrected total.",
+          example_es: "Aquí está su total corregido.",
+        },
+      ],
+    },
   ],
 
   restaurant: [
