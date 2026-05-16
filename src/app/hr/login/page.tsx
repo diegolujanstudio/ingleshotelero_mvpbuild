@@ -18,12 +18,37 @@ import { DemoGuard } from "@/components/DemoGuard";
  * When not (demo mode), "Entrar en modo demo" bypasses auth and drops
  * the HR into the dashboard with demo data + live exam sessions.
  */
+/**
+ * Whitelist the post-login destination. Only the two internal consoles
+ * (and their sub-paths) are allowed — never an open redirect.
+ */
+function safeReturnTo(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/hr";
+  if (
+    raw === "/hr" ||
+    raw === "/masteros" ||
+    raw.startsWith("/hr/") ||
+    raw.startsWith("/masteros/")
+  ) {
+    return raw;
+  }
+  return "/hr";
+}
+
 export default function HRLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Read ?returnTo= once on the client (no Suspense boundary needed —
+  // this page is already "use client" and login is client-interactive).
+  const [returnTo] = useState(() =>
+    typeof window === "undefined"
+      ? "/hr"
+      : safeReturnTo(new URLSearchParams(window.location.search).get("returnTo")),
+  );
+  const forMasterOS = returnTo === "/masteros" || returnTo.startsWith("/masteros/");
 
   const supabaseConfigured =
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
@@ -45,7 +70,7 @@ export default function HRLoginPage() {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password, return_to: "/hr" }),
+        body: JSON.stringify({ email: email.trim(), password, return_to: returnTo }),
       });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -60,12 +85,7 @@ export default function HRLoginPage() {
         setBusy(false);
         return;
       }
-      const dest =
-        json.redirect_to &&
-        json.redirect_to.startsWith("/") &&
-        !json.redirect_to.startsWith("//")
-          ? json.redirect_to
-          : "/hr";
+      const dest = safeReturnTo(json.redirect_to ?? returnTo);
       window.location.assign(dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de autenticación");
@@ -88,12 +108,19 @@ export default function HRLoginPage() {
       </header>
 
       <section className="mx-auto max-w-prose px-6 py-24 md:px-12 md:py-32">
-        <p className="caps mb-6">{formatIndex(1)} · Acceso para Recursos Humanos</p>
+        <p className="caps mb-6">
+          {formatIndex(1)} ·{" "}
+          {forMasterOS
+            ? "Acceso al equipo · Master OS"
+            : "Acceso para Recursos Humanos"}
+        </p>
         <h1 className="font-serif text-t-h1 font-medium text-espresso">
           Bienvenido <em>de vuelta</em>.
         </h1>
         <p className="mt-4 font-sans text-t-body-lg text-espresso-soft">
-          Inicie sesión para ver los resultados de su equipo.
+          {forMasterOS
+            ? "Inicie sesión para entrar a la consola interna del equipo."
+            : "Inicie sesión para ver los resultados de su equipo."}
         </p>
 
         <HairlineRule className="my-10" />

@@ -13,6 +13,7 @@ import {
   UserCog,
   Settings,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 
 interface NavItem {
@@ -24,6 +25,7 @@ interface NavItem {
 
 interface ShellProps {
   email: string;
+  role?: string;
   children: React.ReactNode;
 }
 
@@ -31,8 +33,9 @@ interface ShellProps {
  * HR shell — left sidebar nav, ivory-soft surface, mono caps labels.
  * Visually identical density and rhythm to MasterosShell.
  */
-export function HRShell({ email, children }: ShellProps) {
+export function HRShell({ email, role, children }: ShellProps) {
   const pathname = usePathname();
+  const isSuperAdmin = role === "super_admin";
 
   const ops: NavItem[] = [
     {
@@ -101,6 +104,22 @@ export function HRShell({ email, children }: ShellProps) {
           {admin.map((item) => (
             <NavLink key={item.href} item={item} active={item.match(pathname)} />
           ))}
+
+          {isSuperAdmin && (
+            <>
+              <div className="mt-4">
+                <HairlineRule />
+              </div>
+              <SectionLabel className="pt-3">Equipo</SectionLabel>
+              <Link
+                href="/masteros"
+                className="mx-1 mt-px flex items-center gap-2.5 rounded-md px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ink transition-colors hover:bg-ink-tint"
+              >
+                <ShieldCheck className="h-4 w-4" aria-hidden />
+                Master OS
+              </Link>
+            </>
+          )}
         </nav>
         <HairlineRule />
         <div className="px-4 py-3">
@@ -135,6 +154,14 @@ export function HRShell({ email, children }: ShellProps) {
             </Link>
           </div>
           <nav className="mt-3 flex gap-3 overflow-x-auto">
+            {isSuperAdmin && (
+              <Link
+                href="/masteros"
+                className="shrink-0 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-ink"
+              >
+                Master OS
+              </Link>
+            )}
             {[...ops, ...admin].map((item) => (
               <Link
                 key={item.href}

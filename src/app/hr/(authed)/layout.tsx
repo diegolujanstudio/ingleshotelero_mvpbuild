@@ -16,5 +16,9 @@ export default async function HRAuthedLayout({
   children: React.ReactNode;
 }) {
   const user = await requireHRUser();
-  return <HRShell email={user.email}>{children}</HRShell>;
+  return (
+    <HRShell email={user.email} role={user.role}>
+      {children}
+    </HRShell>
+  );
 }
