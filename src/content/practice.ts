@@ -69,12 +69,13 @@ export const PRACTICE_COPY = {
       titleEmpty: "No hay palabras pendientes hoy.",
       noteEmpty:
         "Vuelva mañana — la repetición espaciada irá colocando palabras nuevas en su repaso conforme avance.",
-      reveal: "Mostrar traducción",
-      gradeQuestion: "¿Qué tan bien la recordó?",
+      reveal: "Ver la traducción",
+      revealHint: "Primero intenta recordarla. Luego toca para comprobar.",
+      gradeQuestion: "¿Te acordabas de esta palabra?",
       grades: [
         { value: 0, label: "No la sabía", tone: "error" },
-        { value: 3, label: "Difícil", tone: "warn" },
-        { value: 4, label: "Bien", tone: "neutral" },
+        { value: 3, label: "Más o menos", tone: "warn" },
+        { value: 4, label: "Sí, la sabía", tone: "neutral" },
         { value: 5, label: "Muy fácil", tone: "success" },
       ] as const,
       continue: "Terminar",

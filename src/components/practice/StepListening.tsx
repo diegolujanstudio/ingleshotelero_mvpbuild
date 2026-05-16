@@ -60,9 +60,12 @@ export function StepListening({
                 type="button"
                 disabled={picked !== null}
                 onClick={() => setPicked(i)}
-                className={`flex w-full items-center gap-4 rounded-md border p-4 text-left font-sans text-t-body-lg text-espresso transition-colors duration-200 ease-editorial ${stateClass}`}
+                className={`flex w-full items-center gap-4 rounded-md border-2 p-5 text-left font-sans text-t-body-lg text-espresso transition-colors duration-200 ease-editorial ${stateClass}`}
               >
-                <span className="font-mono text-[0.625rem] uppercase tracking-[0.08em] text-espresso-muted">
+                <span
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-hair font-sans text-t-label font-medium text-espresso-muted"
+                  aria-hidden
+                >
                   {String.fromCharCode(65 + i)}
                 </span>
                 <span>{opt.text_es}</span>
@@ -78,12 +81,14 @@ export function StepListening({
         </div>
       ) : null}
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8">
         <Button
           variant="accent"
+          size="lg"
           onClick={next}
           disabled={picked === null}
           aria-label={STEP.continue}
+          className="w-full sm:w-auto"
         >
           {STEP.continue}
           <ArrowRight className="h-4 w-4" aria-hidden />

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { Check, Eye } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PRACTICE_COPY } from "@/content/practice";
 import { uxGradeToSm2, type Grade } from "@/lib/practice/sm2";
@@ -116,34 +116,47 @@ export function StepReview({
         <p className="font-serif text-[1.6rem] font-medium leading-tight text-espresso">
           {card.word_en}
         </p>
-        <p className="mt-2 font-sans text-t-body text-espresso-soft">
+        <p className="mt-2 font-sans text-t-body-lg text-espresso-soft">
           {card.example_en}
         </p>
 
         {revealed ? (
-          <div className="mt-5 border-t border-hair pt-5">
-            <p className="font-serif text-[1.2rem] font-medium text-espresso">
+          <div className="mt-6 border-t border-hair pt-6">
+            <p className="font-serif text-[1.4rem] font-medium text-espresso">
               <em>{card.word_es}</em>
             </p>
-            <p className="mt-1 font-sans text-t-body text-espresso-muted">
+            <p className="mt-1.5 font-sans text-t-body-lg text-espresso-muted">
               {card.example_es}
             </p>
           </div>
-        ) : (
+        ) : null}
+      </div>
+
+      {/* Big, unmistakable reveal action — full-width, eye icon, clear
+          label. Replaces the old faint mono caption that 50+yo users
+          could not see was a button. */}
+      {!revealed ? (
+        <div className="mt-6">
           <button
             type="button"
             onClick={() => setRevealed(true)}
-            className="caps mt-5 inline-flex items-center text-ink hover:text-ink-deep"
+            className="flex w-full items-center justify-center gap-2.5 rounded-md border-2 border-ink bg-white px-6 py-4 font-sans text-t-body-lg font-medium text-ink transition-colors duration-200 ease-editorial hover:bg-ink-tint"
           >
+            <Eye className="h-5 w-5" aria-hidden />
             {STEP.reveal}
           </button>
-        )}
-      </div>
+          <p className="mt-3 text-center font-sans text-t-body text-espresso-muted">
+            {STEP.revealHint}
+          </p>
+        </div>
+      ) : null}
 
       {revealed ? (
         <div className="mt-8">
-          <p className="caps mb-3">{STEP.gradeQuestion}</p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <p className="font-sans text-t-body-lg font-medium text-espresso">
+            {STEP.gradeQuestion}
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {STEP.grades.map((g) => (
               <button
                 key={g.value}
@@ -159,24 +172,12 @@ export function StepReview({
                       : "easy",
                   )
                 }
-                className={`rounded-md border px-4 py-3 text-left font-sans text-t-body transition-colors duration-200 ease-editorial ${gradeClass(g.tone)}`}
+                className={`flex min-h-[56px] items-center rounded-md border-2 px-5 py-4 text-left font-sans text-t-body-lg font-medium transition-colors duration-200 ease-editorial ${gradeClass(g.tone)}`}
               >
-                <span className="caps mb-1 block text-espresso-muted">
-                  {g.value}
-                </span>
-                <span>{g.label}</span>
+                {g.label}
               </button>
             ))}
           </div>
-        </div>
-      ) : null}
-
-      {!revealed ? (
-        <div className="mt-8 flex justify-end">
-          <span className="caps text-espresso-muted">
-            <ArrowRight className="mr-1 inline h-3 w-3" aria-hidden />
-            Toque &ldquo;{STEP.reveal}&rdquo; para continuar
-          </span>
         </div>
       ) : null}
     </div>
@@ -184,14 +185,18 @@ export function StepReview({
 }
 
 function gradeClass(tone: "error" | "warn" | "neutral" | "success") {
+  // Resting borders carry a faint tone hint so the four choices read
+  // as a clear scale at a glance (not four identical grey boxes);
+  // hover/active fills the tone. Semantic colors used as states, per
+  // the design system — never as decoration.
   switch (tone) {
     case "error":
-      return "border-hair bg-white hover:border-error hover:bg-error/5";
+      return "border-error/30 bg-white text-espresso hover:border-error hover:bg-error/10";
     case "warn":
-      return "border-hair bg-white hover:border-warn hover:bg-warn/5";
+      return "border-warn/30 bg-white text-espresso hover:border-warn hover:bg-warn/10";
     case "neutral":
-      return "border-hair bg-white hover:border-espresso/40";
+      return "border-ink-soft bg-white text-espresso hover:border-ink hover:bg-ink-tint";
     case "success":
-      return "border-hair bg-white hover:border-success hover:bg-success/5";
+      return "border-success/40 bg-white text-espresso hover:border-success hover:bg-success/10";
   }
 }

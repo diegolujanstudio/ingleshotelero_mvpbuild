@@ -136,14 +136,14 @@ export function AudioPlayer({
       <button
         type="button"
         onClick={play}
-        className="inline-flex h-11 items-center gap-2 rounded-pill border border-hair bg-white px-5 font-sans text-espresso transition-colors duration-200 ease-editorial hover:border-ink"
+        className="inline-flex h-14 items-center gap-3 rounded-pill bg-ink px-7 font-sans text-t-body-lg font-medium text-white transition-colors duration-200 ease-editorial hover:bg-ink-deep"
       >
         {playing ? (
-          <Volume2 className="h-4 w-4" aria-hidden />
+          <Volume2 className="h-5 w-5" aria-hidden />
         ) : played ? (
-          <Repeat className="h-4 w-4" aria-hidden />
+          <Repeat className="h-5 w-5" aria-hidden />
         ) : (
-          <Play className="h-4 w-4" aria-hidden />
+          <Play className="h-5 w-5" aria-hidden />
         )}
         <span>{played ? replayLabel : label}</span>
       </button>
