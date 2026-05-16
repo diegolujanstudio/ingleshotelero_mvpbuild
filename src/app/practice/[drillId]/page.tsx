@@ -10,7 +10,8 @@ import { seedVocabularyIfEmpty } from "@/lib/practice/seed-vocab";
 import { readStreak } from "@/lib/practice/streak";
 import { getEmployeeSession } from "@/lib/auth/employee";
 import { ensureAudio } from "@/lib/tts/audio-bucket";
-import { DRILLS, pickDrill, type Role } from "@/content/practice-drills";
+import { pickDrill, type Role } from "@/content/practice-drills";
+import { getDrillById } from "@/lib/content/drills-store";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import { PracticeRunner, type RunnerData } from "./PracticeRunner";
 
@@ -79,11 +80,12 @@ export default async function PracticeDrillPage({ params, searchParams }: PagePr
     }
   }
 
-  // Resolve the drill.
+  // Resolve the drill — DB-first via the content store (Master OS-
+  // editable), static file as the guaranteed fallback inside the store.
   let drill =
     params.drillId === "today" || params.drillId === "next"
       ? null
-      : DRILLS[role as Role]?.find((d) => d.id === params.drillId) ?? null;
+      : await getDrillById(role as Role, params.drillId);
 
   if (!drill) {
     if (isSupabaseConfigured() && employee_id) {

@@ -34,7 +34,8 @@ import "server-only";
  */
 
 import { createServiceClient } from "@/lib/supabase/client-or-service";
-import { DRILLS, type Drill, type Role } from "@/content/practice-drills";
+import { type Drill, type Role } from "@/content/practice-drills";
+import { getDrillsForRole } from "@/lib/content/drills-store";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import { log } from "@/lib/server/log";
 
@@ -74,7 +75,8 @@ export async function pickDrillForEmployee(
   level: CEFRLevel,
   today: Date = new Date(),
 ): Promise<PickedDrill> {
-  const pool = DRILLS[role as Role] ?? [];
+  // DB-first (Master OS-editable), static file as guaranteed fallback.
+  const pool = await getDrillsForRole(role as Role);
   if (pool.length === 0) {
     // Truly empty pool — caller should treat this as a content gap.
     throw new Error(`No drills configured for role ${role}`);
