@@ -16,26 +16,30 @@ import type { Database } from "./types";
 export function createServerClient() {
   const cookieStore = cookies();
 
+  // MUST use the getAll/setAll adapter — @supabase/ssr 0.5.x encodes &
+  // chunks the auth cookie differently between the legacy get/set/remove
+  // adapter and getAll/setAll. The middleware reads with getAll; if the
+  // sign-in route writes with the legacy adapter the formats mismatch
+  // and supabase.auth.getUser() in middleware sees no session → every
+  // authenticated request bounced to /?returnTo=. Keep both sides on
+  // getAll/setAll.
   return _createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: Record<string, unknown>) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
           } catch {
-            // Called from a Server Component — cookies can't be set. Auth middleware handles refreshes.
-          }
-        },
-        remove(name: string, options: Record<string, unknown>) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch {
-            // See above.
+            // Called from a Server Component — cookies are read-only
+            // there. The middleware performs the session refresh, so
+            // this is safe to swallow.
           }
         },
       },
