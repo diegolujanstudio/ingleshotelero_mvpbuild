@@ -1,12 +1,17 @@
 import { SOPORTE, FORM_NAME, HONEYPOT_FIELD } from "@/content/forms";
 
 /**
- * Support intake form — Netlify Forms compatible.
+ * Support intake form.
  *
- * Server Component (no "use client"). Submits as a normal HTML POST that
- * Netlify intercepts at the edge before it ever reaches our backend.
- * Netlify then fans out via the outgoing-webhook config to
- * /api/netlify/forms-webhook for DB persistence + email notification.
+ * Server Component (no "use client"). Submits a normal HTML POST to our
+ * own first-party route /api/forms/submit, which persists to `leads`
+ * (→ /masteros/leads) and emails victor + diego via Resend, then 303s to
+ * /soporte/gracias.
+ *
+ * NOTE: Netlify Forms is NOT used. This is a Next.js SSR app under
+ * @netlify/plugin-nextjs, so Netlify never intercepts the POST (every
+ * route is a function). QA proved live submissions were silently lost on
+ * that path — owning the route end-to-end is the reliable design.
  *
  * Field NAMES that overlap with `pilot` (name, email, phone, company,
  * message) map cleanly onto the same `leads` columns. The `topic` field
@@ -19,12 +24,11 @@ export function SupportForm() {
     <form
       name={FORM_NAME.soporte}
       method="POST"
-      action="/soporte/gracias"
-      data-netlify="true"
-      netlify-honeypot={HONEYPOT_FIELD}
+      action="/api/forms/submit"
       className="space-y-8 rounded-md border border-hair bg-white p-6 md:p-8"
     >
       <input type="hidden" name="form-name" value={FORM_NAME.soporte} />
+      <input type="hidden" name="redirect" value="/soporte/gracias" />
 
       <p hidden>
         <label>

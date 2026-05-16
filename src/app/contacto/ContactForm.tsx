@@ -2,24 +2,20 @@ import Link from "next/link";
 import { PILOT, FORM_NAME, HONEYPOT_FIELD } from "@/content/forms";
 
 /**
- * Pilot lead-capture form — Netlify Forms compatible.
+ * Pilot lead-capture form.
  *
- * IMPORTANT: this is intentionally a Server Component (no "use client").
- * Netlify scrapes the static HTML at build time to register the form, so
- * everything must render server-side and submit via a normal HTML POST.
- * The handler that runs after submission lives at
- * /api/netlify/forms-webhook (configured in the Netlify dashboard).
+ * Server Component (no "use client"). Submits a normal HTML POST to our
+ * own first-party route /api/forms/submit, which persists to `leads`
+ * (→ /masteros/leads) and emails victor + diego via Resend, then 303s to
+ * /contacto/gracias.
  *
- * Required Netlify markers (do not remove):
- *   - data-netlify="true"
- *   - netlify-honeypot="bot-field"
- *   - hidden <input name="form-name" value="pilot" />  (FIRST input)
- *   - hidden honeypot <input name="bot-field" />
+ * NOTE: Netlify Forms is NOT used. On this Next.js SSR app
+ * (@netlify/plugin-nextjs) every route is a function, so Netlify never
+ * intercepts the POST — QA proved live submissions were silently lost on
+ * that path. Owning the route end-to-end is the reliable design.
  *
  * Validation is handled by the browser via `required` and `type=email`.
- * The webhook does not re-validate field shape — Netlify accepts whatever
- * the visitor types, and a human reads every submission. Spam control is
- * the honeypot + Netlify's built-in Akismet pass.
+ * Spam control is the hidden honeypot field.
  */
 export function ContactForm() {
   const f = PILOT.fields;
@@ -28,13 +24,11 @@ export function ContactForm() {
     <form
       name={FORM_NAME.pilot}
       method="POST"
-      action="/contacto/gracias"
-      data-netlify="true"
-      netlify-honeypot={HONEYPOT_FIELD}
+      action="/api/forms/submit"
       className="space-y-8 rounded-md border border-hair bg-white p-6 md:p-8"
     >
-      {/* form-name MUST be the first input — Netlify routes by it. */}
       <input type="hidden" name="form-name" value={FORM_NAME.pilot} />
+      <input type="hidden" name="redirect" value="/contacto/gracias" />
 
       {/* Honeypot — invisible to humans, irresistible to bots. */}
       <p hidden>
