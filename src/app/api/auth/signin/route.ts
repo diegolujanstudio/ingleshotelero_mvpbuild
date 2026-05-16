@@ -18,7 +18,10 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/client-or-service";
+import {
+  isSupabaseConfigured,
+  createServiceClient,
+} from "@/lib/supabase/client-or-service";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 import { jsonError, jsonOk, parseBody } from "@/lib/server/api";
 import { addBreadcrumb, captureException } from "@/lib/server/sentry";
@@ -83,11 +86,24 @@ export async function POST(req: Request) {
     }
 
     // Verify the user has a matching active hr_users row.
-    const { data: hr } = (await supabase
-      .from("hr_users")
-      .select("id, role, is_active")
-      .eq("id", data.user.id)
-      .maybeSingle()) as unknown as {
+    //
+    // IMPORTANT: use the SERVICE client (bypasses RLS), not the
+    // RLS-bound `supabase` client. Right after signInWithPassword on
+    // the server-side @supabase/ssr client, the new session's JWT is
+    // written to the response cookies but is NOT attached to the
+    // immediate next PostgREST call — so the `hr_self_read` RLS policy
+    // (`id = auth.uid()`) sees a null uid and returns zero rows,
+    // producing a false `no_hr_profile`. We've already proven identity
+    // via signInWithPassword; a service-role lookup by the verified
+    // user id is correct and safe.
+    const svc = createServiceClient();
+    const { data: hr } = (svc
+      ? await svc
+          .from("hr_users")
+          .select("id, role, is_active")
+          .eq("id", data.user.id)
+          .maybeSingle()
+      : { data: null }) as unknown as {
       data: { id: string; role: string; is_active: boolean } | null;
     };
 

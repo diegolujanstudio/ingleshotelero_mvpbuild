@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { createClient } from "@/lib/supabase/client";
 import { HR_SIGNIN } from "@/content/auth";
 
 /**
@@ -25,7 +24,6 @@ import { HR_SIGNIN } from "@/content/auth";
  * reset flow ships in Phase B).
  */
 export function HRSignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams?.get("returnTo") ?? "/hr";
 
@@ -51,24 +49,42 @@ export function HRSignInForm() {
 
     setBusy(true);
     try {
-      const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      // POST to the server-side sign-in route. It runs
+      // signInWithPassword via the @supabase/ssr server client (which
+      // writes the auth cookie onto THIS response, reliably), verifies
+      // the hr_users profile with the service client (no RLS race),
+      // and returns the safe redirect path. We then do a HARD
+      // navigation so the just-set cookie is guaranteed to ride the
+      // next request and the middleware sees the session — no
+      // client-side cookie/navigation race.
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          return_to: returnTo,
+        }),
       });
-      if (err) {
-        setError(err.message || HR_SIGNIN.errorGeneric);
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        redirect_to?: string;
+        error?: { code?: string; message?: string };
+      };
+      if (!res.ok || !json.ok) {
+        setError(json.error?.message || HR_SIGNIN.errorGeneric);
+        setBusy(false);
         return;
       }
-      // Validate that the destination is a relative path before redirecting,
-      // so an attacker can't craft `?returnTo=https://evil.com`.
-      const safeReturn =
-        returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/hr";
-      router.push(safeReturn);
-      router.refresh();
+      const dest =
+        json.redirect_to &&
+        json.redirect_to.startsWith("/") &&
+        !json.redirect_to.startsWith("//")
+          ? json.redirect_to
+          : "/hr";
+      window.location.assign(dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : HR_SIGNIN.errorGeneric);
-    } finally {
       setBusy(false);
     }
   };
