@@ -6,6 +6,7 @@ import {
 } from "@/lib/supabase/client-or-service";
 import { pickDrillForEmployee } from "@/lib/practice/picker";
 import { readStreak } from "@/lib/practice/streak";
+import { getEmployeeSession } from "@/lib/auth/employee";
 import { pickDrill, ROLE_LABELS } from "@/content/practice-drills";
 import { Logo } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
@@ -44,7 +45,13 @@ interface PageProps {
 }
 
 export default async function PracticeIndex({ searchParams }: PageProps) {
-  const employee_id = searchParams.employee_id ?? null;
+  // Resolve the employee from (1) the personal-link session cookie —
+  // the real path: HR sends /i/<token>, the route sets ih_employee_session
+  // and redirects here — or (2) an explicit ?employee_id= param (demo /
+  // testing / deep links). Cookie wins because it's the authenticated
+  // identity; the param is a convenience fallback.
+  const session = await getEmployeeSession();
+  const employee_id = session?.employee_id ?? searchParams.employee_id ?? null;
   let role: RoleModule =
     (searchParams.role && VALID_ROLES.includes(searchParams.role as RoleModule)
       ? (searchParams.role as RoleModule)

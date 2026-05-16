@@ -8,6 +8,7 @@ import { pickDrillForEmployee } from "@/lib/practice/picker";
 import { selectDueCards } from "@/lib/practice/vocab";
 import { seedVocabularyIfEmpty } from "@/lib/practice/seed-vocab";
 import { readStreak } from "@/lib/practice/streak";
+import { getEmployeeSession } from "@/lib/auth/employee";
 import { ensureAudio } from "@/lib/tts/audio-bucket";
 import { DRILLS, pickDrill, type Role } from "@/content/practice-drills";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
@@ -48,7 +49,9 @@ const VALID_LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2"];
  * The runner client component takes RunnerData and runs the loop.
  */
 export default async function PracticeDrillPage({ params, searchParams }: PageProps) {
-  const employee_id = searchParams.employee_id ?? null;
+  // Cookie-first employee resolution (see /practice/page.tsx for rationale).
+  const session = await getEmployeeSession();
+  const employee_id = session?.employee_id ?? searchParams.employee_id ?? null;
   let role: RoleModule =
     (searchParams.role && VALID_ROLES.includes(searchParams.role as RoleModule)
       ? (searchParams.role as RoleModule)
