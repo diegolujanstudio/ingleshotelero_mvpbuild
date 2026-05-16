@@ -130,11 +130,13 @@ export async function POST(request: Request) {
     name: pickStr(data.name),
     email: pickStr(data.email),
     phone: pickStr(data.phone),
-    company: pickStr(data.company),
+    // Landing form labels the org field "hotel"; CRM column is "company".
+    company: pickStr(data.company) ?? pickStr(data.hotel),
     hotel_count: pickInt(data.hotel_count),
     city: pickStr(data.city),
     role: pickStr(data.role),
-    message: pickStr(data.message),
+    // Landing form labels the free-text field "note"; column is "message".
+    message: pickStr(data.message) ?? pickStr(data.note),
     source_url: pickStr(data.source_url) ?? pickStr(envelope.referrer),
     user_agent: pickStr(envelope.user_agent),
     netlify_submission_id: pickStr(envelope.id),
