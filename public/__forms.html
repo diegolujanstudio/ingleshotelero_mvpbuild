@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  Netlify Forms detection file.
+
+  @netlify/plugin-nextjs@5 (the Next.js runtime) does NOT scrape
+  `data-netlify="true"` forms rendered by Server/Client Components the
+  way the legacy plugin did. The supported migration is to declare every
+  form once in this static HTML file, which Netlify's build-time form
+  bot parses to register the forms. The real React forms keep their
+  `data-netlify` + hidden `form-name` + honeypot and POST normally;
+  Netlify intercepts the POST at the edge.
+
+  Ref: https://ntl.fyi/next-runtime-forms-migration
+
+  Field names MUST match the React forms exactly:
+    - src/app/contacto/ContactForm.tsx   (form name: "pilot")
+    - src/app/soporte/SupportForm.tsx    (form name: "soporte")
+-->
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Forms</title>
+  </head>
+  <body>
+    <!-- ── pilot (lead / pedir piloto) ───────────────────────── -->
+    <form name="pilot" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="pilot" />
+      <input name="bot-field" />
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="company" />
+      <input type="number" name="hotel_count" />
+      <input type="text" name="city" />
+      <input type="text" name="role" />
+      <textarea name="message"></textarea>
+      <input type="checkbox" name="acepta_privacidad" />
+    </form>
+
+    <!-- ── soporte (contact us / support) ─────────────────────── -->
+    <form name="soporte" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="soporte" />
+      <input name="bot-field" />
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="company" />
+      <input type="text" name="topic" />
+      <textarea name="message"></textarea>
+    </form>
+  </body>
+</html>
