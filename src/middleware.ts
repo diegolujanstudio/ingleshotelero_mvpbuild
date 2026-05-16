@@ -25,6 +25,22 @@ import { NextResponse, type NextRequest } from "next/server";
  * including the super_admin → /__notfound rewrite for /masteros.
  */
 
+/**
+ * Base64 → UTF-8 string, EDGE-SAFE (no Node `Buffer` — it does not
+ * exist in the Netlify Edge runtime; using it throws and silently
+ * invalidated every session, which was THE bug). Uses Web `atob`
+ * + TextDecoder.
+ */
+function b64ToUtf8(b64: string): string {
+  // Normalize base64url → base64 + pad.
+  let s = b64.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  const bin = atob(s);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
 function decodeSupabaseCookie(raw: string | undefined): {
   valid: boolean;
   sub?: string;
@@ -34,9 +50,7 @@ function decodeSupabaseCookie(raw: string | undefined): {
     // @supabase/ssr 0.5.x stores the session as `base64-<base64(JSON)>`.
     let json = raw;
     if (raw.startsWith("base64-")) {
-      json = Buffer.from(raw.slice("base64-".length), "base64").toString(
-        "utf-8",
-      );
+      json = b64ToUtf8(raw.slice("base64-".length));
     }
     const session = JSON.parse(json) as {
       access_token?: string;
@@ -46,20 +60,19 @@ function decodeSupabaseCookie(raw: string | undefined): {
 
     // Trust expires_at when present; otherwise decode the JWT exp.
     let exp = session.expires_at;
+    let sub: string | undefined;
     if (!exp) {
       const payload = session.access_token.split(".")[1];
       if (!payload) return { valid: false };
-      const decoded = JSON.parse(
-        Buffer.from(
-          payload.replace(/-/g, "+").replace(/_/g, "/"),
-          "base64",
-        ).toString("utf-8"),
-      ) as { exp?: number; sub?: string };
+      const decoded = JSON.parse(b64ToUtf8(payload)) as {
+        exp?: number;
+        sub?: string;
+      };
       exp = decoded.exp;
-      if (decoded.sub) return { valid: !!exp && exp * 1000 > Date.now(), sub: decoded.sub };
+      sub = decoded.sub;
     }
     const nowSec = Math.floor(Date.now() / 1000);
-    return { valid: typeof exp === "number" && exp > nowSec };
+    return { valid: typeof exp === "number" && exp > nowSec, sub };
   } catch {
     return { valid: false };
   }

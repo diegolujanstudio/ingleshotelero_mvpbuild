@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 // Build-fingerprint marker — Diego greps for this string in the live HTML
 // to verify Netlify is deploying our pushes. Bumped on every deploy probe.
 // If you see this comment in production HTML, that build IS live.
-const BUILD_MARKER = "ih-build-mw-localcheck";
+const BUILD_MARKER = "ih-build-mw-edgesafe";
 
 export default function AppEntry() {
   return (

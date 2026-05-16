@@ -591,6 +591,92 @@ export const DRILLS: Record<Role, Drill[]> = {
         },
       ],
     },
+    {
+      id: "r-004",
+      level: "A1",
+      listening: {
+        audio_text: "The check, please.",
+        options: [
+          { emoji: "🧾", text_es: "Traer la cuenta", correct: true },
+          { emoji: "🍰", text_es: "Ofrecer el postre", correct: false },
+          { emoji: "🍷", text_es: "Traer más vino", correct: false },
+        ],
+        explanation_es:
+          "El huésped pide la cuenta. La acción correcta es traerla de inmediato, sin ofrecer más cosas.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll bring the check right away.",
+        note_es:
+          "Cuando piden la cuenta, no es momento de vender más — “right away” respeta su tiempo.",
+      },
+      vocabulary: [
+        {
+          word_en: "check",
+          word_es: "cuenta",
+          example_en: "Here is your check, sir.",
+          example_es: "Aquí está su cuenta, señor.",
+        },
+        {
+          word_en: "of course",
+          word_es: "por supuesto",
+          example_en: "Of course, right away.",
+          example_es: "Por supuesto, enseguida.",
+        },
+        {
+          word_en: "bring",
+          word_es: "traer",
+          example_en: "I'll bring it now.",
+          example_es: "Se lo traigo ahora.",
+        },
+      ],
+    },
+    {
+      id: "r-005",
+      level: "B2",
+      listening: {
+        audio_text:
+          "This steak is overcooked — I asked for medium rare. We're celebrating an anniversary and this is disappointing.",
+        options: [
+          {
+            emoji: "👨‍🍳",
+            text_es: "Disculparse sinceramente, retirar el plato y ofrecer rehacerlo de inmediato",
+            correct: true,
+          },
+          { emoji: "🤷", text_es: "Explicar que así lo prepara el chef", correct: false },
+          { emoji: "🧾", text_es: "Ofrecer un descuento y dejar el plato", correct: false },
+        ],
+        explanation_es:
+          "Plato mal preparado en una ocasión especial. La respuesta B2 reconoce la ocasión, asume el error y lo corrige rápido.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en:
+          "I'm so sorry — that's not the standard we want for your anniversary. Let me take this back and have the chef prepare a fresh one, medium rare, right away. It's on us.",
+        note_es:
+          "Nombrar la ocasión (“your anniversary”), asumir el error y ofrecer una solución concreta + cortesía (“on us”) recupera la experiencia.",
+      },
+      vocabulary: [
+        {
+          word_en: "overcooked",
+          word_es: "demasiado cocido",
+          example_en: "I'm sorry it's overcooked.",
+          example_es: "Lamento que esté demasiado cocido.",
+        },
+        {
+          word_en: "medium rare",
+          word_es: "término medio rojo",
+          example_en: "One steak, medium rare.",
+          example_es: "Un filete, término medio rojo.",
+        },
+        {
+          word_en: "it's on us",
+          word_es: "va por cuenta de la casa",
+          example_en: "Dessert is on us tonight.",
+          example_es: "El postre va por cuenta de la casa esta noche.",
+        },
+      ],
+    },
   ],
 };
 
