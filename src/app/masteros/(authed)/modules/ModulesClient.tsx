@@ -6,6 +6,11 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { DenseDataTable } from "@/components/masteros/DenseDataTable";
 import { JsonEditor } from "@/components/masteros/JsonEditor";
+import {
+  DrillTemplateForm,
+  toDrill,
+  type Drill,
+} from "./DrillTemplateForm";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Badge, LevelBadge } from "@/components/ui/Badge";
 import { MODULES } from "@/content/masteros";
@@ -452,45 +457,93 @@ function EditDrawer({
   onClose: () => void;
   onSaved: (item: ContentItem) => void;
 }) {
+  // A drill is editable with the friendly template; anything else (or an
+  // explicit opt-in) uses the raw JSON editor — nothing is ever lost.
+  const isDrill = initial.item_type === "drill";
+  const [mode, setMode] = useState<"form" | "json">(
+    isDrill ? "form" : "json",
+  );
+
+  // ── Template (form) state ──
+  const [moduleSel, setModuleSel] = useState<RoleModule>(
+    (initial.module as RoleModule) ?? "frontdesk",
+  );
+  const [drill, setDrill] = useState<Drill>(() => toDrill(initial.options));
+
+  // ── JSON state ──
   const original = useMemo(() => JSON.stringify(initial, null, 2), [initial]);
   const [text, setText] = useState<string>(original);
   const [parsed, setParsed] = useState<unknown>(initial);
   const [error, setError] = useState<string | null>(null);
+
   const [saving, setSaving] = useState(false);
 
-  const dirty = text !== original;
-  const canSave = !error && parsed && typeof parsed === "object" && dirty;
+  const formValid =
+    drill.id.trim().length > 0 &&
+    drill.listening.audio_text.trim().length > 0 &&
+    drill.reinforce.model_en.trim().length > 0 &&
+    drill.listening.options.some((o) => o.correct);
 
   async function save() {
-    if (!parsed || typeof parsed !== "object") return;
     setSaving(true);
+    setError(null);
     try {
-      const body = parsed as Record<string, unknown>;
+      let payload: Record<string, unknown>;
+      if (mode === "form") {
+        if (!formValid) {
+          setError(
+            "Falta: ID, audio, frase modelo o marcar la opción correcta.",
+          );
+          return;
+        }
+        // Mirror the seed contract (scripts/seed-content-items.mjs):
+        // the full Drill is authoritative in `options`; flat columns
+        // mirror it for the table/preview.
+        payload = {
+          module: moduleSel,
+          level: drill.level,
+          skill: "listening",
+          item_type: "drill",
+          topic: drill.id.trim(),
+          audio_text: drill.listening.audio_text,
+          scenario_es: drill.listening.explanation_es || null,
+          model_response: drill.reinforce.model_en,
+          options: { ...drill, id: drill.id.trim() },
+          is_active: initial.is_active ?? true,
+        };
+      } else {
+        if (!parsed || typeof parsed !== "object") {
+          setError("JSON inválido.");
+          return;
+        }
+        payload = parsed as Record<string, unknown>;
+      }
+
       const url = isNew
         ? "/api/masteros/modules"
         : `/api/masteros/modules/${initial.id}`;
       const method = isNew ? "POST" : "PATCH";
-      // For PATCH, strip id/created_at to avoid the schema rejecting them.
-      const payload = isNew
-        ? body
-        : Object.fromEntries(
-            Object.entries(body).filter(
-              ([k]) => k !== "id" && k !== "created_at",
-            ),
-          );
+      const finalBody =
+        isNew || mode === "form"
+          ? payload
+          : Object.fromEntries(
+              Object.entries(payload).filter(
+                ([k]) => k !== "id" && k !== "created_at",
+              ),
+            );
       const res = await fetch(url, {
         method,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(finalBody),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setError(typeof j.error === "string" ? j.error : "Error");
+        setError(typeof j.error === "string" ? j.error : "Error al guardar.");
         return;
       }
       const json = (await res.json()) as { item?: ContentItem };
       if (json.item) onSaved(json.item);
-      else onSaved({ ...(parsed as ContentItem), id: initial.id });
+      else onSaved({ ...(initial as ContentItem) });
     } finally {
       setSaving(false);
     }
@@ -515,28 +568,70 @@ function EditDrawer({
               {isNew ? MODULES.drawer.titleNew : MODULES.drawer.title}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft hover:text-ink"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            {isDrill && (
+              <div className="flex rounded-pill border border-hair bg-white p-0.5">
+                {(["form", "json"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={
+                      mode === m
+                        ? "rounded-pill bg-ink px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-white"
+                        : "rounded-pill px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft"
+                    }
+                  >
+                    {m === "form" ? "Plantilla" : "JSON"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft hover:text-ink"
+            >
+              ✕
+            </button>
+          </div>
         </header>
         <div className="flex-1 overflow-y-auto p-5">
-          <JsonEditor
-            value={text}
-            onChange={(v, p, e) => {
-              setText(v);
-              setParsed(p);
-              setError(e);
-            }}
-            rows={28}
-            ariaLabel="Editor JSON del item"
-          />
-          {dirty && (
-            <p className="mt-3 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-warn">
-              {MODULES.drawer.diff}
+          {mode === "form" ? (
+            <div className="space-y-5">
+              <div>
+                <label className="caps mb-1.5 block">Módulo (rol)</label>
+                <select
+                  className="w-full rounded-md border border-hair bg-white px-3 py-2 font-sans text-t-body text-espresso focus:border-ink focus:outline-none"
+                  value={moduleSel}
+                  onChange={(e) =>
+                    setModuleSel(e.target.value as RoleModule)
+                  }
+                >
+                  {["bellboy", "frontdesk", "restaurant"].map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <DrillTemplateForm drill={drill} onChange={setDrill} />
+            </div>
+          ) : (
+            <JsonEditor
+              value={text}
+              onChange={(v, p, e) => {
+                setText(v);
+                setParsed(p);
+                setError(e);
+              }}
+              rows={28}
+              ariaLabel="Editor JSON del item"
+            />
+          )}
+          {error && (
+            <p className="mt-3 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-error">
+              {error}
             </p>
           )}
         </div>
@@ -547,7 +642,7 @@ function EditDrawer({
           <Button
             variant="primary"
             onClick={save}
-            disabled={!canSave || saving}
+            disabled={saving || (mode === "form" && !formValid)}
           >
             {saving ? MODULES.drawer.saving : MODULES.drawer.save}
           </Button>
