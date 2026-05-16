@@ -51,15 +51,39 @@ const KNOWN_FIELDS = new Set([
   "form-name",
   "bot-field",
   "redirect",
+  "ajax",
   "name",
   "email",
   "phone",
   "company",
+  "hotel", // aliased → company (landing site field name)
   "hotel_count",
   "city",
   "role",
   "message",
+  "note", // aliased → message (landing site field name)
 ]);
+
+// The marketing landing (ingleshotelero.com) submits cross-origin via
+// fetch(). Echo back an allowed origin so its `res.ok` check works. The
+// PWA's own same-origin forms don't need this and are unaffected.
+const ALLOWED_ORIGINS = new Set<string>([
+  "https://ingleshotelero.com",
+  "https://www.ingleshotelero.com",
+]);
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    return {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+      Vary: "Origin",
+    };
+  }
+  return {};
+}
 
 function str(v: FormDataEntryValue | null): string | null {
   if (typeof v !== "string") return null;
@@ -74,7 +98,19 @@ function int(v: FormDataEntryValue | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+// CORS preflight for the cross-origin landing fetch (only fires for some
+// browsers; urlencoded POSTs are "simple" and usually skip this).
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(request.headers.get("origin")),
+  });
+}
+
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  const cors = corsHeaders(origin);
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -82,6 +118,11 @@ export async function POST(request: Request) {
     log.error({ err: String(err) }, "forms.submit.bad_body");
     return NextResponse.redirect(new URL("/", request.url), 303);
   }
+
+  // The landing site posts via fetch() and only inspects res.ok — it owns
+  // its own inline thank-you. Reply JSON (not a 303) so the cross-origin
+  // fetch resolves cleanly. Same-origin PWA forms omit `ajax` → 303 as before.
+  const isAjax = (str(form.get("ajax")) ?? "") === "1";
 
   const rawName = (str(form.get("form-name")) ?? "").toLowerCase();
   const formName: LeadFormName = KNOWN_FORMS.has(rawName as LeadFormName)
@@ -94,13 +135,16 @@ export async function POST(request: Request) {
     ALLOWED_REDIRECTS.has(requested) && requested
       ? requested
       : REDIRECTS[formName] ?? "/";
-  const redirectResponse = () =>
-    NextResponse.redirect(new URL(dest, request.url), 303);
+  // AJAX callers get JSON+CORS; classic form posts get a 303 to gracias.
+  const done = () =>
+    isAjax
+      ? NextResponse.json({ ok: true }, { status: 200, headers: cors })
+      : NextResponse.redirect(new URL(dest, request.url), 303);
 
   // Honeypot — bots fill the hidden field. Drop silently (still thank them).
   if ((str(form.get("bot-field")) ?? "").length > 0) {
     log.warn({ formName }, "forms.submit.honeypot");
-    return redirectResponse();
+    return done();
   }
 
   // Anything not modeled as a column is preserved in metadata so we never
@@ -119,11 +163,13 @@ export async function POST(request: Request) {
     name: str(form.get("name")),
     email: str(form.get("email")),
     phone: str(form.get("phone")),
-    company: str(form.get("company")),
+    // Landing site labels the org field "hotel"; PWA forms use "company".
+    company: str(form.get("company")) ?? str(form.get("hotel")),
     hotel_count: int(form.get("hotel_count")),
     city: str(form.get("city")),
     role: str(form.get("role")),
-    message: str(form.get("message")),
+    // Landing site labels the free-text field "note"; PWA uses "message".
+    message: str(form.get("message")) ?? str(form.get("note")),
     source_url:
       str(form.get("source_url")) ?? request.headers.get("referer") ?? null,
     user_agent: request.headers.get("user-agent"),
@@ -160,7 +206,7 @@ export async function POST(request: Request) {
     }
   }
 
-  return redirectResponse();
+  return done();
 }
 
 // Visiting the endpoint directly is not meaningful — send people to support.
