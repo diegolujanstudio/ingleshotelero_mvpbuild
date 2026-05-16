@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
 import { StreakChip } from "@/components/practice/StreakChip";
+import { StreakRibbon } from "@/components/practice/StreakRibbon";
 import { PRACTICE_COPY } from "@/content/practice";
 
 export const metadata: Metadata = {
@@ -61,6 +62,12 @@ export default function PracticeDonePage({ searchParams }: PageProps) {
         <p className="mt-6 max-w-prose font-sans text-t-body-lg text-espresso-soft">
           {ticked ? PRACTICE_COPY.done.notePrimary : PRACTICE_COPY.done.noteExtra}
         </p>
+
+        {ticked && (
+          <div className="mt-10">
+            <StreakRibbon streak={streak} />
+          </div>
+        )}
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <ButtonLink href="/" variant="primary">
