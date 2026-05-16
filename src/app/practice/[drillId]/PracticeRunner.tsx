@@ -61,9 +61,15 @@ export function PracticeRunner({ data }: { data: RunnerData }) {
     }
   }
 
-  async function finish() {
+  async function finish(vocabOverride?: number) {
     if (submitting) return;
     setSubmitting(true);
+
+    // The review step passes its final count straight through —
+    // reading `vocabKnown` from state here would be stale (setState
+    // hasn't flushed before this runs in the same tick), which made
+    // every drill record vocab_known=0.
+    const vocabFinal = vocabOverride ?? vocabKnown;
 
     const duration = Math.round((Date.now() - startedAtRef.current) / 1000);
 
@@ -81,7 +87,7 @@ export function PracticeRunner({ data }: { data: RunnerData }) {
             module: data.module,
             listening_correct: listeningCorrect,
             speaking_score: speakingScore,
-            vocab_known: vocabKnown,
+            vocab_known: vocabFinal,
             duration_seconds: duration,
           }),
         });
@@ -110,7 +116,7 @@ export function PracticeRunner({ data }: { data: RunnerData }) {
     const params = new URLSearchParams({
       streak: String(serverStreak?.current ?? localCurrent),
       ticked: String(serverStreak?.ticked ?? localTicked),
-      vocab: String(vocabKnown),
+      vocab: String(vocabFinal),
     });
     router.push(`/practice/done?${params.toString()}`);
   }
@@ -173,7 +179,9 @@ export function PracticeRunner({ data }: { data: RunnerData }) {
             employee_id={data.employee_id}
             onComplete={({ vocab_known }) => {
               setVocabKnown(vocab_known);
-              advance();
+              // review is the terminal step — call finish() directly
+              // with the count so it isn't read stale from state.
+              void finish(vocab_known);
             }}
           />
         ) : null}

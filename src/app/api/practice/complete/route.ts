@@ -138,21 +138,31 @@ export async function POST(req: Request) {
     // 3. Streak.
     const streak = await tickStreak(input.employee_id, today);
 
-    // 4. Analytics best-effort.
-    void supabase.from("analytics_events").insert({
-      event_type: "drill_completed",
-      employee_id: input.employee_id,
-      metadata: {
-        drill_id: input.drill_id,
-        module: input.module,
-        level: input.level,
-        listening_correct: input.listening_correct ?? null,
-        speaking_score: input.speaking_score ?? null,
-        vocab_known: input.vocab_known ?? 0,
-        duration_seconds: input.duration_seconds ?? null,
-        ticked: streak.ticked,
-      } as Json,
-    });
+    // 4. Analytics — AWAITED, not fire-and-forget. On Netlify the
+    // function is frozen the moment the response returns, so a
+    // `void`'d insert never lands (this is why analytics_events was
+    // empty in QA). One INSERT is cheap; await it.
+    try {
+      await supabase.from("analytics_events").insert({
+        event_type: "drill_completed",
+        employee_id: input.employee_id,
+        metadata: {
+          drill_id: input.drill_id,
+          module: input.module,
+          level: input.level,
+          listening_correct: input.listening_correct ?? null,
+          speaking_score: input.speaking_score ?? null,
+          vocab_known: input.vocab_known ?? 0,
+          duration_seconds: input.duration_seconds ?? null,
+          ticked: streak.ticked,
+        } as Json,
+      });
+    } catch (analyticsErr) {
+      log.warn(
+        { err: String(analyticsErr), employee_id: input.employee_id },
+        "practice.complete.analytics.failed",
+      );
+    }
 
     return NextResponse.json({
       ok: true,
