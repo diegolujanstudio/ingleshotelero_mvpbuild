@@ -44,8 +44,24 @@ export async function POST(req: Request) {
     raw = {};
   }
 
-  // Persisted mode: scoring worker invocation (recording_id or empty body).
-  if (isSupabaseConfigured()) {
+  // ── Route disambiguation (the fix) ──────────────────────────────
+  // There are TWO callers:
+  //   (a) the EXAM scoring worker — body is empty {} (claim batch) or
+  //       { recording_id } (score one). Requires Supabase.
+  //   (b) the DAILY PRACTICE speaking step — a rich body with
+  //       model_response_en / scenario_es (+ audio). This must ALWAYS
+  //       score inline and return real feedback, even in production
+  //       (Supabase configured). Previously prod forced every call into
+  //       the persisted branch, so the practice rep got a 400 → the
+  //       learner never received real speaking feedback. THIS is the
+  //       learning-depth defect.
+  const obj =
+    raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const hasRecordingId = typeof obj.recording_id === "string";
+  const isWorkerCall =
+    hasRecordingId || Object.keys(obj).length === 0; // {recording_id} | {}
+
+  if (isWorkerCall && isSupabaseConfigured()) {
     const parsed = persistedSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
@@ -66,9 +82,10 @@ export async function POST(req: Request) {
     }
   }
 
-  // Demo mode: client passes scenario + audio_data_url and we return a
-  // score for it. This preserves the existing client contract end-to-end
-  // without Supabase.
+  // Practice / inline scoring: the learner's real recording is scored
+  // here and now against the drill's model response. Real Whisper+Claude
+  // when both AI keys are set; otherwise a level-appropriate rubric mock
+  // so the rep is still pedagogically useful (never a silent score 0).
   const parsed = demoSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
