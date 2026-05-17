@@ -478,6 +478,47 @@ function EditDrawer({
 
   const [saving, setSaving] = useState(false);
 
+  // ── AI draft ──
+  const [aiScenario, setAiScenario] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+
+  async function aiDraft() {
+    if (aiScenario.trim().length < 3) return;
+    setAiBusy(true);
+    setAiNote(null);
+    try {
+      const res = await fetch("/api/masteros/modules/ai-draft", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          role: moduleSel,
+          level: drill.level,
+          scenario: aiScenario.trim(),
+        }),
+      });
+      const j = (await res.json()) as {
+        drill?: Drill;
+        source?: string;
+        error?: string;
+      };
+      if (!res.ok || !j.drill) {
+        setAiNote(j.error ?? "No se pudo generar el borrador.");
+        return;
+      }
+      setDrill(toDrill(j.drill));
+      setAiNote(
+        j.source === "ai"
+          ? "Borrador generado con IA. Revísalo y ajústalo antes de guardar."
+          : "IA no configurada — se generó una plantilla base para que la completes.",
+      );
+    } catch {
+      setAiNote("Error al generar el borrador.");
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
   const formValid =
     drill.id.trim().length > 0 &&
     drill.listening.audio_text.trim().length > 0 &&
@@ -614,6 +655,36 @@ function EditDrawer({
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="rounded-md border border-ink-soft bg-ink-tint/40 p-4">
+                <p className="caps mb-2 text-ink">✨ Borrador con IA</p>
+                <p className="mb-2 font-sans text-t-caption text-espresso-soft">
+                  Describe la situación y la IA redacta el drill completo
+                  (audio, opciones, frase modelo, vocabulario). Tú lo
+                  revisas y publicas.
+                </p>
+                <textarea
+                  value={aiScenario}
+                  onChange={(e) => setAiScenario(e.target.value)}
+                  rows={2}
+                  placeholder="Ej: un huésped llega y su habitación no está lista todavía"
+                  className="w-full rounded-md border border-hair bg-white p-2.5 font-sans text-t-body text-espresso focus:border-ink focus:outline-none"
+                />
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={aiDraft}
+                    disabled={aiBusy || aiScenario.trim().length < 3}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink px-4 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-white hover:bg-ink-deep disabled:opacity-50"
+                  >
+                    {aiBusy ? "Generando…" : "Generar borrador"}
+                  </button>
+                  {aiNote && (
+                    <span className="font-sans text-t-caption text-espresso-soft">
+                      {aiNote}
+                    </span>
+                  )}
+                </div>
               </div>
               <DrillTemplateForm drill={drill} onChange={setDrill} />
             </div>
