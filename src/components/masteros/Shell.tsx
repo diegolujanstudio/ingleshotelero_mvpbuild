@@ -12,6 +12,7 @@ import {
   Inbox,
   ListTodo,
   StickyNote,
+  LineChart,
   Map as MapIcon,
   GitBranch,
   ShieldCheck,
@@ -40,6 +41,7 @@ export function MasterosShell({ email, children }: ShellProps) {
   const main: NavItem[] = [
     { label: SHELL.nav.dashboard, href: "/masteros", icon: LayoutDashboard, active: isActive("/masteros") && pathname === "/masteros" },
     { label: SHELL.nav.modules, href: "/masteros/modules", icon: Database, active: pathname.startsWith("/masteros/modules") },
+    { label: "Resultados", href: "/masteros/outcomes", icon: LineChart, active: pathname.startsWith("/masteros/outcomes") },
     { label: SHELL.nav.crm, href: "/masteros/crm", icon: Users, active: pathname.startsWith("/masteros/crm") },
     { label: "Leads", href: "/masteros/leads", icon: Inbox, active: pathname.startsWith("/masteros/leads") },
     { label: "Tareas", href: "/masteros/tasks", icon: ListTodo, active: pathname.startsWith("/masteros/tasks") },
