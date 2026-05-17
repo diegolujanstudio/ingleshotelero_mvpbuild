@@ -70,11 +70,14 @@ export default function PracticeDonePage({ searchParams }: PageProps) {
         )}
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
-          <ButtonLink href="/" variant="primary">
-            {PRACTICE_COPY.done.home}
+          <ButtonLink href="/practice/progress" variant="primary">
+            Ver mi progreso
           </ButtonLink>
           <ButtonLink href="/practice" variant="text">
             {PRACTICE_COPY.done.again}
+          </ButtonLink>
+          <ButtonLink href="/" variant="text">
+            {PRACTICE_COPY.done.home}
           </ButtonLink>
         </div>
 
