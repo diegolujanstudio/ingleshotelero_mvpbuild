@@ -46,11 +46,12 @@ export function MasterosShell({ email, children }: ShellProps) {
     { label: "Leads", href: "/masteros/leads", icon: Inbox, active: pathname.startsWith("/masteros/leads") },
     { label: "Tareas", href: "/masteros/tasks", icon: ListTodo, active: pathname.startsWith("/masteros/tasks") },
     { label: "Recursos", href: "/masteros/resources", icon: StickyNote, active: pathname.startsWith("/masteros/resources") },
+    { label: "Equipo", href: "/masteros/team", icon: Users, active: pathname.startsWith("/masteros/team") },
+    { label: "Auditoría", href: "/masteros/audit", icon: ShieldCheck, active: pathname.startsWith("/masteros/audit") },
   ];
   const soon: Array<{ label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { label: SHELL.nav.journey, icon: MapIcon },
     { label: SHELL.nav.cohorts, icon: GitBranch },
-    { label: SHELL.nav.audit, icon: ShieldCheck },
     { label: SHELL.nav.system, icon: Activity },
   ];
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSuperAdminAPI } from "@/lib/masteros/auth";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
+import { logAudit } from "@/lib/server/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +87,14 @@ export async function PATCH(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  await logAudit({
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "module.update",
+    entity: "module",
+    entityId: params.id,
+    detail: { topic: (data as { topic?: string })?.topic },
+  });
   return NextResponse.json({ item: data });
 }
 
@@ -103,5 +112,12 @@ export async function DELETE(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  await logAudit({
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "module.delete",
+    entity: "module",
+    entityId: params.id,
+  });
   return NextResponse.json({ ok: true });
 }

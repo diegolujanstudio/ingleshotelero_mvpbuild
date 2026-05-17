@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSuperAdminAPI } from "@/lib/masteros/auth";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { updateLeadStatus, deleteLead } from "@/lib/server/leads";
+import { logAudit } from "@/lib/server/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -127,5 +128,12 @@ export async function DELETE(
       { status: 500 },
     );
   }
+  await logAudit({
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "lead.delete",
+    entity: "lead",
+    entityId: params.id,
+  });
   return NextResponse.json({ ok: true });
 }
