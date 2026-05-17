@@ -198,8 +198,11 @@ export async function getInsights(): Promise<Insights> {
     const examByEmp = new Set(
       examRows.filter((e) => e.status === "complete").map((e) => e.employee_id),
     );
-    const orgsOut: OrgHealth[] = Array.from(orgAgg.entries()).map(
-      ([orgId, a]) => {
+    // The internal team org is not a customer — keep it out of the
+    // customer-health radar (matches revenue exclusion).
+    const orgsOut: OrgHealth[] = Array.from(orgAgg.entries())
+      .filter(([orgId]) => orgName.get(orgId) !== "Inglés Hotelero · Master")
+      .map(([orgId, a]) => {
         const employeesN = a.emps.length;
         const active = a.active.size;
         const active_pct = employeesN

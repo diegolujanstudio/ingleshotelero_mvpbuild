@@ -17,6 +17,13 @@ const TIER_MRR: Record<string, number> = {
   enterprise: 500,
 };
 
+/**
+ * The internal team org (created by the bootstrap scripts) is NOT a
+ * paying customer — excluding it so revenue/customers reflect reality.
+ * With no real customers, MRR is correctly $0 / "nothing".
+ */
+export const INTERNAL_ORG_NAME = "Inglés Hotelero · Master";
+
 export interface RevenueSnapshot {
   has_data: boolean;
   mrr_estimate: number;
@@ -48,13 +55,14 @@ export async function getRevenue(): Promise<RevenueSnapshot> {
     const [orgsRes, leadsRes] = await Promise.all([
       sb
         .from("organizations")
-        .select("subscription_tier, subscription_status"),
+        .select("name, subscription_tier, subscription_status"),
       sb.from("leads").select("status"),
     ]);
     const orgs =
-      (orgsRes.data as
-        | { subscription_tier: string; subscription_status: string }[]
-        | null) ?? [];
+      ((orgsRes.data as
+        | { name: string; subscription_tier: string; subscription_status: string }[]
+        | null) ?? []
+      ).filter((o) => o.name !== INTERNAL_ORG_NAME);
     const leads =
       (leadsRes.data as { status: string }[] | null) ?? [];
 
