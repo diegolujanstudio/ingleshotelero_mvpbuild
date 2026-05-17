@@ -2,6 +2,7 @@ import { requireSuperAdmin } from "@/lib/masteros/auth";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { gatherMetrics, demoMetrics } from "@/lib/masteros/metrics";
 import { DashboardClient } from "./DashboardClient";
+import { CommandCenter } from "./CommandCenter";
 
 export const dynamic = "force-dynamic";
 
@@ -30,5 +31,10 @@ export default async function MasterosDashboardPage() {
     }
   }
 
-  return <DashboardClient initial={initial} initialDemo={demo} />;
+  return (
+    <>
+      <CommandCenter />
+      <DashboardClient initial={initial} initialDemo={demo} />
+    </>
+  );
 }
