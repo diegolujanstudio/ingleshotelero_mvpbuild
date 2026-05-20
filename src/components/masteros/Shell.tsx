@@ -15,6 +15,7 @@ import {
   LineChart,
   DollarSign,
   ClipboardList,
+  LayoutGrid,
   Map as MapIcon,
   GitBranch,
   ShieldCheck,
@@ -42,6 +43,7 @@ export function MasterosShell({ email, children }: ShellProps) {
 
   const main: NavItem[] = [
     { label: SHELL.nav.dashboard, href: "/masteros", icon: LayoutDashboard, active: isActive("/masteros") && pathname === "/masteros" },
+    { label: "Atajos", href: "/masteros/launch", icon: LayoutGrid, active: pathname.startsWith("/masteros/launch") },
     { label: SHELL.nav.modules, href: "/masteros/modules", icon: Database, active: pathname.startsWith("/masteros/modules") },
     { label: "Resultados", href: "/masteros/outcomes", icon: LineChart, active: pathname.startsWith("/masteros/outcomes") },
     { label: "Ingresos", href: "/masteros/revenue", icon: DollarSign, active: pathname.startsWith("/masteros/revenue") },
