@@ -71,8 +71,8 @@ function generateRecs(p: Props): Array<{ title: string; body: string }> {
 
   if (!p.current_level) {
     out.push({
-      title: "Tomar examen de colocación",
-      body: `${firstName} aún no ha completado el examen de colocación. Sin nivel CEFR no podemos sugerir un módulo a la medida.`,
+      title: "Tomar evaluación de nivel",
+      body: `${firstName} aún no ha completado la evaluación de nivel. Sin nivel CEFR no podemos sugerir un módulo a la medida.`,
     });
     return out;
   }

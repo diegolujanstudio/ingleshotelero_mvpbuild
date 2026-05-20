@@ -19,7 +19,7 @@ import { log } from "./log";
 // Shapes
 // ─────────────────────────────────────────────────────────────
 
-export type LeadFormName = "pilot" | "soporte" | "other";
+export type LeadFormName = "pilot" | "soporte" | "colocacion" | "other";
 export type LeadStatus =
   | "new"
   | "contacted"

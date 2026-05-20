@@ -55,7 +55,7 @@ export default function TerminosPage() {
 
           <Section num="02" title="Modalidades del servicio">
             <p>
-              <em>Examen de colocación.</em> Pago por evento de evaluación. El
+              <em>Evaluación de nivel.</em> Pago por evento de evaluación. El
               precio público es de cincuenta dólares estadounidenses (USD $50)
               por empleado evaluado. Incluye examen de quince minutos,
               calificación por inteligencia artificial, reporte ejecutivo en PDF
@@ -146,7 +146,7 @@ export default function TerminosPage() {
               Los pagos se realizan mediante <em>Stripe</em>. Para hoteles en
               México emitimos factura electrónica (CFDI) con los datos fiscales
               que el hotel proporcione. Las suscripciones se facturan al inicio
-              del periodo. El examen de colocación se factura al confirmar la
+              del periodo. La evaluación de nivel se factura al confirmar la
               cantidad de empleados a evaluar.
             </p>
             <p>

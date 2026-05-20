@@ -424,7 +424,7 @@ export const SLIDES: Slide[] = [
       after: " No por empleado.",
     },
     note:
-      "El examen de colocación se cobra una vez ($50 USD por empleado) — el wedge para entrar al hotel. La capacitación es la suscripción mensual que viene después.",
+      "La evaluación de nivel se cobra una vez ($50 USD por empleado) — el wedge para entrar al hotel. La capacitación es la suscripción mensual que viene después.",
     tiers: [
       {
         name: "Inicial",

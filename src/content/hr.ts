@@ -161,7 +161,7 @@ export const EMPLOYEE_DETAIL = {
   exportPdf: "Exportar reporte PDF",
   sections: {
     contact: "Contacto",
-    exam: "Examen de colocación",
+    exam: "Evaluación de nivel",
     practice: "Práctica diaria",
     recommendations: "Recomendaciones",
     timeline: "Actividad reciente",

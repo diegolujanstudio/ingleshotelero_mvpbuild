@@ -402,6 +402,7 @@ function LeadDrawer({
   const subjectByForm: Record<LeadRow["form_name"], string> = {
     pilot: LEADS.reply.subjectPilot,
     soporte: LEADS.reply.subjectSoporte,
+    colocacion: LEADS.reply.subjectPilot,
     other: LEADS.reply.subjectOther,
   };
   const mailto = lead.email

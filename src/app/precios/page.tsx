@@ -9,7 +9,7 @@ import { formatIndex } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Precios",
   description:
-    "Planes de Inglés Hotelero. Examen de colocación puntual + subscripción mensual por propiedad.",
+    "Planes de Inglés Hotelero. Evaluación de nivel puntual + subscripción mensual por propiedad.",
 };
 
 const PILOT_MAILTO =
@@ -23,7 +23,7 @@ const PLANS = [
     cap: "Hasta 30 empleados",
     includes: [
       "1 módulo de puesto (recepción, botones, o restaurante)",
-      "Examen de colocación para cada empleado",
+      "Evaluación de nivel para cada empleado",
       "Capacitación diaria de 5 min por WhatsApp o web",
       "Reportes semanales de progreso",
       "Soporte por correo en 24 hrs",
@@ -40,7 +40,7 @@ const PLANS = [
     cap: "Hasta 75 empleados",
     includes: [
       "Los tres módulos (recepción · botones · restaurante)",
-      "Examen de colocación + evaluaciones mensuales",
+      "Evaluación de nivel + evaluaciones mensuales",
       "Entrega por WhatsApp (integración Twilio completa)",
       "Reportes semanales + mensuales",
       "Dashboard de RH con exportes PDF y Excel",
@@ -74,7 +74,7 @@ const PLANS = [
 
 const FAQS = [
   {
-    q: "¿Cuánto cuesta el examen de colocación?",
+    q: "¿Cuánto cuesta el evaluación de nivel?",
     a: "USD 50 por empleado, una sola vez. Incluye el examen de 15 minutos, la calificación por IA, el reporte PDF ejecutivo, y una reunión de resultados. Es la forma más barata de diagnosticar el inglés de todo su equipo — y es la puerta de entrada al programa de capacitación.",
   },
   {
@@ -124,7 +124,7 @@ export default function PreciosPage() {
           Sin letra chica. <em>Sin sorpresas.</em>
         </h1>
         <p className="mt-8 max-w-prose font-sans text-t-body-lg text-espresso-soft">
-          Examen de colocación puntual para diagnosticar a su equipo. Suscripción
+          Evaluación de nivel puntual para diagnosticar a su equipo. Suscripción
           mensual por propiedad para capacitarlos. Los precios son por propiedad,
           no por empleado — así es más fácil crecer sin que el costo se vuelva
           un tema.
@@ -139,7 +139,7 @@ export default function PreciosPage() {
           <div>
             <p className="caps mb-3">{formatIndex(2)} · Punto de entrada</p>
             <h2 className="font-serif text-t-h1 font-medium">
-              Examen de colocación — <em>USD 50</em> por empleado.
+              Evaluación de nivel — <em>USD 50</em> por empleado.
             </h2>
             <p className="mt-6 font-sans text-t-body-lg text-espresso-soft">
               Una sola vez. Diagnostica a todo su equipo en una semana y le entrega
