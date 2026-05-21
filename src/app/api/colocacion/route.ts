@@ -85,5 +85,27 @@ export async function POST(request: Request) {
   } catch (err) {
     log.error({ err: String(err) }, "colocacion.upsert.threw");
   }
+
+  // ALSO register with Netlify Forms so the founders get the native
+  // email notification (victor + diego, any-form) — Diego: use Netlify.
+  // The static landing hosts the 'colocacion' Netlify form; this
+  // server-side POST records the submission + fires Netlify's email.
+  // Best-effort; the lead is already persisted above. The landing
+  // webhook SKIPS colocacion to avoid a duplicate row.
+  try {
+    const params = new URLSearchParams();
+    params.set("form-name", "colocacion");
+    for (const [k, v] of form.entries()) {
+      if (typeof v === "string" && k !== "bot-field") params.append(k, v);
+    }
+    await fetch("https://ingleshotelero.com/", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+  } catch (err) {
+    log.warn({ err: String(err) }, "colocacion.netlify_forward.failed");
+  }
+
   return done();
 }

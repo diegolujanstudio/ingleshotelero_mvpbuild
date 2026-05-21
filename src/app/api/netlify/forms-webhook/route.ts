@@ -91,6 +91,14 @@ export async function POST(request: Request) {
   // ── 4. Map.
   const data = (envelope.data ?? {}) as Record<string, unknown>;
   const rawFormName = String(envelope.form_name ?? data["form-name"] ?? "").trim();
+
+  // Colocación is persisted by the first-party /api/colocacion route; the
+  // Netlify submission only exists to trigger the native founder email.
+  // Skip the DB upsert here so we don't create a duplicate lead.
+  if (rawFormName === "colocacion") {
+    return NextResponse.json({ ok: true, skipped: "colocacion_dedup" });
+  }
+
   const formName: LeadFormName = KNOWN_FORMS.has(rawFormName as LeadFormName)
     ? (rawFormName as LeadFormName)
     : "other";
