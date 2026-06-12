@@ -58,11 +58,20 @@ export default function ListeningPage({
     setReplayCount(0);
     questionStartRef.current = Date.now();
     const t = setTimeout(() => play(current.audio_en), 400);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      audioElRef.current?.pause();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, current?.audio_en]);
 
-  const play = (text: string) => {
+  // Pre-generated ElevenLabs MP3s live in the public `audio` bucket under
+  // {module}/{level}/listening-{index}.mp3 (see scripts/generate-audio-
+  // standalone.mjs). Natural voice first; browser SpeechSynthesis only as
+  // the offline / missing-file fallback.
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+
+  const speakFallback = (text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
@@ -73,6 +82,29 @@ export default function ListeningPage({
     utter.onend = () => setSpeaking(false);
     utter.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utter);
+  };
+
+  const play = (text: string) => {
+    if (typeof window === "undefined") return;
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const item = current;
+    if (!base || !session || !item) {
+      speakFallback(text);
+      return;
+    }
+    const url = `${base}/storage/v1/object/public/audio/${session.module}/${item.level}/listening-${item.index}.mp3`;
+    window.speechSynthesis?.cancel();
+    if (!audioElRef.current) audioElRef.current = new Audio();
+    const el = audioElRef.current;
+    el.pause();
+    el.src = url;
+    el.onplaying = () => setSpeaking(true);
+    el.onended = () => setSpeaking(false);
+    el.onerror = () => {
+      setSpeaking(false);
+      speakFallback(text);
+    };
+    void el.play().catch(() => speakFallback(text));
   };
 
   if (!session || !current) return null;
