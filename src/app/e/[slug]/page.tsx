@@ -5,7 +5,7 @@ import { Logo } from "@/components/brand/Logo";
 import { HairlineRule } from "@/components/ui/HairlineRule";
 import { ROLES, ROLE_IDS } from "@/content/roles";
 import { formatIndex } from "@/lib/utils";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { EntryForm } from "./entry-form";
 
 interface PageProps {
@@ -121,15 +121,16 @@ async function loadProperty(slug: string): Promise<{
   displayName: string;
   isStub: boolean;
 }> {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    return { displayName: toDisplayName(slug), isStub: true };
-  }
-
+  // Public entry page: visitors are anonymous, and RLS only grants
+  // `properties` SELECT to authenticated HR users — the anon client would
+  // always return zero rows here. Use the service role for this read-only
+  // name/is_active lookup. Slugs not in the DB still fall back to the stub
+  // (intentional, e.g. /e/demo-hotel), as does missing Supabase env.
   try {
-    const supabase = createServerClient();
+    const supabase = createServiceClient();
+    if (!supabase) {
+      return { displayName: toDisplayName(slug), isStub: true };
+    }
     const { data, error } = await supabase
       .from("properties")
       .select("name, is_active")
