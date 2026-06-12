@@ -43,24 +43,32 @@ export function EntryForm({ propertySlug, propertyName, roles, isStub }: EntryFo
     let sessionId = clientId;
     let mode: "persisted" | "local-only" = "local-only";
 
+    let serverEmployeeId: string | null = null;
     try {
       const res = await fetch("/api/exams", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           property_slug: propertySlug,
-          name,
-          email: email || undefined,
-          phone: phone || undefined,
+          employee: {
+            name,
+            email: email || null,
+            phone: phone || null,
+            hotel_role: role,
+            shift: shift || null,
+          },
           module: role,
-          shift: shift || undefined,
+          exam_type: "placement",
+          consent_version: "web-v1",
           client_session_id: clientId,
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        sessionId = data.id ?? clientId;
-        mode = data.mode ?? "local-only";
+        sessionId = data.session_id ?? data.id ?? clientId;
+        serverEmployeeId =
+          typeof data.employee_id === "string" ? data.employee_id : null;
+        mode = data.mode === "persisted" ? "persisted" : "local-only";
       }
     } catch {
       // Network / offline → proceed in local-only mode.
@@ -69,7 +77,7 @@ export function EntryForm({ propertySlug, propertyName, roles, isStub }: EntryFo
     // Seed localStorage with the session — the exam pages read from here.
     saveSession({
       id: sessionId,
-      employee_id: mode === "persisted" ? sessionId : null,
+      employee_id: mode === "persisted" ? serverEmployeeId : null,
       property_slug: propertySlug,
       employee: {
         name,
