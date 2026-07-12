@@ -93,6 +93,28 @@ export async function POST(req: Request) {
 
   const service = createServiceClient();
 
+  // org_admin (and property_admin passing an explicit property) may only grant
+  // access to a property inside their OWN organization. Without this check a
+  // caller could pass any property_id and cross-tenant-grant into another org.
+  if (
+    (callerRole === "org_admin" || callerRole === "property_admin") &&
+    body.property_id
+  ) {
+    const { data: ownedProperty } = (await service
+      .from("properties")
+      .select("id")
+      .eq("id", body.property_id)
+      .eq("organization_id", caller.organization_id ?? "")
+      .maybeSingle()) as unknown as { data: { id: string } | null };
+
+    if (!ownedProperty) {
+      return NextResponse.json(
+        { error: "property does not belong to your organization" },
+        { status: 403 },
+      );
+    }
+  }
+
   // Send the auth invite email.
   const origin =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -100,10 +122,10 @@ export async function POST(req: Request) {
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000");
 
-  const { error: inviteError } = await service.auth.admin.inviteUserByEmail(
-    body.email,
-    { redirectTo: `${origin}/hr/accept-invite` },
-  );
+  const { data: invited, error: inviteError } =
+    await service.auth.admin.inviteUserByEmail(body.email, {
+      redirectTo: `${origin}/hr/accept-invite`,
+    });
 
   if (inviteError) {
     return NextResponse.json(
@@ -112,12 +134,16 @@ export async function POST(req: Request) {
     );
   }
 
-  // Create the pending hr_users row.
-  // id will be null until the user accepts (then set to auth.uid()).
-  // Use email as the lookup key for the accept flow.
+  // Bind the pending hr_users row's PK to the real auth uid that
+  // inviteUserByEmail just provisioned. This (a) gives every distinct-email
+  // invite a unique PK (the old constant placeholder collided on the second
+  // invite, 23505), and (b) makes /api/hr/activate + getHRUser() — which look
+  // the user up strictly by id = auth.uid() — resolve without any later id
+  // rebinding. If the id is somehow unavailable, fall back to the DB default.
+  const invitedId = invited?.user?.id;
   const { error: insertError } = await service.from("hr_users").upsert(
     {
-      id: "00000000-0000-0000-0000-000000000000", // placeholder; updated on accept
+      ...(invitedId ? { id: invitedId } : {}),
       organization_id: organizationId,
       property_id: propertyId,
       email: body.email.toLowerCase().trim(),

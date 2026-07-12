@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+
+// Service-role + auth.getUser() both require the Node runtime.
+export const runtime = "nodejs";
 
 /**
  * POST /api/hr/activate
  * Called from the accept-invite page after the user sets their password.
- * Updates the hr_users row: sets id = auth.uid(), is_active = true.
+ * Links the pending hr_users row to the real auth user and activates it.
+ *
+ * SECURITY: identity is derived exclusively from the verified Supabase
+ * session (auth.getUser()). The request body is NOT trusted — a forged body
+ * must never be able to bind an arbitrary auth uid/email to an hr_users row,
+ * nor re-activate someone else's (e.g. a removed admin's) account.
  */
-export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as {
-    auth_uid?: string;
-    email?: string;
-  } | null;
-
-  if (!body?.auth_uid || !body?.email) {
-    return NextResponse.json({ error: "missing fields" }, { status: 400 });
-  }
-
+export async function POST(_req: Request) {
+  // Demo / local-only fallback: no Supabase configured.
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -24,33 +24,54 @@ export async function POST(req: Request) {
   }
 
   try {
-    const service = createServiceClient();
-    const email = body.email.toLowerCase().trim();
+    // Derive the caller's identity from the verified session cookie, never
+    // from the request body. This is the whole fix for the forged-cookie /
+    // arbitrary-email activation vulnerability.
+    const supabase = createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    // Find the pending hr_users row by email.
-    const { data: hrUser } = await service
+    if (!user || !user.email) {
+      return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+    }
+
+    const service = createServiceClient();
+    // Only ever the authenticated user's own email — no client-supplied value.
+    const email = user.email.toLowerCase().trim();
+
+    // Find the pending hr_users row by the authenticated email only.
+    const { data: hrUser, error: lookupErr } = await service
       .from("hr_users")
       .select("id, email, is_active")
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
+    // A DB error is transient — return 5xx so the caller can retry, rather than
+    // mislabelling it as a genuinely-absent row (404).
+    if (lookupErr) {
+      return NextResponse.json({ error: "activation failed" }, { status: 503 });
+    }
     if (!hrUser) {
       return NextResponse.json({ error: "hr_users row not found" }, { status: 404 });
     }
 
-    // Update: link to the real auth user and activate.
-    // Use raw SQL because we need to update the PK (id).
-    const { error } = await service.rpc("activate_hr_user" as never, {
-      p_email: email,
-      p_auth_uid: body.auth_uid,
-    } as never);
+    // Activate: bind the row to the real auth uid from the verified session
+    // (never a client-supplied value) and set it active. Binding id here is a
+    // safety net — the invite now seeds id = auth.uid() up front — and covers
+    // any legacy pending row created before that change. Scoped strictly to the
+    // authenticated user's own email, so it can never touch another account.
+    const { error: updateErr } = await service
+      .from("hr_users")
+      .update({
+        id: user.id,
+        is_active: true,
+        last_login_at: new Date().toISOString(),
+      } as never)
+      .eq("email", email);
 
-    // Fallback if the RPC doesn't exist yet: direct update.
-    if (error) {
-      await service
-        .from("hr_users")
-        .update({ is_active: true, last_login_at: new Date().toISOString() })
-        .eq("email", email);
+    if (updateErr) {
+      return NextResponse.json({ error: "activation failed" }, { status: 503 });
     }
 
     return NextResponse.json({ ok: true });
