@@ -34,11 +34,30 @@ export const metadata: Metadata = {
   description:
     "Capacitación y evaluación de inglés hotelero. Para hoteles de Latinoamérica que atienden huéspedes internacionales.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Inglés Hotelero",
     description: "El inglés que su hotel necesita. Nada más, nada menos.",
+    url: "/",
+    siteName: "Inglés Hotelero",
     locale: "es_MX",
     type: "website",
+    // OG image: a static /og.png (1200×630) is a documented follow-up; dynamic
+    // next/og routes were removed as they don't build reliably on this runtime.
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Inglés Hotelero",
+    description: "El inglés que su hotel necesita. Nada más, nada menos.",
+  },
+  // Default posture for the app shell (hosted on a *.netlify.app origin): stay
+  // OUT of the index. Genuinely public marketing routes (/precios, /onboarding,
+  // /soporte) opt back in with their own `robots: { index: true }` export.
+  robots: {
+    index: false,
+    follow: false,
   },
   // PWA metadata — the manifest is served automatically by src/app/manifest.ts.
   // Apple-specific tags here enable the standalone install experience on iOS.

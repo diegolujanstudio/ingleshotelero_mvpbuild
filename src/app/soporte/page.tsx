@@ -8,6 +8,13 @@ import { SupportForm } from "./SupportForm";
 export const metadata: Metadata = {
   title: SOPORTE.meta.title,
   description: SOPORTE.meta.description,
+  alternates: { canonical: "/soporte" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: SOPORTE.meta.title,
+    description: SOPORTE.meta.description,
+    url: "/soporte",
+  },
 };
 
 export default function SoportePage() {

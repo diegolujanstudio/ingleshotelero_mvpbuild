@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Términos del servicio",
   description:
     "Términos del servicio de Inglés Hotelero. Reglas de uso, responsabilidades y condiciones comerciales.",
+  alternates: { canonical: "/terminos" },
+  // Draft (v0.1, pending attorney review) — keep out of the index for now.
+  robots: { index: false, follow: false },
 };
 
 export default function TerminosPage() {

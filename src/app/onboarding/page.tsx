@@ -4,8 +4,15 @@ import { Logo } from "@/components/brand/Logo";
 import { Building2, GraduationCap, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Bienvenido · Inglés Hotelero",
+  title: "Empezar",
   description: "Empieza con Inglés Hotelero — para hoteles y para empleados.",
+  alternates: { canonical: "/onboarding" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Empezar · Inglés Hotelero",
+    description: "Empieza con Inglés Hotelero — para hoteles y para empleados.",
+    url: "/onboarding",
+  },
 };
 
 export default function OnboardingHub() {

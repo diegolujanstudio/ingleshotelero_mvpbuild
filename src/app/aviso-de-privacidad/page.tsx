@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Aviso de privacidad",
   description:
     "Aviso de privacidad de Inglés Hotelero, conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.",
+  alternates: { canonical: "/aviso-de-privacidad" },
+  // Draft (v0.1, pending attorney review) — keep out of the index for now.
+  robots: { index: false, follow: false },
 };
 
 export default function AvisoPage() {

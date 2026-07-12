@@ -7,9 +7,17 @@ import { HairlineRule } from "@/components/ui/HairlineRule";
 import { formatIndex } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Precios",
+  title: "Precios y planes",
   description:
-    "Planes de Inglés Hotelero. Evaluación de nivel puntual + subscripción mensual por propiedad.",
+    "Evaluación de nivel (USD 50/empleado) y suscripción mensual por propiedad: Inicial $150, Profesional $300, Empresarial desde $500 USD.",
+  alternates: { canonical: "/precios" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Precios y planes · Inglés Hotelero",
+    description:
+      "Evaluación de nivel (USD 50/empleado) y suscripción mensual por propiedad: Inicial $150, Profesional $300, Empresarial desde $500 USD.",
+    url: "/precios",
+  },
 };
 
 const PILOT_MAILTO =
@@ -99,9 +107,124 @@ const FAQS = [
   },
 ];
 
+// ── Structured data (JSON-LD) ───────────────────────────────
+// Answer engines (Google SGE, Perplexity, ChatGPT) reward a single,
+// internally-consistent knowledge graph. Every price below is derived from
+// the PLANS / FAQS arrays above, so the rich result can never drift from the
+// rendered page. The Organization @id matches the marketing site so the app
+// and ingleshotelero.com resolve to one entity.
+const ORG_ID = "https://ingleshotelero.com/#organization";
+const PRECIOS_URL = "https://ingleshotelero.com/precios";
+
+// Empresarial has no fixed priceUSD ("Desde $500 USD / mes") → floor of 500.
+const planPrice = (p: (typeof PLANS)[number]) => p.priceUSD ?? 500;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": ORG_ID,
+      name: "Inglés Hotelero",
+      url: "https://ingleshotelero.com",
+      email: "hola@ingleshotelero.com",
+      foundingDate: "2024",
+      foundingLocation: {
+        "@type": "Place",
+        name: "San Miguel de Allende, Guanajuato, México",
+      },
+      areaServed: "Latinoamérica",
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "sales",
+        email: "hola@ingleshotelero.com",
+        telephone: "+52 624 555 0142",
+        availableLanguage: ["es", "en"],
+      },
+    },
+    {
+      "@type": "Product",
+      "@id": `${PRECIOS_URL}#suscripcion`,
+      name: "Capacitación de inglés hotelero — suscripción por propiedad",
+      description:
+        "Suscripción mensual por propiedad para capacitar al personal de hoteles en inglés funcional (recepción, botones, restaurante). Mes a mes, sin permanencia.",
+      brand: { "@id": ORG_ID },
+      category: "Capacitación empresarial de inglés",
+      url: PRECIOS_URL,
+      offers: {
+        "@type": "AggregateOffer",
+        priceCurrency: "USD",
+        lowPrice: 150,
+        highPrice: 500,
+        offerCount: 3,
+        offers: PLANS.map((plan) => ({
+          "@type": "Offer",
+          name: plan.name,
+          price: String(planPrice(plan)),
+          priceCurrency: "USD",
+          url: PRECIOS_URL,
+          category: "Suscripción mensual por propiedad",
+          description: plan.bestFor,
+        })),
+      },
+    },
+    {
+      "@type": "Product",
+      "@id": `${PRECIOS_URL}#evaluacion`,
+      name: "Evaluación de nivel de inglés hotelero (CEFR A1–B2)",
+      description:
+        "Evaluación puntual por empleado: examen de 15 minutos, calificación por IA con nivel CEFR, reporte PDF ejecutivo y reunión de resultados. Es el punto de entrada al programa de capacitación.",
+      brand: { "@id": ORG_ID },
+      category: "Evaluación de nivel de inglés",
+      url: PRECIOS_URL,
+      offers: {
+        "@type": "Offer",
+        price: "50",
+        priceCurrency: "USD",
+        url: PRECIOS_URL,
+        category: "Evaluación puntual por empleado",
+      },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Inicio",
+          item: "https://ingleshotelero.com",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Precios y planes",
+          item: PRECIOS_URL,
+        },
+      ],
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${PRECIOS_URL}#faq`,
+      mainEntity: FAQS.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: f.a,
+        },
+      })),
+    },
+  ],
+};
+
 export default function PreciosPage() {
   return (
     <main className="bg-ivory text-espresso">
+      {/* JSON-LD structured data for search + answer engines. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
         <Logo />
         <nav className="hidden items-center gap-8 md:flex">

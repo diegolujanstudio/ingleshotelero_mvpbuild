@@ -19,6 +19,9 @@ import { META, EMPLOYEE, HR, INSTALL, FOOTER, TOPBAR, SUPPORT_LINK } from "@/con
 export const metadata: Metadata = {
   title: META.title,
   description: META.description,
+  // This app-shell home stays out of the index; canonical points at the
+  // marketing home so any indexing signal consolidates to ingleshotelero.com.
+  alternates: { canonical: "https://ingleshotelero.com/" },
   robots: { index: false, follow: false },
 };
 

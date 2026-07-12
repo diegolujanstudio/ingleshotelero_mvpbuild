@@ -1,4 +1,4 @@
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Logo } from "@/components/brand/Logo";
 import { HairlineRule } from "@/components/ui/HairlineRule";
 import { ExamPWABoot } from "@/components/pwa/ExamPWABoot";
@@ -19,6 +19,12 @@ import { SyncStatusChip } from "@/components/pwa/SyncStatusChip";
  * Root accessibility-friendly viewport (zoom enabled) is preserved at
  * `src/app/layout.tsx` for everything outside the exam shell.
  */
+// Defense-in-depth: the per-employee exam surface must never be indexed,
+// on top of the /exam/ disallow in robots.ts and the app-shell default.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
 export const viewport: Viewport = {
   themeColor: "#2B1D14",
   width: "device-width",
