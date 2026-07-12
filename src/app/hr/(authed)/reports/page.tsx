@@ -1,5 +1,9 @@
 import { requireHRUser } from "@/lib/hr/auth";
 import { loadEmployees, loadCohorts, loadPropertyInfo } from "@/lib/hr/data";
+import {
+  createServiceClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client-or-service";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { REPORTS, COMMON } from "@/content/hr";
 import { ReportsClient } from "./ReportsClient";
@@ -14,6 +18,30 @@ export default async function ReportsPage() {
     loadPropertyInfo(user),
   ]);
   const isDemo = employees.length > 0 && employees[0].is_demo;
+
+  // Build cohort id → member employee ids so the client cohort filter actually
+  // scopes the preview table AND the CSV/Excel exports (previously a no-op —
+  // only the server PDF honored it). Scoped to the cohorts already resolved for
+  // this user; skipped in demo mode (no real membership rows).
+  let cohortMembers: Record<string, string[]> | undefined;
+  if (!isDemo && isSupabaseConfigured() && cohorts.length > 0) {
+    const sb = createServiceClient();
+    if (sb) {
+      const cohortIds = cohorts.map((c) => c.id);
+      const { data: members } = (await sb
+        .from("cohort_members")
+        .select("cohort_id, employee_id")
+        .in("cohort_id", cohortIds)) as unknown as {
+        data: { cohort_id: string; employee_id: string }[] | null;
+      };
+      if (members) {
+        cohortMembers = {};
+        for (const m of members) {
+          (cohortMembers[m.cohort_id] ??= []).push(m.employee_id);
+        }
+      }
+    }
+  }
 
   return (
     <section className="mx-auto max-w-shell px-6 py-8 md:px-10 md:py-10">
@@ -41,6 +69,7 @@ export default async function ReportsPage() {
           employees={employees}
           cohorts={cohorts}
           propertyName={property.name}
+          cohortMembers={cohortMembers}
         />
       </div>
     </section>

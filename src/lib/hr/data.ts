@@ -18,6 +18,7 @@ import { createServiceClient } from "@/lib/supabase/client-or-service";
 import type { CEFRLevel, RoleModule, Database } from "@/lib/supabase/types";
 import type { HRUser } from "@/lib/auth/session";
 import type { EmployeeStatus } from "@/content/hr";
+import { EMPLOYEE_STATUS_VALUES } from "@/content/hr";
 import type {
   HREmployeeView,
   HRCohortView,
@@ -37,6 +38,82 @@ import {
 
 type SC = NonNullable<ReturnType<typeof createServiceClient>>;
 type EmployeeRow = Database["public"]["Tables"]["employees"]["Row"];
+
+/**
+ * Split an array into fixed-size chunks. Used to cap the length of `.in()`
+ * filter lists so the PostgREST URL never exceeds the gateway's limit and
+ * silently truncates (which would zero-out metrics for large tenants).
+ */
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+/** Max ids per `.in()` list — comfortably under URL-length limits. */
+const IN_CHUNK = 200;
+
+const ACTIVE_STATUSES: EmployeeStatus[] = ["active", "promoted"];
+const INACTIVE_STATUSES: EmployeeStatus[] = ["paused", "inactive", "terminated"];
+
+/**
+ * Reconcile the granular 5-value employee status with the `is_active`
+ * boolean. The employees table has NO `status` column (only is_active), so
+ * the granular status (paused / promoted / terminated) is persisted
+ * out-of-band as an `hr.employee.status_change` analytics event and passed
+ * back here as `override`. is_active stays the source of truth for the
+ * active/inactive split, so we only honor an override that is CONSISTENT
+ * with is_active — otherwise a stale event (e.g. a later soft-delete that
+ * flips is_active without writing an event) would surface the wrong status.
+ */
+function reconcileStatus(
+  isActive: boolean,
+  override?: EmployeeStatus | null,
+): EmployeeStatus {
+  if (isActive) {
+    return override && ACTIVE_STATUSES.includes(override) ? override : "active";
+  }
+  return override && INACTIVE_STATUSES.includes(override) ? override : "inactive";
+}
+
+function extractStatus(metadata: unknown): EmployeeStatus | null {
+  if (metadata && typeof metadata === "object" && "status" in metadata) {
+    const s = (metadata as { status?: unknown }).status;
+    if (typeof s === "string" && (EMPLOYEE_STATUS_VALUES as readonly string[]).includes(s)) {
+      return s as EmployeeStatus;
+    }
+  }
+  return null;
+}
+
+/**
+ * Latest granular status per employee, reconstructed from the
+ * `hr.employee.status_change` analytics events that the employee PATCH route
+ * writes. This is what lets paused/promoted/terminated survive a reload
+ * even though there is no employees.status column. Chunked to keep the
+ * `.in()` URL small.
+ */
+async function latestStatusByEmployee(
+  sb: SC,
+  empIds: string[],
+): Promise<Map<string, EmployeeStatus>> {
+  const map = new Map<string, EmployeeStatus>();
+  if (empIds.length === 0) return map;
+  for (const ids of chunk(empIds, IN_CHUNK)) {
+    const { data } = await sb
+      .from("analytics_events")
+      .select("employee_id, metadata, created_at")
+      .eq("event_type", "hr.employee.status_change")
+      .in("employee_id", ids)
+      .order("created_at", { ascending: false });
+    for (const row of data ?? []) {
+      if (!row.employee_id || map.has(row.employee_id)) continue;
+      const status = extractStatus(row.metadata);
+      if (status) map.set(row.employee_id, status);
+    }
+  }
+  return map;
+}
 
 /** Resolve which property_ids the user can read. */
 async function userPropertyIds(user: HRUser, sb: SC): Promise<string[]> {
@@ -66,6 +143,9 @@ function rowToView(
     streak?: number;
     practice_completion_pct?: number;
     exam_completed_at?: string | null;
+    // Granular status reconstructed from analytics events (see
+    // latestStatusByEmployee); reconciled against is_active below.
+    status_override?: EmployeeStatus | null;
   } = {},
 ): HREmployeeView {
   return {
@@ -79,7 +159,7 @@ function rowToView(
     shift: emp.shift,
     whatsapp_opted_in: emp.whatsapp_opted_in,
     is_active: emp.is_active,
-    status: (emp.is_active ? "active" : "inactive") as EmployeeStatus,
+    status: reconcileStatus(emp.is_active, metrics.status_override),
     source: emp.source,
     created_at: emp.created_at,
     updated_at: emp.updated_at,
@@ -114,60 +194,77 @@ export async function loadEmployees(user: HRUser): Promise<HREmployeeView[]> {
     if (propertyIds.length === 0) {
       return isDemoMode() ? getDemoEmployees() : [];
     }
-    const { data: employees } = await sb
-      .from("employees")
-      .select("*")
-      .in("property_id", propertyIds);
+    // Fetch ALL employees in scope, paging past Supabase's 1000-row cap.
+    // A single unpaged select silently stops at 1000 rows, so large tenants
+    // would lose everyone past the first page.
+    const PAGE = 1000;
+    const employees: EmployeeRow[] = [];
+    for (let offset = 0; ; offset += PAGE) {
+      const { data: pageRows } = await sb
+        .from("employees")
+        .select("*")
+        .in("property_id", propertyIds)
+        .order("id", { ascending: true })
+        .range(offset, offset + PAGE - 1);
+      const rows = pageRows ?? [];
+      employees.push(...rows);
+      if (rows.length < PAGE) break;
+    }
 
-    if (!employees || employees.length === 0) {
+    if (employees.length === 0) {
       return shouldUseDemoFallback(0) ? getDemoEmployees() : [];
     }
 
-    // Latest exam session per employee
-    const { data: sessions } = await sb
-      .from("exam_sessions")
-      .select(
-        "id, employee_id, status, listening_score, speaking_avg_score, completed_at, started_at",
-      )
-      .in(
-        "employee_id",
-        employees.map((e) => e.id),
-      )
-      .order("completed_at", { ascending: false });
+    const empIds = employees.map((e) => e.id);
 
+    // Latest exam session per employee. Chunk the id list so the `.in()`
+    // URL stays under the gateway limit — an over-long URL is rejected and
+    // would zero-out every employee's score.
     const latestByEmp = new Map<
       string,
       { listening: number; speaking: number; combined: number; completed_at: string | null }
     >();
-    for (const s of sessions ?? []) {
-      if (latestByEmp.has(s.employee_id)) continue;
-      if (s.status !== "complete") continue;
-      const listening = s.listening_score ?? 0;
-      const speaking = s.speaking_avg_score ?? 0;
-      const combined = Math.round(speaking * 0.6 + listening * 0.4);
-      latestByEmp.set(s.employee_id, {
-        listening,
-        speaking,
-        combined,
-        completed_at: s.completed_at,
-      });
+    for (const ids of chunk(empIds, IN_CHUNK)) {
+      const { data: sessions } = await sb
+        .from("exam_sessions")
+        .select(
+          "id, employee_id, status, listening_score, speaking_avg_score, completed_at, started_at",
+        )
+        .in("employee_id", ids)
+        .order("completed_at", { ascending: false });
+      for (const s of sessions ?? []) {
+        if (latestByEmp.has(s.employee_id)) continue;
+        if (s.status !== "complete") continue;
+        const listening = s.listening_score ?? 0;
+        const speaking = s.speaking_avg_score ?? 0;
+        const combined = Math.round(speaking * 0.6 + listening * 0.4);
+        latestByEmp.set(s.employee_id, {
+          listening,
+          speaking,
+          combined,
+          completed_at: s.completed_at,
+        });
+      }
     }
 
-    // Streaks
-    const { data: streakRows } = await sb
-      .from("streaks")
-      .select("employee_id, current_streak, last_practice_date")
-      .in(
-        "employee_id",
-        employees.map((e) => e.id),
-      );
+    // Streaks — same chunking.
     const streakByEmp = new Map<string, { current: number; last: string | null }>();
-    for (const s of streakRows ?? []) {
-      streakByEmp.set(s.employee_id, {
-        current: s.current_streak,
-        last: s.last_practice_date,
-      });
+    for (const ids of chunk(empIds, IN_CHUNK)) {
+      const { data: streakRows } = await sb
+        .from("streaks")
+        .select("employee_id, current_streak, last_practice_date")
+        .in("employee_id", ids);
+      for (const s of streakRows ?? []) {
+        streakByEmp.set(s.employee_id, {
+          current: s.current_streak,
+          last: s.last_practice_date,
+        });
+      }
     }
+
+    // Granular status (paused/promoted/terminated) lives in analytics events,
+    // not an employees column — reconstruct it so those filters match.
+    const statusByEmp = await latestStatusByEmployee(sb, empIds);
 
     return employees.map((e) => {
       const m = latestByEmp.get(e.id);
@@ -180,6 +277,7 @@ export async function loadEmployees(user: HRUser): Promise<HREmployeeView[]> {
         last_active_days_ago: daysSince(s?.last ?? m?.completed_at ?? e.updated_at),
         streak: s?.current ?? 0,
         practice_completion_pct: s?.current ? Math.min(100, s.current * 4) : 0,
+        status_override: statusByEmp.get(e.id),
       });
     });
   } catch {
@@ -224,6 +322,10 @@ export async function loadEmployee(
       .eq("employee_id", emp.id)
       .maybeSingle();
 
+    // Granular status is persisted as analytics events, not an employees
+    // column — reconstruct it so the detail view doesn't revert to active.
+    const statusMap = await latestStatusByEmployee(sb, [emp.id]);
+
     return rowToView(emp, {
       listening_score: listening,
       speaking_score: speaking,
@@ -232,6 +334,7 @@ export async function loadEmployee(
       last_active_days_ago: daysSince(streak?.last_practice_date ?? session?.completed_at ?? emp.updated_at),
       streak: streak?.current_streak ?? 0,
       practice_completion_pct: streak?.current_streak ? Math.min(100, streak.current_streak * 4) : 0,
+      status_override: statusMap.get(emp.id),
     });
   } catch {
     return null;
@@ -432,6 +535,36 @@ export async function loadCohort(
   }
 }
 
+/**
+ * Employee ids belonging to a cohort, scoped to the caller's readable
+ * properties. Returns [] when the cohort is out of scope, absent, or empty —
+ * callers should treat [] as "no matching members" and filter to nothing.
+ */
+export async function cohortEmployeeIds(
+  user: HRUser,
+  cohortId: string,
+): Promise<string[]> {
+  const sb = createServiceClient();
+  if (!sb) return [];
+  try {
+    const propertyIds = await userPropertyIds(user, sb);
+    const { data: c } = await sb
+      .from("cohorts")
+      .select("property_id")
+      .eq("id", cohortId)
+      .maybeSingle();
+    // Ownership check before returning any member ids (RLS-bypass safety).
+    if (!c || !propertyIds.includes(c.property_id)) return [];
+    const { data: members } = await sb
+      .from("cohort_members")
+      .select("employee_id")
+      .eq("cohort_id", cohortId);
+    return (members ?? []).map((m) => m.employee_id);
+  } catch {
+    return [];
+  }
+}
+
 /** ─── Team ────────────────────────────────────────────────────────── */
 
 export async function loadTeam(user: HRUser): Promise<HRTeamMember[]> {
@@ -441,10 +574,24 @@ export async function loadTeam(user: HRUser): Promise<HRTeamMember[]> {
   }
   try {
     let q = sb.from("hr_users").select("id, email, name, role, is_active, last_login_at, invite_sent_at");
-    if (user.role === "org_admin" && user.organization_id) {
+    // Scope the team query explicitly. EVERY non-super_admin role — including
+    // `viewer` — must be constrained to its own org/property; otherwise the
+    // query selects the entire hr_users table across every tenant (cross-tenant
+    // PII leak). super_admin is the ONLY role intentionally left unscoped.
+    if (user.role === "super_admin") {
+      // Intentional: platform staff can see all HR users across tenants.
+    } else if (user.role === "org_admin" && user.organization_id) {
       q = q.eq("organization_id", user.organization_id);
-    } else if (user.role === "property_admin" && user.property_id) {
+    } else if (user.property_id) {
+      // property_admin AND viewer are scoped to their single property.
       q = q.eq("property_id", user.property_id);
+    } else if (user.organization_id) {
+      // Any org-scoped role that lacks a property still stays within its org.
+      q = q.eq("organization_id", user.organization_id);
+    } else {
+      // No resolvable scope for a non-super_admin — never return the whole
+      // table. Fall back to demo (if enabled) or an empty list.
+      return isDemoMode() ? getDemoTeam() : [];
     }
     const { data } = await q;
     if (!data || data.length === 0) {
@@ -591,11 +738,30 @@ export async function loadOverview(
               .in("status", ["in_progress", "listening_done", "speaking_done", "scoring"]);
             inProgress = ipCount ?? 0;
 
-            const { count: failedCount } = await sb
-              .from("speaking_recordings")
-              .select("id", { count: "exact", head: true })
-              .eq("scoring_status", "failed");
-            failed = failedCount ?? 0;
+            // `speaking_recordings` has no employee_id column — it links to a
+            // tenant only through session_id -> exam_sessions.employee_id.
+            // Without scoping, this counted failed recordings across EVERY
+            // hotel. Resolve this tenant's session ids first, then count only
+            // failures within them. Both `.in()` lists are chunked to stay
+            // under the URL-length limit.
+            const scopedSessionIds: string[] = [];
+            for (const ids of chunk(empIds, IN_CHUNK)) {
+              const { data: sess } = await sb
+                .from("exam_sessions")
+                .select("id")
+                .in("employee_id", ids);
+              for (const r of sess ?? []) scopedSessionIds.push(r.id);
+            }
+            let failedTotal = 0;
+            for (const ids of chunk(scopedSessionIds, IN_CHUNK)) {
+              const { count: failedCount } = await sb
+                .from("speaking_recordings")
+                .select("id", { count: "exact", head: true })
+                .in("session_id", ids)
+                .eq("scoring_status", "failed");
+              failedTotal += failedCount ?? 0;
+            }
+            failed = failedTotal;
 
             const { data: recentSessions } = await sb
               .from("exam_sessions")

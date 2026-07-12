@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getHRUser } from "@/lib/auth/session";
-import { isOrgLevel } from "@/lib/auth/roles";
+import { isOrgLevel, canManageEmployees } from "@/lib/auth/roles";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { jsonError, parseBody } from "@/lib/server/api";
 import { loadOrgInfo, loadPropertyInfo } from "@/lib/hr/data";
@@ -56,6 +56,13 @@ export async function PATCH(req: Request) {
   }
 
   if (parsed.data.property) {
+    // Mirror the org gate: editing the hotel record requires an admin role
+    // (property_admin / org_admin / super_admin). A viewer must never rewrite
+    // the property. canManageEmployees == rank >= property_admin, exactly the
+    // set allowed to modify property data.
+    if (!canManageEmployees(user.role)) {
+      return jsonError("forbidden", "Sin permiso para editar la propiedad.", 403);
+    }
     if (!user.property_id) {
       return jsonError("forbidden", "Sin propiedad asignada.", 403);
     }

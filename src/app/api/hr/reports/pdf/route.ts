@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getHRUser } from "@/lib/auth/session";
 import { jsonError, parseBody } from "@/lib/server/api";
-import { loadEmployees, loadPropertyInfo } from "@/lib/hr/data";
+import { loadEmployees, loadPropertyInfo, cohortEmployeeIds } from "@/lib/hr/data";
 import { buildReportPdf } from "@/lib/hr/pdf";
 
 const Schema = z.object({
@@ -31,10 +31,20 @@ export async function POST(req: Request) {
   const employees = await loadEmployees(user);
   const property = await loadPropertyInfo(user);
 
+  const f = parsed.data.filters;
+
+  // Resolve the cohort filter to its member employee ids (scoped to the
+  // caller). Previously `f.cohort` was accepted but never applied, so the
+  // PDF ignored the selected cohort entirely.
+  const cohortIds =
+    f?.cohort && f.cohort !== "all"
+      ? new Set(await cohortEmployeeIds(user, f.cohort))
+      : null;
+
   const ids = parsed.data.employeeIds ? new Set(parsed.data.employeeIds) : null;
   const filtered = employees.filter((e) => {
     if (ids && !ids.has(e.id)) return false;
-    const f = parsed.data.filters;
+    if (cohortIds && !cohortIds.has(e.id)) return false;
     if (f?.role && f.role !== "all" && e.hotel_role !== f.role) return false;
     if (f?.level && f.level !== "all" && e.current_level !== f.level) return false;
     if (f?.from && e.exam_completed_at && e.exam_completed_at.slice(0, 10) < f.from) return false;

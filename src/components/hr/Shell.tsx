@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,22 @@ interface ShellProps {
 export function HRShell({ email, role, children }: ShellProps) {
   const pathname = usePathname();
   const isSuperAdmin = role === "super_admin";
+  const [signingOut, setSigningOut] = React.useState(false);
+
+  // Real sign-out: revoke the Supabase session + clear the auth cookies via
+  // POST /api/auth/signout, THEN redirect. A plain link to /hr/login left the
+  // cookie valid, so the user stayed logged in. Navigate with a hard reload
+  // so no stale authed state survives.
+  async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/signout", { method: "POST" });
+    } catch {
+      // Ignore network errors — clear the client and redirect regardless.
+    }
+    window.location.href = "/hr/login";
+  }
 
   const ops: NavItem[] = [
     {
@@ -126,13 +143,15 @@ export function HRShell({ email, role, children }: ShellProps) {
           <p className="truncate font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-muted">
             {email}
           </p>
-          <Link
-            href="/hr/login"
-            className="mt-2 inline-flex items-center gap-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft hover:text-ink"
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="mt-2 inline-flex items-center gap-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft transition-colors hover:text-ink disabled:opacity-60"
           >
             <LogOut className="h-3 w-3" aria-hidden />
             {SHELL.signOut}
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -146,12 +165,15 @@ export function HRShell({ email, role, children }: ShellProps) {
               </p>
               <p className="font-serif text-t-h3 font-medium">{SHELL.product}</p>
             </div>
-            <Link
-              href="/hr/login"
-              className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft"
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              aria-label={SHELL.signOut}
+              className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft disabled:opacity-60"
             >
               <LogOut className="h-4 w-4" aria-hidden />
-            </Link>
+            </button>
           </div>
           <nav className="mt-3 flex gap-3 overflow-x-auto">
             {isSuperAdmin && (

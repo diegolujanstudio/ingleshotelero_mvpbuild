@@ -16,12 +16,20 @@ interface Props {
   employees: HREmployeeView[];
   cohorts: HRCohortView[];
   propertyName: string;
+  /**
+   * Optional map of cohort id -> member employee ids. When provided, the
+   * cohort filter below is applied to the preview table and the client-side
+   * CSV/Excel exports. When absent, cohort filtering is deferred to the
+   * server PDF route (which always enforces it) so we never silently hide
+   * every row. See the reports page for wiring.
+   */
+  cohortMembers?: Record<string, string[]>;
 }
 
 type RoleFilter = "all" | RoleModule;
 type LevelFilter = "all" | CEFRLevel;
 
-export function ReportsClient({ employees, cohorts, propertyName }: Props) {
+export function ReportsClient({ employees, cohorts, propertyName, cohortMembers }: Props) {
   const [cohortF, setCohortF] = React.useState<string>("all");
   const [roleF, setRoleF] = React.useState<RoleFilter>("all");
   const [levelF, setLevelF] = React.useState<LevelFilter>("all");
@@ -31,14 +39,24 @@ export function ReportsClient({ employees, cohorts, propertyName }: Props) {
   const [toast, setToast] = React.useState<string | null>(null);
 
   const filtered = React.useMemo(() => {
+    // Cohort filter: only enforceable client-side when membership data is
+    // available. If `cohortMembers` is supplied, restrict to that cohort's
+    // members (empty set → no matches). If it's not wired, we skip cohort
+    // filtering here — the server PDF route still enforces it — rather than
+    // hide every row.
+    const cohortSet =
+      cohortF !== "all" && cohortMembers
+        ? new Set(cohortMembers[cohortF] ?? [])
+        : null;
     return employees.filter((e) => {
+      if (cohortSet && !cohortSet.has(e.id)) return false;
       if (roleF !== "all" && e.hotel_role !== roleF) return false;
       if (levelF !== "all" && e.current_level !== levelF) return false;
       if (from && e.exam_completed_at && e.exam_completed_at.slice(0, 10) < from) return false;
       if (to && e.exam_completed_at && e.exam_completed_at.slice(0, 10) > to) return false;
       return true;
     });
-  }, [employees, roleF, levelF, from, to]);
+  }, [employees, cohortF, cohortMembers, roleF, levelF, from, to]);
 
   const total = filtered.length;
   const avg = total ? Math.round(filtered.reduce((s, e) => s + e.combined_score, 0) / total) : 0;

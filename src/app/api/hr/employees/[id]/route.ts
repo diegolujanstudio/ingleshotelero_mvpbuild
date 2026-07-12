@@ -75,6 +75,11 @@ export async function PATCH(
     update.whatsapp_opted_in = parsed.data.whatsapp_opted_in;
   }
   if (parsed.data.status !== undefined) {
+    // The employees table has no `status` column, so the active/inactive split
+    // is stored on is_active while the GRANULAR status (paused/promoted/
+    // terminated) is persisted below as an analytics event. loadEmployees /
+    // loadEmployee reconstruct the granular value from that event and
+    // reconcile it against is_active, so these statuses no longer revert.
     update.is_active = parsed.data.status === "active" || parsed.data.status === "promoted";
   }
 
