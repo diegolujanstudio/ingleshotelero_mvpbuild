@@ -90,9 +90,32 @@ interface ClaimableRow {
  * Claim up to `batch` pending rows and score them sequentially.
  * Returns per-row outcomes.
  */
+// Rows claimed as 'processing' are normally reset by the in-process catch in
+// scoreClaimedRow. But a hard function timeout / OOM kills the worker before
+// that catch runs, stranding the row in 'processing' forever (claimPending only
+// picked 'pending'). Reap rows whose claim is older than this threshold back to
+// 'pending' so a later batch retries them. scoring_attempts capping still
+// applies, so a genuinely-failing row eventually gives up.
+const STALE_PROCESSING_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function claimPending(batch: number = 10): Promise<ScoreOneOutput[]> {
   const supabase = createServiceClient();
   if (!supabase) return [];
+
+  // Reaper: reset stale 'processing' rows (dead worker) back to 'pending'
+  // before selecting candidates. Only touch rows still under the attempt cap so
+  // permanently-failing rows are not resurrected indefinitely. The claim UPDATE
+  // in scoreClaimedRow stamps `scored_at` at claim time (there is no
+  // `updated_at` column on this table), so for a 'processing' row `scored_at`
+  // reflects when it was claimed. A row still processing with a claim older than
+  // the threshold means the worker died before its catch could reset it.
+  const staleCutoff = new Date(Date.now() - STALE_PROCESSING_MS).toISOString();
+  await supabase
+    .from("speaking_recordings")
+    .update({ scoring_status: "pending" })
+    .eq("scoring_status", "processing")
+    .lt("scoring_attempts", 3)
+    .lt("scored_at", staleCutoff);
 
   const { data: candidates } = await supabase
     .from("speaking_recordings")
@@ -141,11 +164,16 @@ async function scoreClaimedRow(rec: ClaimableRow): Promise<ScoreOneOutput> {
   const nextAttempts = expectedAttempts + 1;
 
   // Step 2: claim — conditional UPDATE.
+  // Stamp scored_at at claim time so the stale-'processing' reaper in
+  // claimPending can tell an actively-processing row from one stranded by a
+  // dead worker (this table has no updated_at column). On success step 4
+  // overwrites scored_at with the real completion time.
   const { data: claimed, error: claimErr } = await supabase
     .from("speaking_recordings")
     .update({
       scoring_status: "processing",
       scoring_attempts: nextAttempts,
+      scored_at: new Date().toISOString(),
     })
     .eq("id", rec.id)
     .eq("scoring_status", "pending")
@@ -176,6 +204,13 @@ async function scoreClaimedRow(rec: ClaimableRow): Promise<ScoreOneOutput> {
       throw new Error("prompt context missing for session/prompt");
     }
     const audioBlob = await downloadAudio(rec.audio_url);
+    // A claimed exam recording always has real uploaded audio, so a null blob
+    // here means the storage read failed or timed out (transient). Throw so the
+    // catch below resets the row to 'pending' for retry instead of finalizing a
+    // bogus no-response (score 0) as 'complete'.
+    if (!audioBlob) {
+      throw new Error("audio download failed or timed out");
+    }
 
     result = await runScoringOnce({
       scenario_es: ctx.scenario_es,
@@ -299,7 +334,11 @@ async function loadPromptContext(
     .maybeSingle();
   if (!session) return null;
   const prompts = EXAM_CONTENT[session.module]?.speaking ?? [];
-  const prompt = prompts.find((p) => p.index === promptIndex);
+  // Indexing convention: recordings store `prompt_index` 0-based (the exam
+  // speaking page uses the array position; DB schema allows min 0). Content
+  // `prompt.index` is 1-based (see EXAM_CONTENT speaking prompts). Map across
+  // the boundary so stored index 0 resolves to content index 1.
+  const prompt = prompts.find((p) => p.index === promptIndex + 1);
   if (!prompt) return null;
   return {
     scenario_es: prompt.scenario_es,
@@ -309,13 +348,51 @@ async function loadPromptContext(
   };
 }
 
+// Per-upstream timeouts. Without these, a hung Whisper/Claude/storage call
+// would stall the whole batch until the platform hard-kills the function,
+// stranding the claimed row (its catch never runs). On timeout we throw so the
+// caller's catch resets the row to 'pending' for a later retry.
+const UPSTREAM_TIMEOUT_MS = 25_000;
+const DOWNLOAD_TIMEOUT_MS = 20_000;
+
+// Wrap a fetch with an AbortController-backed timeout. Rethrows as a labelled
+// error on timeout so logs make the cause obvious.
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit,
+  timeoutMs: number,
+  label: string,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new Error(`${label} timed out after ${timeoutMs}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function downloadAudio(audioPath: string): Promise<Blob | null> {
   const supabase = createServiceClient();
   if (!supabase) return null;
   try {
-    const { data, error } = await supabase.storage
-      .from("recordings")
-      .download(audioPath);
+    // supabase-js storage .download() takes no AbortSignal, so bound it with a
+    // timeout race. On timeout we throw (caught below) so a hung storage read
+    // doesn't stall the batch indefinitely.
+    const { data, error } = await Promise.race([
+      supabase.storage.from("recordings").download(audioPath),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`audio download timed out after ${DOWNLOAD_TIMEOUT_MS}ms`)),
+          DOWNLOAD_TIMEOUT_MS,
+        ),
+      ),
+    ]);
     if (error) throw error;
     return data ?? null;
   } catch (err) {
@@ -333,11 +410,16 @@ async function transcribe(audio: Blob): Promise<string> {
   form.append("language", "en");
   form.append("response_format", "text");
 
-  const res = await fetch(`${OPENAI_API}/audio/transcriptions`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${key}` },
-    body: form,
-  });
+  const res = await fetchWithTimeout(
+    `${OPENAI_API}/audio/transcriptions`,
+    {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}` },
+      body: form,
+    },
+    UPSTREAM_TIMEOUT_MS,
+    "Whisper",
+  );
   if (!res.ok) throw new Error(`Whisper ${res.status}: ${await res.text()}`);
   return (await res.text()).trim();
 }
@@ -356,22 +438,27 @@ async function scoreWithClaude(
     transcript: input.transcript,
   });
 
-  const res = await fetch(`${ANTHROPIC_API}/messages`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
+  const res = await fetchWithTimeout(
+    `${ANTHROPIC_API}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 512,
+        system: systemPrompt,
+        messages: [
+          { role: "user", content: "Score the transcript above. JSON only." },
+        ],
+      }),
     },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 512,
-      system: systemPrompt,
-      messages: [
-        { role: "user", content: "Score the transcript above. JSON only." },
-      ],
-    }),
-  });
+    UPSTREAM_TIMEOUT_MS,
+    "Claude",
+  );
   if (!res.ok) throw new Error(`Claude ${res.status}: ${await res.text()}`);
 
   const data = (await res.json()) as { content: { type: string; text: string }[] };

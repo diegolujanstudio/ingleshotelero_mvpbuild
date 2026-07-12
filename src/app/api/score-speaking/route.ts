@@ -26,6 +26,16 @@ const demoSchema = z.object({
   prompt_index: z.number().int().min(0).max(20).optional(),
 });
 
+// Only permit inline base64 audio data URLs for the unauthenticated practice
+// branch. Rejects http(s)://, file:, and any other scheme so a caller cannot
+// coerce the server into fetching an internal/arbitrary host (blind SSRF).
+function isAllowedAudioDataUrl(url: string): boolean {
+  // data:audio/<subtype>[;param=value ...];base64,<payload>
+  // The optional param group tolerates MediaRecorder MIME types that carry a
+  // codecs parameter (e.g. audio/webm;codecs=opus) which FileReader preserves.
+  return /^data:audio\/[a-z0-9.+-]+(;[a-z0-9.+=_-]+)*;base64,/i.test(url.trim());
+}
+
 export async function POST(req: Request) {
   const ip = getClientIp(req);
   const rl = await checkRateLimit("score-speaking", ip);
@@ -94,8 +104,19 @@ export async function POST(req: Request) {
     );
   }
 
+  // SSRF guard: this branch is reachable unauthenticated, so we must never
+  // fetch an attacker-controlled scheme/host (http, internal IPs, cloud
+  // metadata endpoints, etc.). The practice client only ever sends an inline
+  // base64 `data:` audio URL, so accept ONLY that and reject anything else
+  // with a 400 before any fetch happens.
   let audioBlob: Blob | null = null;
   if (parsed.data.audio_data_url) {
+    if (!isAllowedAudioDataUrl(parsed.data.audio_data_url)) {
+      return NextResponse.json(
+        { error: "invalid_audio_url" },
+        { status: 400 },
+      );
+    }
     try {
       const res = await fetch(parsed.data.audio_data_url);
       audioBlob = await res.blob();
