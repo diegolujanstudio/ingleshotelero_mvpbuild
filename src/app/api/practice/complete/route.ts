@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  createServiceClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase/client-or-service";
-import { tickStreak, isoDate } from "@/lib/practice/streak";
+import { recordDrillCompletion } from "@/lib/practice/complete";
 import { captureException } from "@/lib/server/sentry";
-import { log } from "@/lib/server/log";
-import type { Json } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
 
@@ -23,22 +17,11 @@ const bodySchema = z.object({
 });
 
 /**
- * POST /api/practice/complete
+ * POST /api/practice/complete — web daily-drill completion.
  *
- * Records a drill completion. The work, in order:
- *   1. Insert drill_history (deduped per (employee, drill, calendar
- *      day) — same drill twice the same day is collapsed).
- *   2. Upsert practice_sessions for today (one row per employee per
- *      calendar day).
- *   3. Tick the streak server-side. Idempotent for the same calendar
- *      day.
- *   4. Best-effort analytics_events row.
- *
- * Returns { ok, streak: { current, longest, last_practice_date } }.
- *
- * Demo mode: returns a synthetic OK with zero streak so the client
- * can still flow into /practice/done; the client falls back to its
- * localStorage streak in that branch.
+ * Thin wrapper over the shared recordDrillCompletion() helper (also used
+ * by the WhatsApp engine) so the web and WhatsApp channels record drills
+ * identically. Demo mode returns a synthetic OK with a zero streak.
  */
 export async function POST(req: Request) {
   let raw: unknown;
@@ -56,122 +39,16 @@ export async function POST(req: Request) {
   }
   const input = parsed.data;
 
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({
-      ok: true,
-      mode: "demo",
-      streak: { current: 0, longest: 0, last_practice_date: null },
-    });
-  }
-
-  const supabase = createServiceClient();
-  if (!supabase) {
-    return NextResponse.json({
-      ok: true,
-      mode: "demo",
-      streak: { current: 0, longest: 0, last_practice_date: null },
-    });
-  }
-
-  const today = new Date();
-  const dayStr = isoDate(today);
-
   try {
-    // 1. drill_history — dedupe within the calendar day.
-    const startOfDay = `${dayStr}T00:00:00.000Z`;
-    const endOfDay = `${dayStr}T23:59:59.999Z`;
-    const { data: existing } = await supabase
-      .from("drill_history")
-      .select("id")
-      .eq("employee_id", input.employee_id)
-      .eq("drill_id", input.drill_id)
-      .gte("completed_at", startOfDay)
-      .lte("completed_at", endOfDay)
-      .maybeSingle();
-    if (!existing) {
-      const { error: histErr } = await supabase.from("drill_history").insert({
-        employee_id: input.employee_id,
-        drill_id: input.drill_id,
-        level: input.level,
-        module: input.module,
-        listening_correct: input.listening_correct ?? null,
-        speaking_score: input.speaking_score ?? null,
-        vocab_known: input.vocab_known ?? 0,
-        duration_seconds: input.duration_seconds ?? null,
-      });
-      if (histErr) {
-        log.warn(
-          { err: histErr.message, employee_id: input.employee_id },
-          "practice.complete.history.failed",
-        );
-      }
-    }
-
-    // 2. practice_sessions — upsert one per (employee, date).
-    const { error: sessErr } = await supabase
-      .from("practice_sessions")
-      .upsert(
-        {
-          employee_id: input.employee_id,
-          date: dayStr,
-          channel: "web",
-          listening_correct:
-            typeof input.listening_correct === "boolean"
-              ? input.listening_correct
-                ? 1
-                : 0
-              : null,
-          speaking_score: input.speaking_score ?? null,
-          vocabulary_reviewed: input.vocab_known ?? 0,
-          duration_seconds: input.duration_seconds ?? null,
-          completed: true,
-        },
-        { onConflict: "employee_id,date" },
-      );
-    if (sessErr) {
-      log.warn(
-        { err: sessErr.message, employee_id: input.employee_id },
-        "practice.complete.session.failed",
-      );
-    }
-
-    // 3. Streak.
-    const streak = await tickStreak(input.employee_id, today);
-
-    // 4. Analytics — AWAITED, not fire-and-forget. On Netlify the
-    // function is frozen the moment the response returns, so a
-    // `void`'d insert never lands (this is why analytics_events was
-    // empty in QA). One INSERT is cheap; await it.
-    try {
-      await supabase.from("analytics_events").insert({
-        event_type: "drill_completed",
-        employee_id: input.employee_id,
-        metadata: {
-          drill_id: input.drill_id,
-          module: input.module,
-          level: input.level,
-          listening_correct: input.listening_correct ?? null,
-          speaking_score: input.speaking_score ?? null,
-          vocab_known: input.vocab_known ?? 0,
-          duration_seconds: input.duration_seconds ?? null,
-          ticked: streak.ticked,
-        } as Json,
-      });
-    } catch (analyticsErr) {
-      log.warn(
-        { err: String(analyticsErr), employee_id: input.employee_id },
-        "practice.complete.analytics.failed",
-      );
-    }
-
+    const result = await recordDrillCompletion({ ...input, channel: "web" });
     return NextResponse.json({
       ok: true,
-      mode: "live",
+      mode: result.mode,
       streak: {
-        current: streak.current_streak,
-        longest: streak.longest_streak,
-        last_practice_date: streak.last_practice_date,
-        ticked: streak.ticked,
+        current: result.streak.current_streak,
+        longest: result.streak.longest_streak,
+        last_practice_date: result.streak.last_practice_date,
+        ticked: result.streak.ticked,
       },
     });
   } catch (err) {
@@ -179,9 +56,6 @@ export async function POST(req: Request) {
       route: "POST /api/practice/complete",
       data: { employee_id: input.employee_id, drill_id: input.drill_id },
     });
-    return NextResponse.json(
-      { ok: false, error: "server_error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, error: "server_error" }, { status: 500 });
   }
 }
