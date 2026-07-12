@@ -11,10 +11,19 @@
  *       2xx              → delete blob (if any), remove row, fire onItemSucceeded.
  *       4xx (most)       → permanent failure: remove row, fire onItemFailed(true).
  *                          (401/408/429 are treated as transient — auth churn
- *                          + rate limits + request timeout SHOULD be retried.)
- *       5xx + network    → transient: bump `attempts`, leave row in queue.
- *                          On `attempts >= MAX_ATTEMPTS` (5), promote to
- *                          permanent, remove row, fire onItemFailed(true).
+ *                          + rate limits + request timeout SHOULD be retried.
+ *                          409 is permanent-but-non-destructive: the row is
+ *                          dropped but the recording blob is NEVER deleted — a
+ *                          late recording the server now holds.)
+ *       5xx / 429 / etc. → transient SERVER failure: bump `attempts`, leave row
+ *                          in queue. On `attempts >= MAX_ATTEMPTS` (5), promote
+ *                          to permanent, remove row, fire onItemFailed(true).
+ *       network error    → transient, but NEVER counts toward MAX_ATTEMPTS and
+ *                          never deletes the row (flaky/captive-portal wifi must
+ *                          not lose a queued recording). Retries next drain.
+ *   - After the first transient failure for a session, later queued items for
+ *     the SAME session are held back this pass (ordering barrier) so a
+ *     finalize-listening can't land ahead of its answers.
  *   - Backoff is computed PER ITEM from its own `attempts` count; we sleep
  *     between transient failures so we don't hammer a struggling server.
  *     1s → 2s → 4s → 8s → 16s capped at 32s.
@@ -30,12 +39,33 @@
  *   - A drain pass NEVER throws; it only returns a `DrainResult`.
  */
 
-import { getAll, markFailure, remove } from './queue';
+import { getAll, markFailure, recordSoftFailure, remove } from './queue';
 import { loadBlob, deleteBlob } from './audio-store';
 import type { DrainResult, QueuedRequest } from './types';
 
 const MAX_ATTEMPTS = 5;
 const BACKOFF_CAP_MS = 32_000;
+/**
+ * Fix 5 (re-drain scheduler): when a drain leaves items behind (transient
+ * failure or a session held back by the ordering barrier), re-arm a delayed
+ * drain after this interval so queued data doesn't wait indefinitely for the
+ * next `online` / visibility transition.
+ */
+const RE_ARM_MS = 15_000;
+
+/**
+ * Fire the queue-changed event so the pending-count chip refreshes. Kept local
+ * (rather than importing from api-client, which imports us) to avoid a cycle.
+ * Server-safe: no-op when there's no `window`.
+ */
+function dispatchQueueChanged(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent('ih:queue-changed'));
+  } catch {
+    // Older browsers without CustomEvent ctor — the chip's polling covers it.
+  }
+}
 
 export interface SyncOptions {
   /** Called once per drain pass with the aggregate result. */
@@ -128,10 +158,36 @@ function stripContentType(headers: Record<string, string>): Record<string, strin
 }
 
 /**
- * One drain pass. Idempotent — call as often as you like; it's a no-op when
- * the queue is empty or IDB is unavailable.
+ * Fix 1 (concurrency latch): a single in-flight drain shared by all callers.
+ * `drainQueue` returns this promise instead of starting a second pass, so the
+ * initial drain + an `online` event + two mounted components can't run
+ * concurrently. Without it, pass B could observe a blob that pass A already
+ * deleted mid-flight and report a false PERMANENT failure.
  */
-export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult> {
+let inFlight: Promise<DrainResult> | null = null;
+
+/**
+ * One drain pass. Idempotent — call as often as you like; it's a no-op when
+ * the queue is empty or IDB is unavailable. Concurrent calls coalesce onto the
+ * same in-flight pass (see `inFlight` above).
+ */
+export function drainQueue(options: SyncOptions = {}): Promise<DrainResult> {
+  if (inFlight) return inFlight;
+  const run = drainQueueImpl(options);
+  inFlight = run;
+  // Clear the latch once the pass settles, regardless of outcome.
+  void run.then(
+    () => {
+      inFlight = null;
+    },
+    () => {
+      inFlight = null;
+    },
+  );
+  return run;
+}
+
+async function drainQueueImpl(options: SyncOptions = {}): Promise<DrainResult> {
   const items = await getAll();
   const result: DrainResult = {
     attempted: items.length,
@@ -154,8 +210,21 @@ export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult
   }
 
   let sawFailure = false;
+  // Fix 4: did this pass mutate the queue (a row removed via success or
+  // permanent failure)? If so we dispatch `ih:queue-changed` at the end.
+  let mutated = false;
+  // Fix 3: sessions that hit a transient failure this pass. Later queued items
+  // for the same session (e.g. finalize-listening after its answers) must not
+  // replay ahead of the failed earlier write, so we hold them back this pass.
+  const blockedSessions = new Set<string>();
 
   for (const item of items) {
+    // Fix 3 (session ordering barrier): skip — without bumping attempts — any
+    // item whose session already failed transiently earlier this pass.
+    if (blockedSessions.has(item.sessionId)) {
+      continue;
+    }
+
     // Per-item backoff sleep BEFORE retry, scaled by previous attempts.
     if (sawFailure) {
       await sleep(backoffMs(item.attempts));
@@ -167,6 +236,7 @@ export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult
     } catch (err) {
       // Should never happen, but guard so a single bad row can't stop the drain.
       await remove(item.id);
+      mutated = true;
       result.failed += 1;
       result.permanentlyFailed += 1;
       result.remaining -= 1;
@@ -178,6 +248,7 @@ export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult
     if (init === null) {
       // Recording row whose blob disappeared — orphaned. Drop it.
       await remove(item.id);
+      mutated = true;
       result.failed += 1;
       result.permanentlyFailed += 1;
       result.remaining -= 1;
@@ -197,11 +268,13 @@ export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult
     }
 
     if (response && response.ok) {
-      // 2xx: clean up.
+      // 2xx: clean up. A confirmed 2xx is the ONLY signal that lets us delete
+      // the recording blob (see the 409 carve-out below).
       if (item.blobKey) {
         await deleteBlob(item.blobKey);
       }
       await remove(item.id);
+      mutated = true;
       result.succeeded += 1;
       result.remaining -= 1;
       options.onItemSucceeded?.(item);
@@ -213,31 +286,51 @@ export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult
     result.failed += 1;
 
     if (response && !isTransientStatus(response.status)) {
-      // Permanent client error (likely a payload bug). Log + drop.
+      // Permanent client error (likely a payload bug). Log + drop the row.
+      const status = response.status;
       const body = await safeReadBody(response);
-      const err = new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
-      if (item.blobKey) {
+      const err = new Error(`HTTP ${status}: ${body.slice(0, 200)}`);
+      // Contract carve-out: a 409 conflict means the server already holds this
+      // logical write (idempotent duplicate) or the session advanced past it —
+      // a late recording the server now accepts. Stop retrying, but NEVER
+      // destroy the blob on a 409. Only a genuine, non-409 permanent 4xx
+      // deletes the recording.
+      if (item.blobKey && status !== 409) {
         await deleteBlob(item.blobKey);
       }
       await remove(item.id);
+      mutated = true;
       result.permanentlyFailed += 1;
       result.remaining -= 1;
       options.onItemFailed?.(item, err, true);
       continue;
     }
 
-    // Transient (5xx, network, 401/408/429): bump attempts.
-    const err =
-      networkError ??
-      new Error(`HTTP ${response?.status ?? 0}`);
+    // Fix 3: this session now failed transiently — hold back its later items.
+    blockedSessions.add(item.sessionId);
+
+    if (networkError) {
+      // Fix 2: pure NETWORK error (fetch threw — offline / captive portal).
+      // Do NOT increment attempts and NEVER delete the row: flaky wifi must
+      // not consume the retry budget or lose a queued recording. It simply
+      // retries on the next drain.
+      await recordSoftFailure(item.id, networkError.message);
+      options.onItemFailed?.(item, networkError, false);
+      continue;
+    }
+
+    // Transient SERVER response (5xx / 429 / 408 / 401): bump attempts. The
+    // attempt cap is reserved for real server failures like these.
+    const err = new Error(`HTTP ${response?.status ?? 0}`);
     const nextAttempts = item.attempts + 1;
     if (nextAttempts >= MAX_ATTEMPTS) {
-      // Exhausted retry budget. Promote to permanent failure to keep the
-      // queue from wedging forever.
+      // Exhausted retry budget against a persistently-failing server. Promote
+      // to permanent failure to keep the queue from wedging forever.
       if (item.blobKey) {
         await deleteBlob(item.blobKey);
       }
       await remove(item.id);
+      mutated = true;
       result.permanentlyFailed += 1;
       result.remaining -= 1;
       options.onItemFailed?.(item, err, true);
@@ -245,6 +338,11 @@ export async function drainQueue(options: SyncOptions = {}): Promise<DrainResult
       await markFailure(item.id, err.message);
       options.onItemFailed?.(item, err, false);
     }
+  }
+
+  // Fix 4: if the queue changed, refresh the pending-count chip.
+  if (mutated) {
+    dispatchQueueChanged();
   }
 
   options.onProgress?.(result);
@@ -273,25 +371,46 @@ export function startSyncListener(options: SyncOptions = {}): () => void {
   }
 
   let cancelled = false;
+  let reArmTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const handler = () => {
+  const kick = (reason: string) => {
     if (cancelled) return;
-    void drainQueue(options).catch((err) => {
-      console.warn('[ih-offline] drain (online event) failed:', err);
-    });
+    void drainQueue(options)
+      .then((result) => {
+        if (cancelled) return;
+        // Fix 5: if items remain (transient failures, or a session held back
+        // by the ordering barrier), re-arm a delayed drain so they don't wait
+        // indefinitely for the next `online` / visibility transition.
+        if (result.remaining > 0) {
+          if (reArmTimer) clearTimeout(reArmTimer);
+          reArmTimer = setTimeout(() => kick('re-arm'), RE_ARM_MS);
+        }
+      })
+      .catch((err) => {
+        console.warn(`[ih-offline] drain (${reason}) failed:`, err);
+      });
   };
 
-  window.addEventListener('online', handler);
+  const onlineHandler = () => kick('online');
+  // Fix 5: a tab returning to the foreground is a strong signal that
+  // connectivity may have recovered (mobile browsers suspend background tabs);
+  // attempt a drain then.
+  const visibilityHandler = () => {
+    if (document.visibilityState === 'visible') kick('visibility');
+  };
+
+  window.addEventListener('online', onlineHandler);
+  document.addEventListener('visibilitychange', visibilityHandler);
 
   // Fire-and-forget initial drain. We don't await here — listener registration
   // must be synchronous to satisfy the teardown contract, and a slow drain
   // shouldn't block the caller.
-  void drainQueue(options).catch((err) => {
-    console.warn('[ih-offline] drain (initial) failed:', err);
-  });
+  kick('initial');
 
   return () => {
     cancelled = true;
-    window.removeEventListener('online', handler);
+    if (reArmTimer) clearTimeout(reArmTimer);
+    window.removeEventListener('online', onlineHandler);
+    document.removeEventListener('visibilitychange', visibilityHandler);
   };
 }

@@ -106,7 +106,8 @@ export async function clearAll(): Promise<void> {
 
 /**
  * Increment attempt counter and record the failure message. Called by
- * `sync.ts` after a transient (5xx / network / 401 / 408 / 429) failure.
+ * `sync.ts` after a transient SERVER failure (5xx / 429 / 408 / 401) — i.e.
+ * one that should count toward the retry cap.
  */
 export async function markFailure(id: string, error: string): Promise<void> {
   const db = getDB();
@@ -120,5 +121,25 @@ export async function markFailure(id: string, error: string): Promise<void> {
     });
   } catch (err) {
     console.warn('[ih-offline] markFailure failed:', err);
+  }
+}
+
+/**
+ * Record a transient failure message WITHOUT incrementing `attempts`.
+ *
+ * Used by `sync.ts` for pure NETWORK errors (fetch threw: offline, captive
+ * portal, DNS hiccup). These must never burn the retry budget or trip the
+ * delete-on-exhaust path — flaky wifi must not permanently lose a queued
+ * answer or recording. The row is left intact for the next drain.
+ */
+export async function recordSoftFailure(id: string, error: string): Promise<void> {
+  const db = getDB();
+  if (!db) return;
+  try {
+    await db.queue.update(id, {
+      lastError: error.slice(0, 500), // diagnostic only; attempts untouched
+    });
+  } catch (err) {
+    console.warn('[ih-offline] recordSoftFailure failed:', err);
   }
 }
