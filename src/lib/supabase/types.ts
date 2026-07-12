@@ -353,6 +353,52 @@ export interface Database {
         };
         Relationships: [];
       };
+      whatsapp_sessions: {
+        Row: {
+          id: string;
+          employee_id: string;
+          phone: string;
+          date: string;
+          state: "idle" | "drill_sent" | "awaiting_answer" | "awaiting_audio" | "done";
+          drill_id: string | null;
+          module: RoleModule | null;
+          level: CEFRLevel | null;
+          listening_correct: boolean | null;
+          audio_path: string | null;
+          speaking_score: number | null;
+          last_inbound_at: string | null;
+          last_outbound_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          phone: string;
+          date?: string;
+          state?: "idle" | "drill_sent" | "awaiting_answer" | "awaiting_audio" | "done";
+          drill_id?: string | null;
+          module?: RoleModule | null;
+          level?: CEFRLevel | null;
+          listening_correct?: boolean | null;
+          audio_path?: string | null;
+          speaking_score?: number | null;
+          last_inbound_at?: string | null;
+          last_outbound_at?: string | null;
+        };
+        Update: {
+          state?: "idle" | "drill_sent" | "awaiting_answer" | "awaiting_audio" | "done";
+          drill_id?: string | null;
+          module?: RoleModule | null;
+          level?: CEFRLevel | null;
+          listening_correct?: boolean | null;
+          audio_path?: string | null;
+          speaking_score?: number | null;
+          last_inbound_at?: string | null;
+          last_outbound_at?: string | null;
+        };
+        Relationships: [];
+      };
       idempotency_keys: {
         Row: {
           key: string;
