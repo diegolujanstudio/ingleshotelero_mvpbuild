@@ -56,3 +56,6 @@ supabase/.temp
 # Private fonts — licensed typefaces should NOT be committed to public repos.
 # Place your New Spirit files in public/fonts/ locally; .gitignore them before open-sourcing.
 # public/fonts/*.woff2
+
+# landing/ is its own git repo (ingleshotelero-landing) - never track here
+landing/
