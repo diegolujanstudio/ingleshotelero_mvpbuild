@@ -47,6 +47,10 @@ export interface Database {
           max_properties: number;
           max_employees: number;
           billing_email: string | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          plan: string | null;
+          current_period_end: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -60,6 +64,10 @@ export interface Database {
           max_properties?: number;
           max_employees?: number;
           billing_email?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          plan?: string | null;
+          current_period_end?: string | null;
         };
         Update: {
           id?: string;
@@ -71,6 +79,10 @@ export interface Database {
           max_properties?: number;
           max_employees?: number;
           billing_email?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          plan?: string | null;
+          current_period_end?: string | null;
         };
         Relationships: [];
       };
