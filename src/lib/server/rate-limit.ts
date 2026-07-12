@@ -15,7 +15,7 @@ import "server-only";
  */
 import { log } from "./log";
 
-type Bucket = "exams" | "recordings" | "score-speaking";
+type Bucket = "exams" | "recordings" | "score-speaking" | "whatsapp";
 
 interface LimitConfig {
   requests: number;
@@ -26,6 +26,7 @@ const LIMITS: Record<Bucket, LimitConfig> = {
   exams: { requests: 10, windowSeconds: 60 },
   recordings: { requests: 20, windowSeconds: 60 },
   "score-speaking": { requests: 60, windowSeconds: 60 },
+  whatsapp: { requests: 60, windowSeconds: 60 },
 };
 
 let warned = false;
