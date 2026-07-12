@@ -39,15 +39,52 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
+/**
+ * Supabase returns at most ~1000 rows per select regardless of an explicit
+ * .limit(), so an unbounded read silently plateaus and undercounts active
+ * employees / daily series past 1000 rows. Range-loop in 1000-row pages until
+ * a short page signals the end. (Count-only metrics use count:exact head:true
+ * instead — see examsCompleted / scoringQueueDepth.)
+ */
+const PAGE = 1000;
+async function fetchAll<T>(
+  build: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as T[];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 /** distinct employees with a practice_session OR exam_session in the window */
 async function activeEmployees(sb: SC, since: string): Promise<number> {
-  const [{ data: practiceRows }, { data: examRows }] = await Promise.all([
-    sb.from("practice_sessions").select("employee_id").gte("created_at", since),
-    sb.from("exam_sessions").select("employee_id").gte("started_at", since),
+  const [practiceRows, examRows] = await Promise.all([
+    fetchAll<{ employee_id: string | null }>((f, t) =>
+      sb
+        .from("practice_sessions")
+        .select("employee_id")
+        .gte("created_at", since)
+        .range(f, t),
+    ),
+    fetchAll<{ employee_id: string | null }>((f, t) =>
+      sb
+        .from("exam_sessions")
+        .select("employee_id")
+        .gte("started_at", since)
+        .range(f, t),
+    ),
   ]);
   const set = new Set<string>();
-  for (const r of practiceRows ?? []) if (r.employee_id) set.add(r.employee_id);
-  for (const r of examRows ?? []) if (r.employee_id) set.add(r.employee_id);
+  for (const r of practiceRows) if (r.employee_id) set.add(r.employee_id);
+  for (const r of examRows) if (r.employee_id) set.add(r.employee_id);
   return set.size;
 }
 
@@ -73,15 +110,21 @@ async function dailyActiveSeries(
   sb: SC,
 ): Promise<Array<{ date: string; count: number }>> {
   const since = daysAgo(30);
-  const [{ data: practice }, { data: exams }] = await Promise.all([
-    sb
-      .from("practice_sessions")
-      .select("employee_id, created_at")
-      .gte("created_at", since),
-    sb
-      .from("exam_sessions")
-      .select("employee_id, started_at")
-      .gte("started_at", since),
+  const [practice, exams] = await Promise.all([
+    fetchAll<{ employee_id: string | null; created_at: string }>((f, t) =>
+      sb
+        .from("practice_sessions")
+        .select("employee_id, created_at")
+        .gte("created_at", since)
+        .range(f, t),
+    ),
+    fetchAll<{ employee_id: string | null; started_at: string }>((f, t) =>
+      sb
+        .from("exam_sessions")
+        .select("employee_id, started_at")
+        .gte("started_at", since)
+        .range(f, t),
+    ),
   ]);
 
   const buckets = new Map<string, Set<string>>();
@@ -108,12 +151,15 @@ async function dailyActiveSeries(
 async function levelDistribution(
   sb: SC,
 ): Promise<Array<{ level: CEFRLevel; count: number }>> {
-  const { data } = await sb
-    .from("employees")
-    .select("current_level")
-    .eq("is_active", true);
+  const data = await fetchAll<{ current_level: CEFRLevel | null }>((f, t) =>
+    sb
+      .from("employees")
+      .select("current_level")
+      .eq("is_active", true)
+      .range(f, t),
+  );
   const counts: Record<CEFRLevel, number> = { A1: 0, A2: 0, B1: 0, B2: 0 };
-  for (const r of data ?? []) {
+  for (const r of data) {
     if (r.current_level && LEVELS.includes(r.current_level)) {
       counts[r.current_level as CEFRLevel]++;
     }
@@ -127,10 +173,14 @@ async function drillSeries(
   sb: SC,
 ): Promise<Array<{ date: string; completed: number; invited: number }>> {
   const since = daysAgo(30);
-  const { data } = await sb
-    .from("practice_sessions")
-    .select("created_at, completed")
-    .gte("created_at", since);
+  const data = await fetchAll<{ created_at: string; completed: boolean | null }>(
+    (f, t) =>
+      sb
+        .from("practice_sessions")
+        .select("created_at, completed")
+        .gte("created_at", since)
+        .range(f, t),
+  );
 
   const buckets = new Map<string, { completed: number; invited: number }>();
   for (let i = 29; i >= 0; i--) {
@@ -159,11 +209,18 @@ async function costSeries(
   Array<{ date: string; whisper: number; claude: number; elevenlabs: number }>
 > {
   const since = daysAgo(7);
-  const { data } = await sb
-    .from("analytics_events")
-    .select("event_type, metadata, created_at")
-    .in("event_type", ["scoring.run", "tts.generated"])
-    .gte("created_at", since);
+  const data = await fetchAll<{
+    event_type: string;
+    metadata: Record<string, unknown> | null;
+    created_at: string;
+  }>((f, t) =>
+    sb
+      .from("analytics_events")
+      .select("event_type, metadata, created_at")
+      .in("event_type", ["scoring.run", "tts.generated"])
+      .gte("created_at", since)
+      .range(f, t),
+  );
 
   const buckets = new Map<
     string,

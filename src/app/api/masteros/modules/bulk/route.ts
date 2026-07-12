@@ -107,16 +107,45 @@ export async function POST(req: Request) {
   // Process in chunks of 100 to keep the round-trip reasonable.
   for (let i = 0; i < valid.length; i += 100) {
     const chunk = valid.slice(i, i + 100);
+
+    // FETCH-MERGE (not defaultToNull:false, which still nulls omitted columns
+    // to their DEFAULT on the ON CONFLICT DO UPDATE path and resets
+    // is_active/usage_count). Bulk imports are mixed-shape — a vocabulary row
+    // omits audio_url/options; a listening row omits word/model_response — so
+    // we load each existing row and merge the incoming fields OVER it. Omitted
+    // fields keep their current value; an explicit null still clears. This
+    // preserves pre-generated audio_url / options / usage_count.
+    const ids = chunk.map((c) => c.id).filter((x): x is string => Boolean(x));
+    const existingById = new Map<string, Record<string, unknown>>();
+    if (ids.length > 0) {
+      const { data: existingRows, error: fetchErr } = await sb
+        .from("content_items")
+        .select("*")
+        .in("id", ids);
+      if (fetchErr) {
+        chunk.forEach((_, j) => failed.push({ index: i + j, error: fetchErr.message }));
+        continue;
+      }
+      for (const row of (existingRows ?? []) as Record<string, unknown>[]) {
+        existingById.set(row.id as string, row);
+      }
+    }
+
+    const merged = chunk.map((c) => {
+      const prior = c.id ? existingById.get(c.id) : undefined;
+      return prior ? { ...prior, ...c } : c;
+    });
+
     const { error } = await sb
       .from("content_items")
-      .upsert(chunk as never, { onConflict: "id" });
+      .upsert(merged as never, { onConflict: "id" });
     if (error) {
       // Mark the whole chunk as failed; could refine later.
       chunk.forEach((_, j) =>
         failed.push({ index: i + j, error: error.message }),
       );
     } else {
-      chunk.forEach((c) => (c.id ? updated++ : inserted++));
+      chunk.forEach((c) => (c.id && existingById.has(c.id) ? updated++ : inserted++));
     }
   }
 

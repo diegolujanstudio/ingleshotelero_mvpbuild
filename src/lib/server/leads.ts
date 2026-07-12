@@ -179,10 +179,24 @@ export async function listLeads(opts: ListLeadsOpts = {}): Promise<ListLeadsResu
   if (opts.status) query = query.eq("status", opts.status);
 
   if (opts.search && opts.search.trim().length > 0) {
-    const q = opts.search.trim().replace(/[%_]/g, "\\$&");
-    // Fan out across the most common columns; ILIKE is fine at this scale.
+    const raw = opts.search.trim();
+    // A PostgREST .or() string uses `,` `(` `)` `.` structurally, so raw MX
+    // company names ("Hoteles Rivera, S.A. de C.V.") would break the filter
+    // and silently return nothing. Wrapping each value in double quotes makes
+    // those chars literal; then we escape backslash + double-quote for that
+    // quoted context. `%`/`_` are ILIKE wildcards → escape so user input is
+    // matched literally.
+    const escapedForLike = raw.replace(/[%_]/g, "\\$&");
+    const escapedForOr = escapedForLike.replace(/["\\]/g, "\\$&");
+    const pattern = `%${escapedForOr}%`;
     query = query.or(
-      `name.ilike.%${q}%,email.ilike.%${q}%,company.ilike.%${q}%,city.ilike.%${q}%,message.ilike.%${q}%`,
+      [
+        `name.ilike."${pattern}"`,
+        `email.ilike."${pattern}"`,
+        `company.ilike."${pattern}"`,
+        `city.ilike."${pattern}"`,
+        `message.ilike."${pattern}"`,
+      ].join(","),
     );
   }
 

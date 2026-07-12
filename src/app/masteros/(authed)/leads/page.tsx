@@ -11,7 +11,22 @@ import { LeadsClient, type LeadsTab, type LeadsStatusFilter } from "./LeadsClien
 
 export const dynamic = "force-dynamic";
 
-const FORM_TABS: ReadonlyArray<LeadsTab> = ["all", "pilot", "soporte", "other"];
+interface LeadCounts {
+  all: number;
+  pilot: number;
+  soporte: number;
+  colocacion: number;
+  other: number;
+}
+
+const FORM_TABS: ReadonlyArray<LeadsTab> = [
+  "all",
+  "pilot",
+  "soporte",
+  "colocacion",
+  "other",
+];
+const PAGE_SIZE = 50;
 const STATUS_FILTERS: ReadonlyArray<LeadsStatusFilter> = [
   "all",
   "new",
@@ -24,7 +39,7 @@ const STATUS_FILTERS: ReadonlyArray<LeadsStatusFilter> = [
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: { tab?: string; status?: string; search?: string };
+  searchParams: { tab?: string; status?: string; search?: string; page?: string };
 }) {
   await requireSuperAdmin();
 
@@ -39,18 +54,28 @@ export default async function LeadsPage({
     ? (searchParams.status as LeadsStatusFilter)
     : "all";
   const search = (searchParams.search ?? "").slice(0, 200);
+  // 1-based page → row offset. Guards non-numeric / <1 input.
+  const page = Math.max(1, Math.floor(numberOr(searchParams.page, 1)));
+  const offset = (page - 1) * PAGE_SIZE;
 
   const sb = createServiceClient();
   let rows: LeadRow[] = [];
   let total = 0;
-  let counts = { all: 0, pilot: 0, soporte: 0, other: 0 };
+  let counts: LeadCounts = {
+    all: 0,
+    pilot: 0,
+    soporte: 0,
+    colocacion: 0,
+    other: 0,
+  };
   let demo = false;
 
   if (!sb) {
     const all = demoLeads();
-    counts = demoCounts(all);
-    rows = filterDemo(all, tab, status, search);
-    total = rows.length;
+    counts = withColocacion(demoCounts(all));
+    const filtered = filterDemo(all, tab, status, search);
+    total = filtered.length;
+    rows = filtered.slice(offset, offset + PAGE_SIZE);
     demo = true;
   } else {
     try {
@@ -59,8 +84,8 @@ export default async function LeadsPage({
           formName: tab === "all" ? undefined : (tab as LeadFormName),
           status: status === "all" ? undefined : (status as LeadStatus),
           search: search.trim() ? search.trim() : undefined,
-          limit: 50,
-          offset: 0,
+          limit: PAGE_SIZE,
+          offset,
         }),
         gatherCountsServer(sb),
       ]);
@@ -72,16 +97,18 @@ export default async function LeadsPage({
       // and /masteros/crm posture).
       if (rows.length === 0 && counts.all === 0) {
         const all = demoLeads();
-        counts = demoCounts(all);
-        rows = filterDemo(all, tab, status, search);
-        total = rows.length;
+        counts = withColocacion(demoCounts(all));
+        const filtered = filterDemo(all, tab, status, search);
+        total = filtered.length;
+        rows = filtered.slice(offset, offset + PAGE_SIZE);
         demo = true;
       }
     } catch {
       const all = demoLeads();
-      counts = demoCounts(all);
-      rows = filterDemo(all, tab, status, search);
-      total = rows.length;
+      counts = withColocacion(demoCounts(all));
+      const filtered = filterDemo(all, tab, status, search);
+      total = filtered.length;
+      rows = filtered.slice(offset, offset + PAGE_SIZE);
       demo = true;
     }
   }
@@ -94,26 +121,71 @@ export default async function LeadsPage({
       tab={tab}
       status={status}
       search={search}
+      page={page}
+      pageSize={PAGE_SIZE}
       demo={demo}
     />
   );
 }
 
+// demoCounts() (shared, out of this surface) has no colocacion bucket; add a
+// zero one so the shape matches LeadCounts. Demo data has no colocacion rows.
+function withColocacion(c: {
+  all: number;
+  pilot: number;
+  soporte: number;
+  other: number;
+}): LeadCounts {
+  return { colocacion: 0, ...c };
+}
+
+function numberOr(v: string | undefined, d: number): number {
+  const n = v === undefined ? NaN : Number(v);
+  return Number.isFinite(n) ? n : d;
+}
+
 async function gatherCountsServer(
   sb: NonNullable<ReturnType<typeof createServiceClient>>,
-) {
-  const { data, error } = await (
-    sb as unknown as { from: (t: string) => { select: (c: string) => Promise<{ data: Array<{ form_name: LeadFormName }> | null; error: { message: string } | null }> } }
-  ).from("leads").select("form_name");
-  if (error) throw error;
-  const c = { all: 0, pilot: 0, soporte: 0, other: 0 };
-  for (const r of (data as Array<{ form_name: LeadFormName }> | null) ?? []) {
-    c.all++;
-    if (r.form_name === "pilot") c.pilot++;
-    else if (r.form_name === "soporte") c.soporte++;
-    else c.other++;
-  }
-  return c;
+): Promise<LeadCounts> {
+  // Exact head-counts — a bare select caps at Supabase's 1000-row limit, which
+  // would freeze the tab badges at 1000 as the table grows. head:true returns
+  // the count only, at any scale.
+  const countFor = async (form?: LeadFormName): Promise<number> => {
+    const base = (
+      sb as unknown as {
+        from: (t: string) => {
+          select: (
+            c: string,
+            o: { count: "exact"; head: true },
+          ) => {
+            eq: (
+              col: string,
+              val: string,
+            ) => Promise<{ count: number | null; error: { message: string } | null }>;
+          } & Promise<{ count: number | null; error: { message: string } | null }>;
+        };
+      }
+    )
+      .from("leads")
+      .select("id", { count: "exact", head: true });
+    const { count, error } = await (form ? base.eq("form_name", form) : base);
+    if (error) throw error;
+    return count ?? 0;
+  };
+
+  const [all, pilot, soporte, colocacion] = await Promise.all([
+    countFor(),
+    countFor("pilot"),
+    countFor("soporte"),
+    countFor("colocacion"),
+  ]);
+  return {
+    all,
+    pilot,
+    soporte,
+    colocacion,
+    other: Math.max(0, all - pilot - soporte - colocacion),
+  };
 }
 
 function filterDemo(

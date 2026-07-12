@@ -30,6 +30,14 @@ function escapeCell(value: unknown): string {
   // Strip control characters except \t, \n, \r — they're rare in our data
   // but break Excel.
   s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+  // Neutralize spreadsheet formula injection (CSV injection): a cell whose
+  // value begins with = + - @ (or a leading tab / CR) can be executed as a
+  // formula by Excel / Google Sheets. Prefix a single quote so the value is
+  // always treated as literal text. Runs for every export path — all of them
+  // funnel through this helper.
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
   return `"${s.replace(/"/g, '""')}"`;
 }
 

@@ -40,6 +40,10 @@ export async function GET() {
     }
   }
 
-  cached = { at: now, payload };
+  // Only cache REAL payloads. Caching the demo fallback would drop the `demo`
+  // flag on subsequent cache hits (they returned `demo:false`), serving
+  // fabricated demo metrics as if they were real — and would also pin the
+  // dashboard to demo for 60s after a transient DB error that has recovered.
+  if (!demo) cached = { at: now, payload };
   return NextResponse.json({ ...payload, cached: false, demo });
 }

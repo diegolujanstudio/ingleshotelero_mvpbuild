@@ -12,7 +12,10 @@ import { demoLeads, demoCounts } from "@/lib/masteros/leads-demo";
 
 export const dynamic = "force-dynamic";
 
-const FormEnum = z.enum(["pilot", "soporte", "other"]);
+// 'colocacion' is a real lead form (high-intent placement-exam requests). It
+// must be its own tab, otherwise those rows fall between the exact-match tabs
+// (they are not "other") and never appear in the list or export.
+const FormEnum = z.enum(["pilot", "soporte", "colocacion", "other"]);
 const StatusEnum = z.enum([
   "new",
   "contacted",
@@ -29,6 +32,7 @@ export interface LeadCounts {
   all: number;
   pilot: number;
   soporte: number;
+  colocacion: number;
   other: number;
 }
 
@@ -43,7 +47,7 @@ export interface LeadsListResponse {
  * GET /api/masteros/leads
  *
  * Query:
- *   tab     = 'all' | 'pilot' | 'soporte' | 'other'   (default 'all')
+ *   tab     = 'all' | 'pilot' | 'soporte' | 'colocacion' | 'other' (default 'all')
  *   status  = 'all' | LeadStatus                       (default 'all')
  *   search  = free-text                                (optional)
  *   limit   = 1..200                                   (default 50)
@@ -84,7 +88,7 @@ export async function GET(req: Request) {
     return NextResponse.json<LeadsListResponse>({
       rows: sliced,
       total: filtered.length,
-      counts: demoCounts(all),
+      counts: { colocacion: 0, ...demoCounts(all) },
       demo: true,
     });
   }
@@ -114,30 +118,57 @@ export async function GET(req: Request) {
     return NextResponse.json<LeadsListResponse>({
       rows: sliced,
       total: filtered.length,
-      counts: demoCounts(all),
+      counts: { colocacion: 0, ...demoCounts(all) },
       demo: true,
     });
   }
 }
 
-async function gatherCounts(sb: NonNullable<ReturnType<typeof createServiceClient>>): Promise<LeadCounts> {
-  // Single fetch of every row's form_name → in-memory tally. At masteros scale
-  // this is fine and avoids 4 round-trips. If the table grows past ~50K rows,
-  // swap for a SQL view.
-  const { data, error } = await (
-    sb as unknown as { from: (t: string) => { select: (c: string) => Promise<{ data: Array<{ form_name: LeadFormName }> | null; error: { message: string } | null }> } }
-  )
-    .from("leads")
-    .select("form_name");
-  if (error) throw error;
-  const counts: LeadCounts = { all: 0, pilot: 0, soporte: 0, other: 0 };
-  for (const r of (data as Array<{ form_name: LeadFormName }> | null) ?? []) {
-    counts.all++;
-    if (r.form_name === "pilot") counts.pilot++;
-    else if (r.form_name === "soporte") counts.soporte++;
-    else counts.other++;
-  }
-  return counts;
+async function gatherCounts(
+  sb: NonNullable<ReturnType<typeof createServiceClient>>,
+): Promise<LeadCounts> {
+  // Exact head-counts, NOT a fetch-and-tally. A bare select caps at Supabase's
+  // 1000-row limit, so the tab badges would silently freeze at 1000 once the
+  // table grows — right when pagination starts to matter. head:true returns no
+  // rows, just the count, at any scale.
+  const countFor = async (form?: LeadFormName): Promise<number> => {
+    const base = (
+      sb as unknown as {
+        from: (t: string) => {
+          select: (
+            c: string,
+            o: { count: "exact"; head: true },
+          ) => {
+            eq: (
+              col: string,
+              val: string,
+            ) => Promise<{ count: number | null; error: { message: string } | null }>;
+          } & Promise<{ count: number | null; error: { message: string } | null }>;
+        };
+      }
+    )
+      .from("leads")
+      .select("id", { count: "exact", head: true });
+    const { count, error } = await (form ? base.eq("form_name", form) : base);
+    if (error) throw error;
+    return count ?? 0;
+  };
+
+  const [all, pilot, soporte, colocacion] = await Promise.all([
+    countFor(),
+    countFor("pilot"),
+    countFor("soporte"),
+    countFor("colocacion"),
+  ]);
+  // form_name is constrained to the four known values, so "other" is the
+  // remainder — no separate query needed.
+  return {
+    all,
+    pilot,
+    soporte,
+    colocacion,
+    other: Math.max(0, all - pilot - soporte - colocacion),
+  };
 }
 
 function applyFilters(

@@ -17,6 +17,30 @@ function notFound() {
   return NextResponse.json({ error: "not_found" }, { status: 404 });
 }
 
+/**
+ * Supabase caps a single select at ~1000 rows regardless of an explicit
+ * .limit(), so an unbounded read silently plateaus and undercounts employees
+ * (n_employees) / drops the newest CRM edits past 1000 rows. Range-loop in
+ * 1000-row pages until a short page signals the end.
+ */
+const PAGE = 1000;
+async function fetchAllRows<T>(
+  build: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 export interface CrmOrgRow {
   id: string;
   name: string;
@@ -63,7 +87,7 @@ export async function GET() {
   }
 
   try {
-    const [orgsRes, propsRes, hrRes, employeesRes, eventsRes] =
+    const [orgsRes, propsRes, hrRes, employeeRows, eventRows] =
       await Promise.all([
         sb.from("organizations").select(
           "id, name, type, subscription_tier, subscription_status, billing_email",
@@ -76,12 +100,28 @@ export async function GET() {
           .select(
             "id, organization_id, email, name, role, is_active, last_login_at",
           ),
-        sb.from("employees").select("id, property_id, is_active"),
-        sb
-          .from("analytics_events")
-          .select("event_type, metadata, created_at")
-          .in("event_type", ["crm_status", "crm_note"])
-          .order("created_at", { ascending: true }),
+        // Range-looped: employee counts must be accurate at 10k+ rows.
+        fetchAllRows<{ property_id: string; is_active: boolean }>((f, t) =>
+          sb
+            .from("employees")
+            .select("id, property_id, is_active")
+            .range(f, t) as never,
+        ),
+        // Newest-first + range-looped: the rollup below is last-write-wins, so
+        // the NEWEST status/note per org must be reachable. Oldest-first with
+        // no limit dropped every edit past the first 1000 rows.
+        fetchAllRows<{
+          event_type: string;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+        }>((f, t) =>
+          sb
+            .from("analytics_events")
+            .select("event_type, metadata, created_at")
+            .in("event_type", ["crm_status", "crm_note"])
+            .order("created_at", { ascending: false })
+            .range(f, t) as never,
+        ),
       ]);
 
     if (orgsRes.error) throw orgsRes.error;
@@ -102,7 +142,7 @@ export async function GET() {
     }
 
     const employeesByProperty = new Map<string, number>();
-    for (const e of employeesRes.data ?? []) {
+    for (const e of employeeRows) {
       if (!e.is_active) continue;
       employeesByProperty.set(
         e.property_id,
@@ -110,18 +150,28 @@ export async function GET() {
       );
     }
 
-    // Roll up status/notes from analytics_events — last write wins.
+    // Roll up status/notes from analytics_events — last write wins. Rows come
+    // newest-first, so the FIRST time we see an org (per field) is its newest
+    // value; skip if already set so older rows can't clobber it.
     const statusByOrg = new Map<string, "pilot" | "paid" | "churned">();
     const notesByOrg = new Map<string, string>();
-    for (const ev of eventsRes.data ?? []) {
+    for (const ev of eventRows) {
       const meta = (ev.metadata ?? {}) as Record<string, unknown>;
       const orgId = typeof meta.organization_id === "string" ? meta.organization_id : null;
       if (!orgId) continue;
-      if (ev.event_type === "crm_status" && typeof meta.status === "string") {
+      if (
+        ev.event_type === "crm_status" &&
+        typeof meta.status === "string" &&
+        !statusByOrg.has(orgId)
+      ) {
         if (["pilot", "paid", "churned"].includes(meta.status)) {
           statusByOrg.set(orgId, meta.status as "pilot" | "paid" | "churned");
         }
-      } else if (ev.event_type === "crm_note" && typeof meta.notes === "string") {
+      } else if (
+        ev.event_type === "crm_note" &&
+        typeof meta.notes === "string" &&
+        !notesByOrg.has(orgId)
+      ) {
         notesByOrg.set(orgId, meta.notes);
       }
     }

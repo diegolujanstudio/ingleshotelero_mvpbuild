@@ -21,8 +21,19 @@ import { Button } from "@/components/ui/Button";
 import { LEADS } from "@/content/leads";
 import type { LeadRow, LeadStatus } from "@/lib/server/leads";
 
-export type LeadsTab = "all" | "pilot" | "soporte" | "other";
+export type LeadsTab = "all" | "pilot" | "soporte" | "colocacion" | "other";
 export type LeadsStatusFilter = "all" | LeadStatus;
+
+// 'colocacion' has no entry in LEADS.tabs (content/leads.ts is owned by another
+// surface and out of scope here). Fall back to a literal es-MX label until it
+// can move into src/content/leads.ts.
+const COLOCACION_TAB_LABEL = "Colocación";
+// Shown when a save fails on the server (see patchLead). Belongs in
+// src/content/leads.ts eventually.
+const SAVE_ERROR_MSG =
+  "No se pudo guardar el cambio. Revisa tu conexión e intenta de nuevo.";
+// Pagination labels — es-MX. Belong in src/content/leads.ts eventually.
+const LEADS_PAGER = { prev: "Anterior", next: "Siguiente" } as const;
 
 const STATUS_OPTIONS: ReadonlyArray<{ id: LeadStatus; label: string }> = [
   { id: "new", label: LEADS.status.new },
@@ -35,10 +46,18 @@ const STATUS_OPTIONS: ReadonlyArray<{ id: LeadStatus; label: string }> = [
 interface Props {
   initialRows: LeadRow[];
   initialTotal: number;
-  counts: { all: number; pilot: number; soporte: number; other: number };
+  counts: {
+    all: number;
+    pilot: number;
+    soporte: number;
+    colocacion: number;
+    other: number;
+  };
   tab: LeadsTab;
   status: LeadsStatusFilter;
   search: string;
+  page: number;
+  pageSize: number;
   demo: boolean;
 }
 
@@ -49,6 +68,8 @@ export function LeadsClient({
   tab,
   status,
   search,
+  page,
+  pageSize,
   demo,
 }: Props) {
   const router = useRouter();
@@ -71,12 +92,14 @@ export function LeadsClient({
       { id: "all", label: LEADS.tabs.all, count: counts.all, href: hrefFor({ tab: "all", status, search }) },
       { id: "pilot", label: LEADS.tabs.pilot, count: counts.pilot, href: hrefFor({ tab: "pilot", status, search }) },
       { id: "soporte", label: LEADS.tabs.soporte, count: counts.soporte, href: hrefFor({ tab: "soporte", status, search }) },
+      { id: "colocacion", label: COLOCACION_TAB_LABEL, count: counts.colocacion, href: hrefFor({ tab: "colocacion", status, search }) },
       { id: "other", label: LEADS.tabs.other, count: counts.other, href: hrefFor({ tab: "other", status, search }) },
     ],
     [counts, status, search],
   );
 
   function navigate(next: { tab?: LeadsTab; status?: LeadsStatusFilter; search?: string }) {
+    // Any tab/status/search change resets to page 1 (hrefFor omits page).
     const href = hrefFor({
       tab: next.tab ?? tab,
       status: next.status ?? status,
@@ -86,6 +109,14 @@ export function LeadsClient({
       router.push(href);
     });
   }
+
+  function goToPage(p: number) {
+    startTransition(() => {
+      router.push(hrefFor({ tab, status, search, page: p }));
+    });
+  }
+
+  const totalPages = Math.max(1, Math.ceil(initialTotal / pageSize));
 
   // Debounced search submit on Enter or blur.
   function commitSearch() {
@@ -125,11 +156,18 @@ export function LeadsClient({
           }
         : d,
     );
-    await fetch(`/api/masteros/leads/${id}`, {
+    const res = await fetch(`/api/masteros/leads/${id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(patch),
-    }).catch(() => undefined);
+    }).catch(() => null);
+    // The route now returns 5xx on a genuine save failure (it no longer fakes
+    // {ok:true} on DB errors). If the save didn't persist, warn and re-sync
+    // from the server so the optimistic edit doesn't linger as a false success.
+    if (!res || !res.ok) {
+      window.alert(SAVE_ERROR_MSG);
+      startTransition(() => router.refresh());
+    }
   }
 
   async function deleteRow(id: string) {
@@ -334,10 +372,37 @@ export function LeadsClient({
           initialSorting={[{ id: "created_at", desc: true }]}
           onRowClick={(r) => setDrawer(r)}
         />
-        {initialTotal > rows.length && (
-          <p className="mt-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-muted">
-            {rows.length} de {initialTotal}
-          </p>
+        {initialTotal > 0 && (
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-muted">
+              {rows.length > 0
+                ? `${(page - 1) * pageSize + 1}–${(page - 1) * pageSize + rows.length} de ${initialTotal}`
+                : `0 de ${initialTotal}`}
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={pending || page <= 1}
+                  className="rounded-pill border border-hair bg-white px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft hover:border-espresso/30 hover:text-ink disabled:opacity-40"
+                >
+                  {LEADS_PAGER.prev}
+                </button>
+                <span className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-muted">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={pending || page >= totalPages}
+                  className="rounded-pill border border-hair bg-white px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-soft hover:border-espresso/30 hover:text-ink disabled:opacity-40"
+                >
+                  {LEADS_PAGER.next}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -653,15 +718,19 @@ function hrefFor({
   tab,
   status,
   search,
+  page,
 }: {
   tab: LeadsTab;
   status: LeadsStatusFilter;
   search: string;
+  page?: number;
 }): string {
   const sp = new URLSearchParams();
   if (tab !== "all") sp.set("tab", tab);
   if (status !== "all") sp.set("status", status);
   if (search.trim()) sp.set("search", search.trim());
+  // Omit page for page 1 so tab/status/search changes reset to the first page.
+  if (page && page > 1) sp.set("page", String(page));
   const qs = sp.toString();
   return `/masteros/leads${qs ? `?${qs}` : ""}`;
 }

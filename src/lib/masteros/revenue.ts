@@ -48,23 +48,50 @@ const EMPTY: RevenueSnapshot = {
   lead_conversion_pct: null,
 };
 
+/**
+ * Supabase caps a single select at ~1000 rows regardless of an explicit
+ * .limit(), so an unbounded read silently plateaus and understates MRR / the
+ * funnel past 1000 orgs or leads. Range-loop in 1000-row pages until a short
+ * page signals the end.
+ */
+const PAGE = 1000;
+async function fetchAll<T>(
+  build: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as T[];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 export async function getRevenue(): Promise<RevenueSnapshot> {
   const sb = createServiceClient();
   if (!sb) return EMPTY;
   try {
-    const [orgsRes, leadsRes] = await Promise.all([
-      sb
-        .from("organizations")
-        .select("name, subscription_tier, subscription_status"),
-      sb.from("leads").select("status"),
+    const [orgsAll, leads] = await Promise.all([
+      fetchAll<{
+        name: string;
+        subscription_tier: string;
+        subscription_status: string;
+      }>((f, t) =>
+        sb
+          .from("organizations")
+          .select("name, subscription_tier, subscription_status")
+          .range(f, t),
+      ),
+      fetchAll<{ status: string }>((f, t) =>
+        sb.from("leads").select("status").range(f, t),
+      ),
     ]);
-    const orgs =
-      ((orgsRes.data as
-        | { name: string; subscription_tier: string; subscription_status: string }[]
-        | null) ?? []
-      ).filter((o) => o.name !== INTERNAL_ORG_NAME);
-    const leads =
-      (leadsRes.data as { status: string }[] | null) ?? [];
+    const orgs = orgsAll.filter((o) => o.name !== INTERNAL_ORG_NAME);
 
     if (orgs.length === 0 && leads.length === 0) return EMPTY;
 

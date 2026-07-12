@@ -99,8 +99,15 @@ export async function PATCH(
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    // Migration missing → degrade.
-    return NextResponse.json({ ok: true, demo: true, _err: e instanceof Error ? e.message : "unknown" });
+    // Demo mode already returned above (sb was null). A throw here is a
+    // genuine DB / network failure, so the save did NOT persist — surface it
+    // as 5xx instead of a fake {ok:true,demo:true}. 503 (not 4xx) so the
+    // offline api-client treats it as transient and re-queues rather than
+    // dropping the edit permanently.
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "unknown" },
+      { status: 503 },
+    );
   }
 }
 

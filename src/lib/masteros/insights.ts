@@ -65,47 +65,78 @@ function avg(ns: number[]): number | null {
   return ns.length ? Math.round(ns.reduce((a, b) => a + b, 0) / ns.length) : null;
 }
 
+/**
+ * Supabase returns at most ~1000 rows per select regardless of an explicit
+ * .limit(), so an unbounded aggregate silently plateaus and corrupts KPIs
+ * past 1000 rows. Range-loop in 1000-row pages until a short page signals the
+ * end, so employee / drill / session aggregates stay correct at scale.
+ */
+const PAGE = 1000;
+async function fetchAll<T>(
+  build: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as T[];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 export async function getInsights(): Promise<Insights> {
   const sb = createServiceClient();
   if (!sb) return EMPTY;
 
-  try {
-    const [emp, hist, exams, orgs, props] = await Promise.all([
-      sb.from("employees").select("id, property_id, current_level, is_active"),
-      sb
-        .from("drill_history")
-        .select(
-          "employee_id, drill_id, listening_correct, speaking_score, vocab_known, completed_at",
-        )
-        .order("completed_at", { ascending: false })
-        .limit(8000),
-      sb.from("exam_sessions").select("employee_id, status"),
-      sb.from("organizations").select("id, name"),
-      sb.from("properties").select("id, organization_id"),
-    ]);
+  type Emp = {
+    id: string;
+    property_id: string;
+    current_level: string | null;
+    is_active: boolean;
+  };
+  type Hist = {
+    employee_id: string;
+    drill_id: string;
+    listening_correct: boolean | null;
+    speaking_score: number | null;
+    vocab_known: number | null;
+    completed_at: string;
+  };
 
-    type Emp = {
-      id: string;
-      property_id: string;
-      current_level: string | null;
-      is_active: boolean;
-    };
-    type Hist = {
-      employee_id: string;
-      drill_id: string;
-      listening_correct: boolean | null;
-      speaking_score: number | null;
-      vocab_known: number | null;
-      completed_at: string;
-    };
-    const employees = (emp.data as Emp[] | null) ?? [];
-    const history = (hist.data as Hist[] | null) ?? [];
-    const examRows =
-      (exams.data as { employee_id: string; status: string }[] | null) ?? [];
-    const orgRows =
-      (orgs.data as { id: string; name: string }[] | null) ?? [];
-    const propRows =
-      (props.data as { id: string; organization_id: string }[] | null) ?? [];
+  try {
+    // Every read is range-looped (see fetchAll) so aggregates stay correct
+    // beyond Supabase's 1000-row-per-request cap.
+    const [employees, history, examRows, orgRows, propRows] = await Promise.all([
+      fetchAll<Emp>((f, t) =>
+        sb
+          .from("employees")
+          .select("id, property_id, current_level, is_active")
+          .range(f, t),
+      ),
+      fetchAll<Hist>((f, t) =>
+        sb
+          .from("drill_history")
+          .select(
+            "employee_id, drill_id, listening_correct, speaking_score, vocab_known, completed_at",
+          )
+          .order("completed_at", { ascending: false })
+          .range(f, t),
+      ),
+      fetchAll<{ employee_id: string; status: string }>((f, t) =>
+        sb.from("exam_sessions").select("employee_id, status").range(f, t),
+      ),
+      fetchAll<{ id: string; name: string }>((f, t) =>
+        sb.from("organizations").select("id, name").range(f, t),
+      ),
+      fetchAll<{ id: string; organization_id: string }>((f, t) =>
+        sb.from("properties").select("id, organization_id").range(f, t),
+      ),
+    ]);
 
     if (employees.length === 0 && history.length === 0) return EMPTY;
 
