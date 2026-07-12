@@ -59,3 +59,6 @@ supabase/.temp
 
 # landing/ is its own git repo (ingleshotelero-landing) - never track here
 landing/
+
+# temp session reference files
+.claude/existing-drills.json
