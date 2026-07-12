@@ -31,6 +31,7 @@ export function EntryForm({ propertySlug, propertyName, roles, isStub }: EntryFo
   const [shift, setShift] = useState<Shift | null>(null);
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canSubmit = name.trim().length > 1 && role !== null && consent;
 
@@ -38,6 +39,7 @@ export function EntryForm({ propertySlug, propertyName, roles, isStub }: EntryFo
     e.preventDefault();
     if (!canSubmit || submitting) return;
     setSubmitting(true);
+    setError(null);
 
     const clientId = newSessionId();
     let sessionId = clientId;
@@ -69,9 +71,39 @@ export function EntryForm({ propertySlug, propertyName, roles, isStub }: EntryFo
         serverEmployeeId =
           typeof data.employee_id === "string" ? data.employee_id : null;
         mode = data.mode === "persisted" ? "persisted" : "local-only";
+      } else if (!isStub) {
+        // Real (DB-backed) hotel: a non-OK response means no server session was
+        // created, so every later answer/recording POST would 404 and the exam
+        // would be invisible to HR. Surface it and let the user retry instead of
+        // dropping them into a phantom local-only exam under a client id that
+        // does not exist server-side.
+        setSubmitting(false);
+        setError(
+          "No pudimos crear su sesión de examen. Verifique su conexión e inténtelo de nuevo.",
+        );
+        return;
       }
     } catch {
-      // Network / offline → proceed in local-only mode.
+      // For a real hotel, a network failure has the same phantom-exam risk —
+      // stop and let the user retry. Preview/stub hotels intentionally continue
+      // in local-only mode (there is no database to persist to).
+      if (!isStub) {
+        setSubmitting(false);
+        setError(
+          "No pudimos conectar con el servidor. Verifique su conexión e inténtelo de nuevo.",
+        );
+        return;
+      }
+    }
+
+    // Real hotel but the server did not persist (e.g. demo fallback on a live
+    // property) → also treat as a failure rather than a silent phantom exam.
+    if (!isStub && mode !== "persisted") {
+      setSubmitting(false);
+      setError(
+        "No pudimos crear su sesión de examen. Inténtelo de nuevo en un momento.",
+      );
+      return;
     }
 
     // Seed localStorage with the session — the exam pages read from here.
@@ -182,6 +214,15 @@ export function EntryForm({ propertySlug, propertyName, roles, isStub }: EntryFo
       </fieldset>
 
       <div className="space-y-4">
+        {error && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-error bg-error/5 p-4 font-sans text-t-body text-error"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{error}</span>
+          </p>
+        )}
         {isStub && (
           <p className="flex items-start gap-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-warn">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5" aria-hidden />

@@ -78,6 +78,17 @@ export async function GET(
   }
 }
 
+// Monotonic status ranking — a PATCH may only move the state machine forward,
+// never backwards (mirrors FORWARD_ORDER in /finalize).
+const FORWARD_ORDER: Record<string, number> = {
+  in_progress: 0,
+  listening_done: 1,
+  speaking_done: 2,
+  scoring: 3,
+  complete: 4,
+  abandoned: 99,
+};
+
 // Legacy PATCH preserved for the existing client (writes through to a few
 // fields). New code should use /finalize-listening or post answers instead.
 const patchSchema = z.object({
@@ -130,21 +141,51 @@ export async function PATCH(
   const supabase = createServiceClient();
   if (!supabase) return NextResponse.json({ ok: true, mode: "local-only" });
 
-  const patch: ExamSessionUpdate = {};
-  if (parsed.data.current_step) patch.current_step = parsed.data.current_step;
-  if (parsed.data.status) patch.status = parsed.data.status;
-  if (typeof parsed.data.listening_score === "number")
-    patch.listening_score = parsed.data.listening_score;
-  if (typeof parsed.data.listening_total === "number")
-    patch.listening_total = parsed.data.listening_total;
-  if (typeof parsed.data.speaking_avg_score === "number")
-    patch.speaking_avg_score = parsed.data.speaking_avg_score;
-  if (parsed.data.final_level) patch.final_level = parsed.data.final_level;
-  if (typeof parsed.data.level_confidence === "number")
-    patch.level_confidence = parsed.data.level_confidence;
-  if (parsed.data.completed) patch.completed_at = new Date().toISOString();
-
   try {
+    // Read current state so we can (a) enforce a forward-only status transition
+    // and (b) refuse client-supplied result fields once the server has already
+    // computed the authoritative result.
+    const { data: current, error: readErr } = await supabase
+      .from("exam_sessions")
+      .select("status, final_level")
+      .eq("id", params.id)
+      .maybeSingle();
+    if (readErr) throw readErr; // transient → 500 (offline client re-queues)
+    if (!current) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+
+    const patch: ExamSessionUpdate = {};
+    if (parsed.data.current_step) patch.current_step = parsed.data.current_step;
+
+    // Forward-only status guard: never regress the state machine. Late or
+    // duplicate PATCHes (and offline replays) must not move a completed session
+    // back to an earlier status.
+    if (parsed.data.status) {
+      const currentRank = FORWARD_ORDER[current.status] ?? 0;
+      const targetRank = FORWARD_ORDER[parsed.data.status] ?? 0;
+      if (targetRank > currentRank) patch.status = parsed.data.status;
+    }
+
+    // Result fields are server-authoritative (finalizeListening +
+    // recomputeFinalLevel). Once the server has produced a final_level (or the
+    // session is complete), refuse client-supplied scores so a late PATCH can't
+    // clobber the real result. listening_total is a harmless count and stays.
+    const serverScored =
+      current.status === "complete" || current.final_level != null;
+    if (!serverScored) {
+      if (typeof parsed.data.listening_score === "number")
+        patch.listening_score = parsed.data.listening_score;
+      if (typeof parsed.data.speaking_avg_score === "number")
+        patch.speaking_avg_score = parsed.data.speaking_avg_score;
+      if (parsed.data.final_level) patch.final_level = parsed.data.final_level;
+      if (typeof parsed.data.level_confidence === "number")
+        patch.level_confidence = parsed.data.level_confidence;
+    }
+    if (typeof parsed.data.listening_total === "number")
+      patch.listening_total = parsed.data.listening_total;
+    if (parsed.data.completed) patch.completed_at = new Date().toISOString();
+
     if (Object.keys(patch).length > 0) {
       await supabase.from("exam_sessions").update(patch).eq("id", params.id);
     }
@@ -152,7 +193,7 @@ export async function PATCH(
   } catch (err) {
     captureException(err, {
       route: "PATCH /api/exams/:id",
-      data: { id: params.id, fields: Object.keys(patch) },
+      data: { id: params.id },
     });
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }

@@ -71,8 +71,8 @@ export async function POST(
             session_id: params.id,
             question_index: parsed.data.question_index,
             selected_option: parsed.data.selected_option,
-            is_correct: parsed.data.is_correct,
-            level_tag: parsed.data.level_tag,
+            // is_correct / level_tag from the client are deliberately dropped —
+            // recordListeningAnswer recomputes them from the content bank.
             response_time_ms: parsed.data.response_time_ms ?? null,
             replay_count: parsed.data.replay_count ?? 0,
           });
@@ -88,6 +88,12 @@ export async function POST(
     }
     if (code === "INVALID_STATUS") {
       return NextResponse.json({ error: "invalid_status" }, { status: 409 });
+    }
+    // Forged / out-of-range question or option index — a permanent client error.
+    // Return 4xx (not 5xx) so the offline client treats it as non-retryable and
+    // does not re-queue an answer that can never be accepted.
+    if (code === "INVALID_INDEX") {
+      return NextResponse.json({ error: "invalid_index" }, { status: 400 });
     }
     captureException(err, {
       route: "POST /api/exams/:id/answer",

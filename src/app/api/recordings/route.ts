@@ -100,18 +100,51 @@ export async function POST(req: Request) {
 
   try {
     // Validate session exists + status is recordable.
-    const { data: session } = await supabase
+    const { data: session, error: sessionErr } = await supabase
       .from("exam_sessions")
       .select("id, status")
       .eq("id", session_id)
       .maybeSingle();
+    // A DB error here is TRANSIENT. It must NOT be reported as 404 — the offline
+    // client treats 4xx as permanent and would delete the queued audio blob
+    // (data loss). Return 503 so the recording is re-queued and retried.
+    if (sessionErr) {
+      return NextResponse.json({ error: "session_lookup_failed" }, { status: 503 });
+    }
     if (!session) {
       return NextResponse.json({ error: "session_not_found" }, { status: 404 });
     }
-    if (
-      !["in_progress", "listening_done", "speaking_done"].includes(session.status)
-    ) {
-      return NextResponse.json({ error: "invalid_status" }, { status: 409 });
+
+    // A session that has advanced past the recording phase (scoring / complete /
+    // abandoned) used to be rejected 409. The offline drain then treats that 4xx
+    // as permanent and DELETES the blob → lost audio. Instead accept the late
+    // recording idempotently: if this (session_id, prompt_index) is already
+    // stored, echo the existing row; otherwise still persist it. Either way we
+    // return 2xx so the client keeps the audio and the status update below never
+    // regresses the session.
+    const RECORDABLE = ["in_progress", "listening_done", "speaking_done"];
+    if (!RECORDABLE.includes(session.status)) {
+      const { data: existingRec, error: existingErr } = await supabase
+        .from("speaking_recordings")
+        .select("id")
+        .eq("session_id", session_id)
+        .eq("prompt_index", prompt_index)
+        .maybeSingle();
+      // Transient lookup failure → 503 so the client re-queues (never drop audio).
+      if (existingErr) {
+        return NextResponse.json(
+          { error: "recording_lookup_failed" },
+          { status: 503 },
+        );
+      }
+      if (existingRec) {
+        return NextResponse.json({
+          recording_id: existingRec.id,
+          mode: "already_recorded",
+          scoring_status: "pending",
+        });
+      }
+      // No prior recording for this prompt yet — fall through and store it.
     }
 
     // Derive a sensible extension from blob.type.
@@ -167,11 +200,15 @@ export async function POST(req: Request) {
       .eq("session_id", session_id);
     const uniquePrompts = new Set((distinct ?? []).map((r) => r.prompt_index));
     if (uniquePrompts.size >= 6) {
+      // Forward-only: only advance from a pre-speaking_done state. A late
+      // recording arriving after the session already moved to scoring/complete
+      // must NOT regress it back to speaking_done (the `.in(...)` filter also
+      // subsumes the old `.neq("complete")` guard).
       await supabase
         .from("exam_sessions")
         .update({ status: "speaking_done", current_step: "results" })
         .eq("id", session_id)
-        .neq("status", "complete");
+        .in("status", ["in_progress", "listening_done", "speaking_done"]);
     }
 
     // Best-effort signed URL (1h expiry) for HR review.
