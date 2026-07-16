@@ -1,5 +1,6 @@
 import { requireHRUser } from "@/lib/hr/auth";
 import { loadEmployees } from "@/lib/hr/data";
+import { resolveActiveScope } from "@/lib/hr/scope";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { EMPLOYEES, COMMON } from "@/content/hr";
 import { EmployeesClient } from "./EmployeesClient";
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 export default async function EmployeesPage() {
   const user = await requireHRUser();
-  const employees = await loadEmployees(user);
+  const { propertyIds } = await resolveActiveScope(user);
+  const employees = await loadEmployees(user, propertyIds);
   const isDemo = employees.length > 0 && employees[0].is_demo;
 
   return (

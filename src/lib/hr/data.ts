@@ -184,13 +184,22 @@ function daysSince(iso: string | null | undefined): number {
 
 /** ─── Employees ───────────────────────────────────────────────────── */
 
-export async function loadEmployees(user: HRUser): Promise<HREmployeeView[]> {
+/**
+ * @param propertyIdsOverride Optional scope override — pass
+ *   `resolveActiveScope(user).propertyIds` from an /hr page to honor the
+ *   active-property cookie (chain/org switcher). Omit to use the user's full
+ *   scope (used by API routes, which never apply the cookie).
+ */
+export async function loadEmployees(
+  user: HRUser,
+  propertyIdsOverride?: string[],
+): Promise<HREmployeeView[]> {
   const sb = createServiceClient();
   if (!sb) {
     return isDemoMode() ? getDemoEmployees() : [];
   }
   try {
-    const propertyIds = await userPropertyIds(user, sb);
+    const propertyIds = propertyIdsOverride ?? (await userPropertyIds(user, sb));
     if (propertyIds.length === 0) {
       return isDemoMode() ? getDemoEmployees() : [];
     }
@@ -393,13 +402,17 @@ export async function loadEmployeeTranscripts(
 
 /** ─── Cohorts ─────────────────────────────────────────────────────── */
 
-export async function loadCohorts(user: HRUser): Promise<HRCohortView[]> {
+/** @param propertyIdsOverride See {@link loadEmployees}. */
+export async function loadCohorts(
+  user: HRUser,
+  propertyIdsOverride?: string[],
+): Promise<HRCohortView[]> {
   const sb = createServiceClient();
   if (!sb) {
     return isDemoMode() ? getDemoCohorts() : [];
   }
   try {
-    const propertyIds = await userPropertyIds(user, sb);
+    const propertyIds = propertyIdsOverride ?? (await userPropertyIds(user, sb));
     if (propertyIds.length === 0) {
       return isDemoMode() ? getDemoCohorts() : [];
     }
@@ -669,9 +682,11 @@ export interface OverviewStats {
   isDemo: boolean;
 }
 
+/** @param propertyIdsOverride See {@link loadEmployees}. */
 export async function loadOverview(
   user: HRUser,
   employees: HREmployeeView[],
+  propertyIdsOverride?: string[],
 ): Promise<OverviewStats> {
   const isDemo = employees.length > 0 && employees[0].is_demo;
   const active = employees.filter((e) => e.is_active);
@@ -726,7 +741,7 @@ export async function loadOverview(
     const sb = createServiceClient();
     if (sb) {
       try {
-        const propertyIds = await userPropertyIds(user, sb);
+        const propertyIds = propertyIdsOverride ?? (await userPropertyIds(user, sb));
         if (propertyIds.length > 0) {
           // Employees in properties -> in-progress sessions
           const empIds = active.map((e) => e.id);

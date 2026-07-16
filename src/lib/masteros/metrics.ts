@@ -28,6 +28,15 @@ type SC = SupabaseClient<Database>;
 
 const LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2"];
 
+/** Max ids per `.in()` list — comfortably under URL-length limits. */
+const IN_CHUNK = 200;
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 function daysAgo(n: number): string {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() - n);
@@ -266,6 +275,92 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+export interface PropertyBreakdownRow {
+  property_id: string;
+  org_name: string;
+  property_name: string;
+  active_7d: number;
+  exams_30d: number;
+  drills_7d: number;
+}
+
+/**
+ * Per-property rollup — active employees, exam throughput, and drill
+ * completions, one row per active property. Platform-wide equivalent of the
+ * /hr/org comparison table, but for every org at once (super_admin only).
+ */
+async function propertyBreakdown(sb: SC): Promise<PropertyBreakdownRow[]> {
+  const since7 = daysAgo(7);
+  const since30 = daysAgo(30);
+
+  const properties = await fetchAll<{
+    id: string;
+    name: string;
+    organization_id: string;
+  }>((f, t) =>
+    sb
+      .from("properties")
+      .select("id, name, organization_id")
+      .eq("is_active", true)
+      .range(f, t),
+  );
+  if (properties.length === 0) return [];
+
+  const orgIds = [...new Set(properties.map((p) => p.organization_id))];
+  const orgNameById = new Map<string, string>();
+  for (const ids of chunk(orgIds, IN_CHUNK)) {
+    const { data } = await sb.from("organizations").select("id, name").in("id", ids);
+    for (const o of data ?? []) orgNameById.set(o.id, o.name);
+  }
+
+  const employees = await fetchAll<{ id: string; property_id: string }>((f, t) =>
+    sb.from("employees").select("id, property_id").eq("is_active", true).range(f, t),
+  );
+  const empIds = employees.map((e) => e.id);
+  const propertyByEmp = new Map(employees.map((e) => [e.id, e.property_id]));
+
+  const active7ByProperty = new Map<string, Set<string>>();
+  const exams30ByProperty = new Map<string, number>();
+  const drills7ByProperty = new Map<string, number>();
+
+  for (const ids of chunk(empIds, IN_CHUNK)) {
+    const { data: practice } = await sb
+      .from("practice_sessions")
+      .select("employee_id, created_at, completed")
+      .in("employee_id", ids)
+      .gte("created_at", since7);
+    for (const r of practice ?? []) {
+      if (!r.employee_id) continue;
+      const pid = propertyByEmp.get(r.employee_id);
+      if (!pid) continue;
+      if (!active7ByProperty.has(pid)) active7ByProperty.set(pid, new Set());
+      active7ByProperty.get(pid)!.add(r.employee_id);
+      if (r.completed) drills7ByProperty.set(pid, (drills7ByProperty.get(pid) ?? 0) + 1);
+    }
+
+    const { data: exams } = await sb
+      .from("exam_sessions")
+      .select("employee_id, completed_at, status")
+      .in("employee_id", ids)
+      .eq("status", "complete")
+      .gte("completed_at", since30);
+    for (const r of exams ?? []) {
+      const pid = propertyByEmp.get(r.employee_id);
+      if (!pid) continue;
+      exams30ByProperty.set(pid, (exams30ByProperty.get(pid) ?? 0) + 1);
+    }
+  }
+
+  return properties.map((p) => ({
+    property_id: p.id,
+    org_name: orgNameById.get(p.organization_id) ?? "—",
+    property_name: p.name,
+    active_7d: active7ByProperty.get(p.id)?.size ?? 0,
+    exams_30d: exams30ByProperty.get(p.id) ?? 0,
+    drills_7d: drills7ByProperty.get(p.id) ?? 0,
+  }));
+}
+
 export interface MetricsPayload {
   generated_at: string;
   totals: {
@@ -284,6 +379,7 @@ export interface MetricsPayload {
       elevenlabs: number;
     }>;
   };
+  properties: PropertyBreakdownRow[];
   costRates: typeof COST_RATES;
 }
 
@@ -291,8 +387,8 @@ export async function gatherMetrics(sb: SC): Promise<MetricsPayload> {
   const since7 = daysAgo(7);
   const since30 = daysAgo(30);
 
-  const [active, exams, queue, daily, levels, drills, cost] = await Promise.all(
-    [
+  const [active, exams, queue, daily, levels, drills, cost, properties] =
+    await Promise.all([
       activeEmployees(sb, since7),
       examsCompleted(sb, since30),
       scoringQueueDepth(sb),
@@ -300,8 +396,8 @@ export async function gatherMetrics(sb: SC): Promise<MetricsPayload> {
       levelDistribution(sb),
       drillSeries(sb),
       costSeries(sb),
-    ],
-  );
+      propertyBreakdown(sb),
+    ]);
 
   return {
     generated_at: new Date().toISOString(),
@@ -316,6 +412,7 @@ export async function gatherMetrics(sb: SC): Promise<MetricsPayload> {
       drills,
       cost,
     },
+    properties,
     costRates: COST_RATES,
   };
 }
@@ -374,6 +471,24 @@ export function demoMetrics(): MetricsPayload {
       drills,
       cost,
     },
+    properties: [
+      {
+        property_id: "demo-property-1",
+        org_name: "Hotel Demostración Cancún",
+        property_name: "Torre Norte",
+        active_7d: 31,
+        exams_30d: 18,
+        drills_7d: 96,
+      },
+      {
+        property_id: "demo-property-2",
+        org_name: "Hotel Demostración Cancún",
+        property_name: "Torre Sur",
+        active_7d: 16,
+        exams_30d: 9,
+        drills_7d: 52,
+      },
+    ],
     costRates: COST_RATES,
   };
 }

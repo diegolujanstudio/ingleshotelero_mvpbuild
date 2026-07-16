@@ -1,5 +1,6 @@
 import { requireHRUser } from "@/lib/hr/auth";
 import { loadEmployees, loadCohorts, loadPropertyInfo } from "@/lib/hr/data";
+import { resolveActiveScope } from "@/lib/hr/scope";
 import {
   createServiceClient,
   isSupabaseConfigured,
@@ -12,9 +13,10 @@ export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
   const user = await requireHRUser();
+  const { propertyIds } = await resolveActiveScope(user);
   const [employees, cohorts, property] = await Promise.all([
-    loadEmployees(user),
-    loadCohorts(user),
+    loadEmployees(user, propertyIds),
+    loadCohorts(user, propertyIds),
     loadPropertyInfo(user),
   ]);
   const isDemo = employees.length > 0 && employees[0].is_demo;

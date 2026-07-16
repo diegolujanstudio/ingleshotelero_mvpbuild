@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, Clock } from "lucide-react";
 import { requireHRUser } from "@/lib/hr/auth";
 import { loadEmployees, loadOverview } from "@/lib/hr/data";
+import { resolveActiveScope } from "@/lib/hr/scope";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { MetricCard } from "@/components/masteros/MetricCard";
 import { HairlineRule } from "@/components/ui/HairlineRule";
@@ -13,8 +14,9 @@ export const dynamic = "force-dynamic";
 
 export default async function HROverviewPage() {
   const user = await requireHRUser();
-  const employees = await loadEmployees(user);
-  const stats = await loadOverview(user, employees);
+  const { propertyIds } = await resolveActiveScope(user);
+  const employees = await loadEmployees(user, propertyIds);
+  const stats = await loadOverview(user, employees, propertyIds);
 
   return (
     <section className="mx-auto max-w-shell px-6 py-8 md:px-10 md:py-10">

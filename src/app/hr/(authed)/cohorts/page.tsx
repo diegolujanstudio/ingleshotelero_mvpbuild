@@ -1,5 +1,6 @@
 import { requireHRUser } from "@/lib/hr/auth";
 import { loadCohorts } from "@/lib/hr/data";
+import { resolveActiveScope } from "@/lib/hr/scope";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { COHORTS, COMMON } from "@/content/hr";
 import { CohortsClient } from "./CohortsClient";
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 export default async function CohortsPage() {
   const user = await requireHRUser();
-  const cohorts = await loadCohorts(user);
+  const { propertyIds } = await resolveActiveScope(user);
+  const cohorts = await loadCohorts(user, propertyIds);
   const isDemo = cohorts.length > 0 && cohorts[0].is_demo;
 
   return (

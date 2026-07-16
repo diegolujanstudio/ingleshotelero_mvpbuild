@@ -78,6 +78,19 @@ export const DASHBOARD = {
         "Estimación: $0.006/min Whisper, $0.02/scoring Claude, $0.30/1K caracteres ElevenLabs.",
     },
   },
+  propertyTable: {
+    eyebrow: "Desglose",
+    title: "Por propiedad",
+    caption: "actividad y exámenes por hotel, todas las organizaciones",
+    columns: {
+      org: "Organización",
+      property: "Propiedad",
+      active7d: "Activos (7d)",
+      exams30d: "Exámenes (30d)",
+      drills7d: "Drills (7d)",
+    },
+    empty: "Sin propiedades activas.",
+  },
   empty: "Sin datos suficientes en este rango.",
   error: "No se pudo cargar la métrica.",
 };

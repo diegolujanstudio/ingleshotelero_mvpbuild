@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireHRUser } from "@/lib/hr/auth";
 import { loadCohort, loadEmployees } from "@/lib/hr/data";
+import { computeCohortProgress } from "@/lib/hr/cohort-progress";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { HairlineRule } from "@/components/ui/HairlineRule";
 import { LevelBadge } from "@/components/ui/Badge";
@@ -21,7 +22,13 @@ export default async function CohortDetailPage({
   const cohort = await loadCohort(user, params.id);
   if (!cohort) notFound();
 
-  const allEmployees = await loadEmployees(user);
+  // Demo cohorts have no real cohort_members rows to compute progress from —
+  // computeCohortProgress soft-fails to an empty result, and the client
+  // falls back to each member's existing completion_pct in that case.
+  const [allEmployees, progress] = await Promise.all([
+    loadEmployees(user),
+    computeCohortProgress(cohort.id),
+  ]);
   const memberIds = new Set(cohort.members.map((m) => m.employee_id));
   const candidates = allEmployees.filter((e) => !memberIds.has(e.id));
 
@@ -45,14 +52,17 @@ export default async function CohortDetailPage({
 
       <div className="mt-6 grid gap-3 md:grid-cols-4">
         <Tile label="Miembros" value={cohort.member_count} />
-        <Tile label="Avance promedio" value={`${cohort.avg_completion_pct}%`} />
+        <Tile
+          label="Avance promedio"
+          value={`${progress.members.length ? progress.avg_completion_pct : cohort.avg_completion_pct}%`}
+        />
         <Tile label="Inicio" value={cohort.start_date ?? "—"} />
         <Tile label="Cierre" value={cohort.end_date ?? "—"} />
       </div>
 
       <HairlineRule className="my-8" />
 
-      <CohortDetailClient cohort={cohort} candidates={candidates} />
+      <CohortDetailClient cohort={cohort} candidates={candidates} progress={progress} />
     </section>
   );
 }

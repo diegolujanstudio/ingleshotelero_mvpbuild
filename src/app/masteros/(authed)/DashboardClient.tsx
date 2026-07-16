@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   Bar,
   BarChart,
@@ -15,12 +15,14 @@ import {
   YAxis,
 } from "recharts";
 import { RefreshCw } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { SectionHeader } from "@/components/masteros/SectionHeader";
 import { MetricCard } from "@/components/masteros/MetricCard";
 import { ChartCard } from "@/components/masteros/ChartCard";
+import { DenseDataTable } from "@/components/masteros/DenseDataTable";
 import { Button } from "@/components/ui/Button";
 import { DASHBOARD } from "@/content/masteros";
-import type { MetricsPayload } from "@/lib/masteros/metrics";
+import type { MetricsPayload, PropertyBreakdownRow } from "@/lib/masteros/metrics";
 
 const TOKENS = {
   ink: "#2E4761",
@@ -59,6 +61,47 @@ export function DashboardClient({ initial, initialDemo }: Props) {
   const [data, setData] = useState<MetricsPayload>(initial);
   const [demo, setDemo] = useState<boolean>(Boolean(initialDemo));
   const [pending, startTransition] = useTransition();
+
+  const propertyColumns = useMemo<ColumnDef<PropertyBreakdownRow>[]>(
+    () => [
+      {
+        accessorKey: "org_name",
+        header: DASHBOARD.propertyTable.columns.org,
+        cell: ({ row }) => <span className="caps">{row.original.org_name}</span>,
+      },
+      {
+        accessorKey: "property_name",
+        header: DASHBOARD.propertyTable.columns.property,
+        cell: ({ row }) => (
+          <span className="font-serif text-t-body font-medium text-espresso">
+            {row.original.property_name}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "active_7d",
+        header: DASHBOARD.propertyTable.columns.active7d,
+        cell: ({ row }) => (
+          <span className="font-mono text-t-label text-espresso">{row.original.active_7d}</span>
+        ),
+      },
+      {
+        accessorKey: "exams_30d",
+        header: DASHBOARD.propertyTable.columns.exams30d,
+        cell: ({ row }) => (
+          <span className="font-mono text-t-label text-espresso">{row.original.exams_30d}</span>
+        ),
+      },
+      {
+        accessorKey: "drills_7d",
+        header: DASHBOARD.propertyTable.columns.drills7d,
+        cell: ({ row }) => (
+          <span className="font-mono text-t-label text-espresso">{row.original.drills_7d}</span>
+        ),
+      },
+    ],
+    [],
+  );
 
   function refresh() {
     startTransition(async () => {
@@ -261,6 +304,23 @@ export function DashboardClient({ initial, initialDemo }: Props) {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+      </div>
+
+      <div className="mt-8">
+        <SectionHeader
+          eyebrow={DASHBOARD.propertyTable.eyebrow}
+          title={DASHBOARD.propertyTable.title}
+          sub={DASHBOARD.propertyTable.caption}
+          className="border-none pb-2"
+        />
+        <div className="mt-3">
+          <DenseDataTable
+            data={data.properties}
+            columns={propertyColumns}
+            emptyMessage={DASHBOARD.propertyTable.empty}
+            pageSize={25}
+          />
+        </div>
       </div>
 
       <p className="mt-6 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-espresso-muted">

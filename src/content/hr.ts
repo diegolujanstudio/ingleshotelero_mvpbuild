@@ -24,8 +24,13 @@ export const SHELL = {
     employees: "Empleados",
     cohorts: "Cohortes",
     reports: "Reportes",
+    org: "Organización",
     team: "Equipo RH",
     settings: "Configuración",
+  },
+  propertySwitcher: {
+    label: "Propiedad",
+    all: "Todas las propiedades",
   },
 };
 
@@ -215,7 +220,10 @@ export const COHORTS = {
     new: "Nueva cohorte",
     edit: "Editar",
     archive: "Archivar",
+    archiving: "Archivando…",
   },
+  archiveConfirm:
+    "¿Archivar esta cohorte? Ya no aparecerá activa, pero se conserva su historial y el de sus miembros.",
   table: {
     name: "Nombre",
     module: "Módulo",
@@ -256,6 +264,16 @@ export const COHORTS = {
     progressTitle: "Avance de la cohorte",
     none: "Aún no hay miembros en esta cohorte.",
     addMemberSearch: "Busca un empleado por nombre…",
+    onTrack: "Al corriente",
+    examDone: "Examen completado",
+    examPending: "Examen pendiente",
+    lastPractice: "Última práctica",
+    noPractice: "Sin práctica registrada",
+    metrics: {
+      avg: "Avance promedio",
+      onTrack: "Al corriente",
+      members: "Miembros",
+    },
   },
 };
 
@@ -376,6 +394,32 @@ export const TEAM = {
     sent: "Invitación enviada.",
     error: "No se pudo enviar la invitación.",
   },
+};
+
+export const ORG = {
+  eyebrow: "Organización · Vista consolidada",
+  headline: {
+    before: "Todas tus propiedades, ",
+    em: "un vistazo",
+    after: ".",
+  },
+  sub: "Compara actividad, nivel y avance de examen entre propiedades. Elige una para enfocar el resto del panel en ella.",
+  metrics: {
+    properties: { eyebrow: "Propiedades", caption: "activas en tu organización" },
+    totalActive: { eyebrow: "Empleados activos", caption: "en todas las propiedades" },
+    exams30d: { eyebrow: "Exámenes completados", caption: "últimos 30 días" },
+  },
+  table: {
+    name: "Propiedad",
+    city: "Ciudad",
+    employeesActive: "Activos",
+    avgLevel: "Nivel promedio",
+    exams30d: "Exámenes (30d)",
+    completion: "% con examen",
+    practice7d: "Práctica (7d)",
+  },
+  viewProperty: "Enfocar esta propiedad",
+  empty: "Aún no hay propiedades activas en tu organización.",
 };
 
 export const COMMON = {

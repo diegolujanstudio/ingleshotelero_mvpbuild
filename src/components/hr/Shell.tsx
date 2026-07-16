@@ -5,7 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { HairlineRule } from "@/components/ui/HairlineRule";
+import { PropertySwitcher } from "@/components/hr/PropertySwitcher";
 import { SHELL } from "@/content/hr";
+import type { PropertyLite } from "@/lib/hr/scope";
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +17,7 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
+  Building2,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,15 +31,29 @@ interface ShellProps {
   email: string;
   role?: string;
   children: React.ReactNode;
+  /** Properties the user can read. Switcher only renders when length > 1. */
+  properties?: PropertyLite[];
+  /** "all" or a single property id — current active-scope pick. */
+  activePropertyId?: string;
+  /** Show the "Organización" nav item (org_admin/super_admin with >1 property). */
+  showOrg?: boolean;
 }
 
 /**
  * HR shell — left sidebar nav, ivory-soft surface, mono caps labels.
  * Visually identical density and rhythm to MasterosShell.
  */
-export function HRShell({ email, role, children }: ShellProps) {
+export function HRShell({
+  email,
+  role,
+  children,
+  properties = [],
+  activePropertyId = "all",
+  showOrg = false,
+}: ShellProps) {
   const pathname = usePathname();
   const isSuperAdmin = role === "super_admin";
+  const showSwitcher = properties.length > 1;
   const [signingOut, setSigningOut] = React.useState(false);
 
   // Real sign-out: revoke the Supabase session + clear the auth cookies via
@@ -79,6 +96,16 @@ export function HRShell({ email, role, children }: ShellProps) {
       icon: FileBarChart,
       match: (p) => p.startsWith("/hr/reports"),
     },
+    ...(showOrg
+      ? [
+          {
+            label: SHELL.nav.org,
+            href: "/hr/org",
+            icon: Building2,
+            match: (p: string) => p.startsWith("/hr/org"),
+          },
+        ]
+      : []),
   ];
 
   const admin: NavItem[] = [
@@ -107,6 +134,11 @@ export function HRShell({ email, role, children }: ShellProps) {
             {SHELL.product}
           </p>
         </div>
+        {showSwitcher && (
+          <div className="px-4 pb-4">
+            <PropertySwitcher properties={properties} activePropertyId={activePropertyId} />
+          </div>
+        )}
         <HairlineRule />
         <nav className="flex flex-1 flex-col gap-px px-2 py-3">
           <SectionLabel>{SHELL.groupOps}</SectionLabel>
@@ -175,6 +207,11 @@ export function HRShell({ email, role, children }: ShellProps) {
               <LogOut className="h-4 w-4" aria-hidden />
             </button>
           </div>
+          {showSwitcher && (
+            <div className="mt-3">
+              <PropertySwitcher properties={properties} activePropertyId={activePropertyId} />
+            </div>
+          )}
           <nav className="mt-3 flex gap-3 overflow-x-auto">
             {isSuperAdmin && (
               <Link
