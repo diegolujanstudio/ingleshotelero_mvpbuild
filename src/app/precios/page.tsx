@@ -30,16 +30,16 @@ const PLANS = [
     cadence: "/ mes · por propiedad",
     cap: "Hasta 30 empleados",
     includes: [
-      "1 módulo de puesto (recepción, botones, o restaurante)",
-      "Evaluación de nivel para cada empleado",
-      "Capacitación diaria de 5 min por WhatsApp o web",
-      "Reportes semanales de progreso",
-      "Soporte por correo en 24 hrs",
+      "Un módulo de puesto: recepción, botones o restaurante",
+      "Evaluación de nivel CEFR para cada empleado",
+      "Práctica diaria de 5 minutos por WhatsApp o web",
+      "Reporte de avance cada semana",
+      "Soporte por correo, respuesta en 24 horas",
     ],
     envKey: "NEXT_PUBLIC_STRIPE_LINK_STARTER",
     tone: "white" as const,
     ctaLabel: "Contratar plan Inicial",
-    bestFor: "Hoteles boutique con un departamento prioritario",
+    bestFor: "Para el hotel que arranca por un solo departamento",
   },
   {
     name: "Profesional",
@@ -47,17 +47,17 @@ const PLANS = [
     cadence: "/ mes · por propiedad",
     cap: "Hasta 75 empleados",
     includes: [
-      "Los tres módulos (recepción · botones · restaurante)",
-      "Evaluación de nivel + evaluaciones mensuales",
-      "Entrega por WhatsApp (integración Twilio completa)",
-      "Reportes semanales + mensuales",
-      "Dashboard de RH con exportes PDF y Excel",
+      "Los tres módulos: recepción, botones y restaurante",
+      "Evaluación inicial y reevaluación cada mes",
+      "Práctica diaria por WhatsApp, sin apps que instalar",
+      "Reportes cada semana y un resumen mensual",
+      "Panel de RH con exportación a PDF y Excel",
       "Soporte prioritario",
     ],
     envKey: "NEXT_PUBLIC_STRIPE_LINK_PROFESSIONAL",
     tone: "accent" as const,
     ctaLabel: "Contratar plan Profesional",
-    bestFor: "Hoteles de 4–5 estrellas con tres puestos guest-facing",
+    bestFor: "El 4 y 5 estrellas con tres puestos de cara al huésped",
     recommended: true,
   },
   {
@@ -66,44 +66,44 @@ const PLANS = [
     cadence: "Desde $500 USD / mes",
     cap: "Empleados ilimitados · multi-propiedad",
     includes: [
-      "Todos los módulos + contenido personalizado",
-      "Dashboard multi-propiedad para cadenas",
-      "Gerente de cuenta dedicado",
-      "Reportes personalizados + integración con su BI",
-      "Acceso API para integrar con su sistema de RH",
-      "Certificación 'Propiedad Bilingüe' al alcanzar meta",
+      "Todos los módulos, con contenido a la medida de su marca",
+      "Panel multi-propiedad para leer toda la cadena de un vistazo",
+      "Un gerente de cuenta que conoce su operación",
+      "Reportes a la medida, conectados a su BI",
+      "Acceso API para enlazar con su sistema de RH",
+      "Certificación 'Propiedad Bilingüe' al llegar a la meta",
     ],
     envKey: "NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE",
     tone: "white" as const,
     ctaLabel: "Hablar con ventas",
-    bestFor: "Cadenas de 3+ propiedades",
+    bestFor: "Para cadenas de tres o más propiedades",
   },
 ];
 
 const FAQS = [
   {
-    q: "¿Cuánto cuesta el evaluación de nivel?",
-    a: "USD 50 por empleado, una sola vez. Incluye el examen de 15 minutos, la calificación por IA, el reporte PDF ejecutivo, y una reunión de resultados. Es la forma más barata de diagnosticar el inglés de todo su equipo — y es la puerta de entrada al programa de capacitación.",
+    q: "¿Cuánto cuesta la evaluación de nivel?",
+    a: "USD 50 por empleado, una sola vez. Incluye el examen de 15 minutos, la calificación por IA con nivel CEFR, el reporte PDF para Dirección y una reunión para revisar resultados. Es la forma más rápida de saber, con datos, en qué nivel de inglés está cada persona de su equipo — y la puerta de entrada al programa de capacitación.",
   },
   {
     q: "¿Qué pasa si tengo una cadena de hoteles?",
-    a: "El plan Empresarial cubre múltiples propiedades con un dashboard central. Cotización personalizada según número de propiedades y empleados totales. Se factura a una sola entidad.",
+    a: "El plan Empresarial cubre varias propiedades bajo un solo panel. La cotización se arma según el número de propiedades y de empleados, y todo se factura a una sola entidad.",
   },
   {
     q: "¿Puedo cancelar en cualquier momento?",
-    a: "Sí. Todos los planes son mes a mes sin permanencia. Si cancela, conserva acceso hasta el final del período facturado y puede exportar todos sus datos.",
+    a: "Sí. Todos los planes son mes a mes, sin permanencia. Si cancela, conserva el acceso hasta el final del período que ya pagó y puede exportar todos sus datos.",
   },
   {
     q: "¿Cuánto tarda en implementarse?",
-    a: "Un día. Le enviamos el enlace único de su hotel, su RH lo comparte con el equipo, y los empleados toman el examen cuando puedan. En una semana típica tiene datos completos.",
+    a: "Un día. Le enviamos el enlace único de su hotel, RH lo comparte con el equipo y cada empleado toma el examen cuando su turno lo permita. Para el final de la semana ya tiene los datos completos.",
   },
   {
     q: "¿Factura en pesos?",
-    a: "Sí. Los precios se muestran en USD por claridad internacional, pero facturamos en MXN al tipo de cambio del día de cobro, con IVA desglosado, CFDI 4.0, y uso 'G03'.",
+    a: "Sí. Los precios se muestran en USD para que sean claros en cualquier país, pero facturamos en MXN al tipo de cambio del día de cobro, con IVA desglosado, CFDI 4.0 y uso 'G03'.",
   },
   {
-    q: "¿El piloto gratis realmente es gratis?",
-    a: "Sí. Un departamento, un mes, sin cobro y sin tarjeta. Al terminar le entregamos el reporte y una cotización específica. Si no convence, nadie firma nada.",
+    q: "¿El piloto gratis de verdad es gratis?",
+    a: "Sí. Un departamento, un mes, sin cobro y sin tarjeta. Al terminar le entregamos el reporte y una cotización a su medida. Si no lo convence, nadie firma nada.",
   },
 ];
 
@@ -247,10 +247,10 @@ export default function PreciosPage() {
           Sin letra chica. <em>Sin sorpresas.</em>
         </h1>
         <p className="mt-8 max-w-prose font-sans text-t-body-lg text-espresso-soft">
-          Evaluación de nivel puntual para diagnosticar a su equipo. Suscripción
-          mensual por propiedad para capacitarlos. Los precios son por propiedad,
-          no por empleado — así es más fácil crecer sin que el costo se vuelva
-          un tema.
+          Una evaluación de nivel para saber dónde está parado su equipo. Una
+          suscripción mensual para llevarlo a donde necesita. Cobramos por
+          propiedad, no por empleado: su cuenta no crece cada vez que da de alta
+          a alguien nuevo.
         </p>
       </section>
 
@@ -265,19 +265,19 @@ export default function PreciosPage() {
               Evaluación de nivel — <em>USD 50</em> por empleado.
             </h2>
             <p className="mt-6 font-sans text-t-body-lg text-espresso-soft">
-              Una sola vez. Diagnostica a todo su equipo en una semana y le entrega
-              un reporte que puede llevar a Dirección el lunes.
+              Se paga una vez. Mide a todo su equipo en una semana y le deja un
+              reporte que puede poner sobre la mesa de Dirección el lunes.
             </p>
           </div>
           <div className="rounded-md border border-hair bg-white p-8">
             <p className="caps mb-4">Incluye</p>
             <ul className="space-y-3 font-sans text-t-body text-espresso">
               {[
-                "Examen de 15 min por empleado (diagnóstico, escucha, habla)",
-                "Calificación por IA con nivel CEFR A1–B2",
-                "Reporte PDF ejecutivo para Dirección y GM",
-                "Reunión de 30 min para revisar resultados",
-                "Recomendación de módulo para cada empleado",
+                "Examen de 15 minutos por empleado: comprensión, escucha y habla",
+                "Calificación por IA con nivel CEFR, de A1 a B2",
+                "Reporte PDF listo para Dirección y Gerencia General",
+                "Reunión de 30 minutos para leer los resultados juntos",
+                "El módulo recomendado para cada empleado, por nombre",
               ].map((it) => (
                 <li key={it} className="flex items-start gap-3">
                   <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-ink" aria-hidden />
@@ -287,7 +287,7 @@ export default function PreciosPage() {
             </ul>
             <HairlineRule className="my-6" />
             <p className="caps">
-              Recomendación: empiece con el piloto gratis antes de facturar.
+              Antes de facturar, pruébelo con el piloto gratis.
             </p>
             <ButtonLink href={PILOT_MAILTO} variant="accent" size="lg" className="mt-4">
               Empezar con el piloto gratis

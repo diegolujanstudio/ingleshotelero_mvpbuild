@@ -56,20 +56,29 @@ export async function loadOrgOverview(user: HRUser): Promise<OrgOverview> {
   try {
     const propertyIds = properties.map((p) => p.id);
 
-    // Active employees per property + their current level, chunked.
+    // Active employees per property + their current level, chunked. Paged
+    // past Supabase's 1000-row cap per chunk — a chain with many properties
+    // and a large combined headcount would otherwise silently lose rows.
+    const PAGE = 1000;
     const empIdsByProperty = new Map<string, string[]>();
     const levelByEmp = new Map<string, CEFRLevel | null>();
     for (const ids of chunk(propertyIds, IN_CHUNK)) {
-      const { data } = await sb
-        .from("employees")
-        .select("id, property_id, current_level")
-        .in("property_id", ids)
-        .eq("is_active", true);
-      for (const e of data ?? []) {
-        const list = empIdsByProperty.get(e.property_id) ?? [];
-        list.push(e.id);
-        empIdsByProperty.set(e.property_id, list);
-        levelByEmp.set(e.id, e.current_level);
+      for (let offset = 0; ; offset += PAGE) {
+        const { data } = await sb
+          .from("employees")
+          .select("id, property_id, current_level")
+          .in("property_id", ids)
+          .eq("is_active", true)
+          .order("id", { ascending: true })
+          .range(offset, offset + PAGE - 1);
+        const rows = data ?? [];
+        for (const e of rows) {
+          const list = empIdsByProperty.get(e.property_id) ?? [];
+          list.push(e.id);
+          empIdsByProperty.set(e.property_id, list);
+          levelByEmp.set(e.id, e.current_level);
+        }
+        if (rows.length < PAGE) break;
       }
     }
 

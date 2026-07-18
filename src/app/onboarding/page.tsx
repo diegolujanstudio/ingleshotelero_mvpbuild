@@ -5,12 +5,12 @@ import { Building2, GraduationCap, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Empezar",
-  description: "Empieza con Inglés Hotelero — para hoteles y para empleados.",
+  description: "Empiece con Inglés Hotelero: una ruta para el hotel, otra para el empleado.",
   alternates: { canonical: "/onboarding" },
   robots: { index: true, follow: true },
   openGraph: {
     title: "Empezar · Inglés Hotelero",
-    description: "Empieza con Inglés Hotelero — para hoteles y para empleados.",
+    description: "Empiece con Inglés Hotelero: una ruta para el hotel, otra para el empleado.",
     url: "/onboarding",
   },
 };
@@ -30,7 +30,7 @@ export default function OnboardingHub() {
           ¿Por dónde <em>empezamos</em>?
         </h1>
         <p className="mt-4 max-w-prose font-sans text-t-body-lg text-espresso-soft">
-          Elige tu camino. Te guiamos paso a paso.
+          Elija su ruta. Lo acompañamos en cada paso.
         </p>
 
         <div className="mt-9 grid gap-4 sm:grid-cols-2">
@@ -43,7 +43,7 @@ export default function OnboardingHub() {
               Soy un hotel
             </h2>
             <p className="mt-2 font-sans text-t-body text-espresso-soft">
-              Quiero capacitar a mi equipo. Cómo arrancamos tu propiedad.
+              Quiero capacitar a mi equipo. Le mostramos cómo se pone en marcha su propiedad.
             </p>
             <span className="mt-4 inline-flex items-center gap-1 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ink group-hover:gap-2">
               Empezar como hotel <ArrowRight className="h-3.5 w-3.5" />
@@ -58,7 +58,7 @@ export default function OnboardingHub() {
               Soy empleado
             </h2>
             <p className="mt-2 font-sans text-t-body text-espresso-soft">
-              Voy a aprender inglés para mi puesto. Cómo funciona tu práctica.
+              Voy a aprender inglés para mi puesto. Así funciona su práctica diaria.
             </p>
             <span className="mt-4 inline-flex items-center gap-1 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ink group-hover:gap-2">
               Empezar como empleado <ArrowRight className="h-3.5 w-3.5" />
