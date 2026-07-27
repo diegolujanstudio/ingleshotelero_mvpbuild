@@ -344,9 +344,24 @@ export default function PreciosPage() {
         </dl>
       </section>
 
-      {/* ── CTA band ──────────────────────────── */}
-      <section className="bg-espresso text-ivory-light">
-        <div className="mx-auto grid max-w-shell gap-10 px-6 py-16 md:grid-cols-[1fr_auto] md:items-end md:gap-20 md:px-12 md:py-section-gap">
+      {/* ── CTA band — photographic, matching the marketing-site refresh ── */}
+      <section className="relative overflow-hidden bg-espresso text-ivory-light">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/img/brand/swimmer-gold.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover opacity-55"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 45%, rgba(30,24,18,0.25) 0%, rgba(30,24,18,0.7) 100%)",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative mx-auto grid max-w-shell gap-10 px-6 py-16 md:grid-cols-[1fr_auto] md:items-end md:gap-20 md:px-12 md:py-section-gap">
           <div className="max-w-prose">
             <p className="caps mb-6 text-ivory-light/60">{formatIndex(5)} · Siguiente paso</p>
             <h2 className="font-serif text-t-h1 font-medium">
