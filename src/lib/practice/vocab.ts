@@ -12,6 +12,7 @@ import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { DRILLS, type Role } from "@/content/practice-drills";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import { nextReview, type Grade, type SM2State } from "./sm2";
+import { applyInterferenceConstraint } from "@/content/interference";
 import { log } from "@/lib/server/log";
 
 export interface VocabCard {
@@ -71,6 +72,9 @@ export async function selectDueCards(
   if (!supabase) return [];
 
   const nowIso = new Date().toISOString();
+  // Over-fetch: the interference filter needs alternatives to substitute in
+  // when two due words collide, otherwise it can only shorten the session.
+  const fetchLimit = Math.max(count * 4, count + 8);
   const { data, error } = await supabase
     .from("vocabulary_progress")
     .select(
@@ -80,7 +84,7 @@ export async function selectDueCards(
     .eq("module", module)
     .lte("next_review_at", nowIso)
     .order("next_review_at", { ascending: true })
-    .limit(count);
+    .limit(fetchLimit);
   if (error) {
     log.warn(
       { err: error.message, employee_id },
@@ -91,9 +95,10 @@ export async function selectDueCards(
 
   let rows = data ?? [];
 
-  // Top up from "never reviewed" rows if we don't have enough due.
-  if (rows.length < count) {
-    const remaining = count - rows.length;
+  // Top up from "never reviewed" rows. We top up to the over-fetch limit, not
+  // to `count`, so the interference filter still has substitutes available
+  // when the due set is small.
+  if (rows.length < fetchLimit) {
     const seenWords = new Set(rows.map((r) => r.word));
     const { data: fresh } = await supabase
       .from("vocabulary_progress")
@@ -103,9 +108,9 @@ export async function selectDueCards(
       .eq("employee_id", employee_id)
       .eq("module", module)
       .is("next_review_at", null)
-      .limit(remaining + seenWords.size);
+      .limit(fetchLimit);
     for (const r of fresh ?? []) {
-      if (rows.length >= count) break;
+      if (rows.length >= fetchLimit) break;
       if (!seenWords.has(r.word)) rows.push(r);
     }
   }
@@ -116,13 +121,14 @@ export async function selectDueCards(
     if (b.level === level && a.level !== level) return 1;
     return 0;
   });
-  rows = rows.slice(0, count);
+  // Deliberately NOT sliced to `count` here — the interference filter below
+  // needs surplus candidates to swap in, or it can only ever shrink a batch.
 
-  const out: DueCardWithMeta[] = [];
+  const built: DueCardWithMeta[] = [];
   for (const r of rows) {
     const content = lookupVocabContent(module, r.word);
     if (!content) continue;
-    out.push({
+    built.push({
       ...content,
       level: r.level,
       next_review_at: r.next_review_at,
@@ -133,7 +139,12 @@ export async function selectDueCards(
       },
     });
   }
-  return out;
+
+  // Law 2 — never put two still-being-learned words from the same
+  // interference group in one batch. Semantically clustered sets are learned
+  // >30% more slowly. See content/interference.ts.
+  const { selected } = applyInterferenceConstraint(built, count);
+  return selected;
 }
 
 /**

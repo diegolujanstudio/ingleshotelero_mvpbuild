@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { DRILLS, type Drill, type Role } from "@/content/practice-drills";
+import { generateVariant, parseVariantId } from "@/content/practice-variants";
 import { log } from "@/lib/server/log";
 
 /**
@@ -87,11 +88,24 @@ export const getDrillsForRole = cache(
   },
 );
 
-/** Resolve one drill by its stable id (e.g. "b-001"), DB-first. */
+/**
+ * Resolve one drill by id, DB-first.
+ *
+ * Accepts both authored ids ("b-001") and combinatorial variant ids
+ * ("b-001~apurado~ocupado" — see content/practice-variants.ts). Variants are
+ * generated from the resolved base, so a DB edit to a situation flows into
+ * every one of its variants automatically. An unknown personality/pressure
+ * degrades to the base drill rather than 404ing: a stale bookmark should
+ * still give someone their practice.
+ */
 export async function getDrillById(
   role: Role,
   id: string,
 ): Promise<Drill | null> {
   const pool = await getDrillsForRole(role);
-  return pool.find((d) => d.id === id) ?? null;
+  const parsed = parseVariantId(id);
+  const baseId = parsed?.baseId ?? id;
+  const base = pool.find((d) => d.id === baseId) ?? null;
+  if (!base || !parsed) return base;
+  return generateVariant(base, parsed.personality, parsed.pressure);
 }

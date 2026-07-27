@@ -36,6 +36,12 @@ import "server-only";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { type Drill, type Role } from "@/content/practice-drills";
 import { getDrillsForRole } from "@/lib/content/drills-store";
+import {
+  PERSONALITIES,
+  PRESSURES,
+  generateVariant,
+  parseVariantId,
+} from "@/content/practice-variants";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import { log } from "@/lib/server/log";
 
@@ -114,24 +120,50 @@ export async function pickDrillForEmployee(
       .map((h) => h.drill_id),
   );
 
-  // Anti-back-to-back: drop any drill seen in last 3 days.
-  let filtered = candidates.filter((d) => !recentIds.has(d.id));
-  if (filtered.length === 0) filtered = candidates.slice();
+  // ── Combinatorial expansion (METODO-TURNO.md §6.5) ────────────────
+  // Each authored situation becomes situation × personality × pressure.
+  // Without this, ~5 drills per cell minus a 3-day exclusion means a
+  // learner sees repeats inside a 14-day pilot. See practice-variants.ts.
+  //
+  // Pressure is gated by experience so the first week stays gentle — the
+  // "Semana Sin Pena" rule: nobody meets an angry guest in a collapsing
+  // lobby on day two.
+  const completions = history.length;
+  const allowedPressures = PRESSURES.filter((p) => {
+    if (p.id === "tranquilo") return true;
+    if (p.id === "ocupado") return completions >= 7;
+    return completions >= 21;
+  });
 
-  // Weighted shuffle by weak skills: a weak drill is worth 3 entries
-  // in the rotation pool, a fresh drill is worth 1. Day-of-year picks
-  // an index into the expanded pool.
+  const expanded: Drill[] = [];
+  for (const pr of allowedPressures) {
+    for (const persona of PERSONALITIES) {
+      for (const base of candidates) {
+        expanded.push(generateVariant(base, persona.id, pr.id));
+      }
+    }
+  }
+
+  // Anti-back-to-back operates on the variant id, so the same situation in
+  // a different mood is legitimately a different rehearsal.
+  let filtered = expanded.filter((d) => !recentIds.has(d.id));
+  if (filtered.length === 0) filtered = expanded.slice();
+
+  // Weak-skill weighting matches on the BASE id: if someone struggled with
+  // a situation, resurface that situation in any mood, not that exact variant.
   const weighted: Drill[] = [];
   for (const d of filtered) {
-    const w = weakIds.has(d.id) ? 3 : 1;
+    const baseId = parseVariantId(d.id)?.baseId ?? d.id;
+    const w = weakIds.has(baseId) || weakIds.has(d.id) ? 3 : 1;
     for (let i = 0; i < w; i++) weighted.push(d);
   }
 
   const idx = dayOfYear(today) % weighted.length;
   const picked = weighted[idx];
 
+  const pickedBaseId = parseVariantId(picked.id)?.baseId ?? picked.id;
   let reason: PickedDrill["reason"] = "default";
-  if (weakIds.has(picked.id)) reason = "weak_skill";
+  if (weakIds.has(pickedBaseId) || weakIds.has(picked.id)) reason = "weak_skill";
   else if (levelMatched === level) reason = "level_match";
   else if (levelMatched && levelMatched !== level) reason = "level_fallback";
 
