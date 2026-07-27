@@ -64,7 +64,15 @@ Our structural advantage is the **denominator**. Competitors require scheduling,
 - **Core** — Profesional, $300 USD/property/month
 - **Upsell at peak satisfaction** — additional properties; the padrino program; custom brand content
 - **Continuity** — the subscription itself, defended by the certificate and the HR record
-- **Downsell** — Inicial at $150, one department only
+- **Downsell** — Inicial at $150, capped at 20 employees (all three departments)
+
+> **Revised July 2026.** Inicial was originally specified as "one department
+> only." That was dropped: a 15-person boutique has staff spread across all
+> three roles, so a one-department plan excludes the smallest part of our ICP
+> outright, and the headcount band already caps value capture — limiting
+> departments on top of it is double-limiting. The upsell motion is *additional
+> properties*, not additional departments, which is the stronger move in a
+> chain-heavy market anyway. Bands and rationale: `PRICING.md`.
 
 **Keep per-property pricing.** Per-seat annual commitments assume the same humans are present in 12 months. They will not be. Per-property survives churn and is the correct instrument for this market.
 

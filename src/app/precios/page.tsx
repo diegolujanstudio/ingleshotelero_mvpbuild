@@ -28,11 +28,19 @@ const PLANS = [
     name: "Inicial",
     priceUSD: 150,
     cadence: "/ mes · por propiedad",
-    cap: "Hasta 30 empleados",
+    // Bands must match the marketing site exactly — see docs/PRICING.md. They
+    // were 30/75 here and 12/45 there, so a prospect who read both pages got
+    // two different answers about which plan they were on.
+    cap: "Hasta 20 empleados",
     includes: [
-      "Un módulo de puesto: recepción, botones o restaurante",
+      // Inicial is no longer crippled by department. A 15-person boutique has
+      // staff spread across all three roles; a one-module plan excludes our
+      // smallest ICP entirely. The headcount band already caps value capture,
+      // so limiting departments on top of it is double-limiting. See PRICING.md.
+      "Los tres módulos: recepción, botones y restaurante",
       "Evaluación de nivel CEFR para cada empleado",
       "Práctica diaria de 5 minutos por WhatsApp o web",
+      "Altas y bajas ilimitadas dentro del rango",
       "Reporte de avance cada semana",
       "Soporte por correo, respuesta en 24 horas",
     ],
@@ -45,7 +53,7 @@ const PLANS = [
     name: "Profesional",
     priceUSD: 300,
     cadence: "/ mes · por propiedad",
-    cap: "Hasta 75 empleados",
+    cap: "De 21 a 50 empleados",
     includes: [
       "Los tres módulos: recepción, botones y restaurante",
       "Evaluación inicial y reevaluación cada mes",
@@ -64,7 +72,7 @@ const PLANS = [
     name: "Empresarial",
     priceUSD: null as number | null,
     cadence: "Desde $500 USD / mes",
-    cap: "Empleados ilimitados · multi-propiedad",
+    cap: "51 empleados o más · multi-propiedad",
     includes: [
       "Todos los módulos, con contenido a la medida de su marca",
       "Panel multi-propiedad para leer toda la cadena de un vistazo",
