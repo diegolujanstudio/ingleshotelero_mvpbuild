@@ -18,7 +18,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/precios", "/onboarding", "/soporte"],
+        allow: ["/onboarding", "/soporte"],
         disallow: [
           "/hr/",
           "/masteros/",

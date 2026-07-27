@@ -120,6 +120,20 @@ const nextConfig = {
     // Server Actions are on by default in 14.x; keep explicit for clarity.
     serverActions: { allowedOrigins: ["localhost:3000"] },
   },
+  async redirects() {
+    return [
+      // Pricing lives on the marketing site only — one published price, one
+      // place to change it. The app used to carry its own /precios, which
+      // drifted out of sync (it advertised different headcount bands). This
+      // is permanent so the marketing page inherits any accumulated SEO
+      // equity instead of leaving a dead route behind.
+      {
+        source: "/precios",
+        destination: "https://ingleshotelero.com/precios/",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withPWA(nextConfig);

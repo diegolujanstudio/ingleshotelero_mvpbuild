@@ -136,17 +136,90 @@ what the offer architecture always said.
 
 ---
 
-## 5. Open questions for Diego
+## 5. What the ICP is actually willing to pay
+
+The question is not "what is our cost plus a margin." It is **which budget line
+does this come out of, and what already sits in it.**
+
+### 5.1 There is already a training budget, and a compliance habit
+
+Mexican employers are legally obliged to train and to document it (DC-3 / STPS,
+under NOM-017, NOM-001, NOM-002, NOM-026, NOM-019, NOM-035, NOM-030). Failure to
+comply carries fines of **$29,327 – $586,550 MXN**.
+
+> ⚠️ **We do not satisfy any of these.** They are safety, hygiene and
+> psychosocial norms — English is not legally mandated anywhere in them. Never
+> imply otherwise in sales material. What this fact buys us is narrower and
+> still useful: **the buyer already has a training line, a training vendor
+> habit, and a person whose job is to spend it.** We are not asking them to
+> invent a budget category.
+
+### 5.2 The benchmark that decides the ceiling
+
+Standard corporate training spend is **1–3% of payroll** (some sources stretch
+to 5%). Against an average Riviera Maya frontline wage of $7,584.70 MXN/month:
+
+| n | Our cost/employee/yr | % of frontline payroll |
+|---|---|---|
+| 12 | $2,625 | 2.88% |
+| 20 | $1,575 | 1.73% |
+| **21** | **$3,000** | **3.30%** ← only cell above the norm |
+| 30 | $2,100 | 2.31% |
+| 50 | $1,260 | 1.38% |
+| 80 | $1,313 | 1.44% |
+| 120 | $875 | 0.96% |
+| 150 | $700 | 0.77% |
+
+**This is the single most useful number on the page:** we fit inside the budget
+that already exists. We do not require a new one. That is what makes the sale
+procurement-boring instead of a capital request.
+
+### 5.3 What they pay for the alternatives
+
+| Option | Per employee | Notes |
+|---|---|---|
+| **Inglés Hotelero** (30-person property) | **$2,100 MXN/yr** | daily, hospitality-specific, covers new hires |
+| Closed group class | ~$2,600 MXN once | $450–850 MXN/hr for 4–8 students, 24 h course |
+| Open English (individual) | $9,588–15,588 MXN/yr | $799–1,299 MXN/person/month; generic English |
+| Enterprise platforms (Voxy/EF/Babbel tier) | $2,850–11,400 MXN/yr | €150–600/learner/yr at 500+ seats |
+
+We are **3.7× to 13.7× cheaper per person than Open English** and at or below
+the enterprise floor — while being the only option that is hospitality-specific
+and that covers turnover at no extra charge.
+
+### 5.4 The conclusion — hold the list price, fix the top
+
+Inicial and Profesional are **correctly priced.** They sit inside the 1–3%
+budget norm and far under every per-seat alternative. With zero paying
+customers, low friction is worth more than margin extraction, and per-property
+is a differentiator we do not want to erode. **Do not raise them.**
+
+**Empresarial is genuinely underpriced.** A flat $500 USD at 150 employees is
+$58 MXN/employee/month — **0.77% of payroll, and 13.7× under Open English.**
+The largest, best-funded properties get the deepest discount, which is backwards.
+Since Empresarial is quote-based ("desde"), this is a *sales-motion* fix, not a
+page change: quote it against headcount, not as a flat floor. A defensible
+internal rule is to hold roughly **1.5% of frontline payroll**, i.e. about
+$110–170 MXN/employee/month, which puts a 120-person resort near $850 USD/month
+rather than $500.
+
+---
+
+## 6. Open questions for Diego
 
 1. **Chain volume pricing.** Empresarial is currently *more* expensive per
    property than Profesional, which inverts normal volume logic for a chain
    buying 8 properties. The tickets now say "el precio por propiedad baja a
    partir de la quinta," but there is **no published grid** behind that. It needs
    a real one before a chain conversation, or the line should come out.
-2. **Are we underpriced?** A single traditional 24-hour course for a 30-person
-   property costs ~$78,000 MXN. We charge $63,000 MXN for a year. With zero
-   paying customers, low friction beats margin extraction — but this is worth
-   revisiting after the first three pilots convert.
+2. **Empresarial quoting rule** (see §5.4). Do you want to adopt the ~1.5%-of-
+   payroll guide — roughly $110–170 MXN/employee/month — so a 120-person resort
+   quotes near $850 USD instead of $500? This is the one place the research says
+   we are leaving real money on the table.
 3. **Exam pricing at scale.** $875 MXN × 120 employees = $105,000 MXN upfront for
    a large property. That may need to be bundled into the subscription for
    Empresarial rather than billed separately.
+4. **Where the peso rate lives.** `FX = 17.5` is duplicated across
+   `RoiCalc.astro` and hard-coded pesos in `PricingTickets.astro`, `llms.txt`
+   and `plataforma.astro`. If the peso moves more than ~5% these drift apart.
+   Worth centralising into one data module if we keep peso-first pricing.

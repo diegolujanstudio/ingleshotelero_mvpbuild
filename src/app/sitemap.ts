@@ -13,12 +13,8 @@ const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://ingleshotelero.netlify.
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
   return [
-    {
-      url: `${base}/precios`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
+    // /precios is intentionally absent: pricing is published only on the
+    // marketing site, and the app's route 308s there (see next.config.mjs).
     {
       url: `${base}/onboarding`,
       lastModified,
