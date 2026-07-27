@@ -13,7 +13,8 @@ const PRODUCTO = [
   { href: "/#por-que", label: "Por qué funciona" },
   { href: "/#como", label: "Cómo funciona" },
   { href: "/#para-quien", label: "Para quién" },
-  { href: "/precios", label: "Precios" },
+  // Pricing is published on the marketing site only — see next.config.mjs.
+  { href: "https://ingleshotelero.com/precios/", label: "Precios" },
 ];
 
 const DEMO = [
