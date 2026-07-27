@@ -15,6 +15,7 @@ import { StreakChip } from "@/components/practice/StreakChip";
 import { LevelChip } from "@/components/practice/LevelChip";
 import { PRACTICE_COPY } from "@/content/practice";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
+import { ROLE_IDS } from "@/content/roles";
 
 /**
  * /practice — daily 5-minute drill entry.
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const VALID_ROLES: RoleModule[] = ["bellboy", "frontdesk", "restaurant"];
+const VALID_ROLES: RoleModule[] = ROLE_IDS;
 const VALID_LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2"];
 
 interface PageProps {

@@ -5,12 +5,13 @@ import { canManageEmployees } from "@/lib/auth/roles";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { jsonError, parseBody, zEmail } from "@/lib/server/api";
 import type { RoleModule, Shift, CEFRLevel } from "@/lib/supabase/types";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 const PostSchema = z.object({
   name: z.string().min(1),
   email: zEmail.optional().or(z.literal("")),
   phone: z.string().trim().optional().or(z.literal("")),
-  hotel_role: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  hotel_role: z.enum(ROLE_ENUM_VALUES),
   department: z.string().optional(),
   shift: z.enum(["morning", "afternoon", "night"]).optional().or(z.literal("")),
   current_level: z.enum(["A1", "A2", "B1", "B2"]).optional().or(z.literal("")),

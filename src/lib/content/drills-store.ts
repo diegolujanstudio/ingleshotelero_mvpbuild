@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { DRILLS, type Drill, type Role } from "@/content/practice-drills";
 import { generateVariant, parseVariantId } from "@/content/practice-variants";
 import { log } from "@/lib/server/log";
+import { ROLE_IDS } from "@/content/roles";
 
 /**
  * Content store — makes the Master OS modules editor actually drive the
@@ -29,7 +30,7 @@ import { log } from "@/lib/server/log";
  * existing modules list UI shows something readable.
  */
 
-const ROLES: Role[] = ["bellboy", "frontdesk", "restaurant"];
+const ROLES = ROLE_IDS as Role[];
 
 /** Structural guard — a DB row's `options` must be a real Drill or we skip it. */
 function isDrill(v: unknown): v is Drill {

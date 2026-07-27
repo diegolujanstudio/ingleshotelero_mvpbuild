@@ -18,6 +18,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import type { HREmployeeView } from "./demo-bridge";
+import { ROLES, ROLE_IDS } from "@/content/roles";
 
 const TOKENS = {
   ink: [46, 71, 97] as [number, number, number],
@@ -29,11 +30,9 @@ const TOKENS = {
   white: [255, 255, 255] as [number, number, number],
 };
 
-const ROLE_LABEL: Record<RoleModule, string> = {
-  bellboy: "Botones",
-  frontdesk: "Recepción",
-  restaurant: "Restaurante / Bar",
-};
+const ROLE_LABEL: Record<RoleModule, string> = Object.fromEntries(
+  ROLE_IDS.map((id) => [id, ROLES[id].label_es]),
+) as Record<RoleModule, string>;
 
 export interface BuildReportOptions {
   propertyName: string;
@@ -150,7 +149,7 @@ export function buildReportPdf(opts: BuildReportOptions): Uint8Array {
   doc.text("POR PUESTO", margin, roleY);
   drawHairline(doc, margin, roleY + 6, pageW - margin, roleY + 6);
 
-  const roles: RoleModule[] = ["bellboy", "frontdesk", "restaurant"];
+  const roles: RoleModule[] = ROLE_IDS;
   const colW = (pageW - margin * 2) / 3;
   roles.forEach((r, i) => {
     const dept = employees.filter((e) => e.hotel_role === r);

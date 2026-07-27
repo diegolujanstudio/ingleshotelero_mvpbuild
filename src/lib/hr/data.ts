@@ -26,6 +26,7 @@ import type {
   HROrgInfo,
   HRPropertyInfo,
 } from "./demo-bridge";
+import { ROLE_IDS } from "@/content/roles";
 import {
   getDemoEmployees,
   getDemoCohorts,
@@ -692,11 +693,9 @@ export async function loadOverview(
   const active = employees.filter((e) => e.is_active);
   const counts: Record<CEFRLevel, number> = { A1: 0, A2: 0, B1: 0, B2: 0 };
   for (const e of active) if (e.current_level) counts[e.current_level]++;
-  const byRoleMap: Record<RoleModule, number> = {
-    bellboy: 0,
-    frontdesk: 0,
-    restaurant: 0,
-  };
+  const byRoleMap = Object.fromEntries(
+    ROLE_IDS.map((id) => [id, 0]),
+  ) as Record<RoleModule, number>;
   for (const e of active) byRoleMap[e.hotel_role]++;
 
   const examsLast30 = active.filter(

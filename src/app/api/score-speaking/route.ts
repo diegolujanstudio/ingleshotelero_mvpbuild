@@ -10,6 +10,7 @@ import {
   runCoachOnce,
 } from "@/lib/server/scoring";
 import { mockScore, mockCoach } from "@/lib/scoring";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,7 @@ const demoSchema = z.object({
   expected_keywords: z.array(z.string().max(40)).max(20),
   model_response_en: z.string().max(500).optional(),
   level_tag: z.enum(["A1", "A2", "B1", "B2"]),
-  module: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  module: z.enum(ROLE_ENUM_VALUES),
   audio_data_url: z.string().optional().nullable(),
   session_id: z.string().optional(),
   prompt_index: z.number().int().min(0).max(20).optional(),

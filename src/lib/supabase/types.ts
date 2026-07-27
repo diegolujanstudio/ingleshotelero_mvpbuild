@@ -18,7 +18,21 @@ export type Json =
   | Json[];
 
 export type CEFRLevel = "A1" | "A2" | "B1" | "B2";
-export type RoleModule = "bellboy" | "frontdesk" | "restaurant";
+/**
+ * Departments. Adding one here also requires a migration to widen the CHECK
+ * constraints on employees.hotel_role and the five `module` columns — see
+ * supabase/migrations/0014_role_modules.sql. The product-facing metadata for
+ * each lives in src/content/roles.ts, which is the list everything derives from.
+ */
+export type RoleModule =
+  | "bellboy"
+  | "frontdesk"
+  | "restaurant"
+  | "housekeeping"
+  | "concierge"
+  | "spa"
+  | "security"
+  | "maintenance";
 export type ExamType = "placement" | "monthly" | "final";
 export type ExamStatus =
   | "in_progress"

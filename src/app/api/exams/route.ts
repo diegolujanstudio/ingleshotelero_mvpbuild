@@ -11,6 +11,7 @@ import {
   storeIdempotent,
 } from "@/lib/server/idempotency";
 import type { Json } from "@/lib/supabase/types";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 
@@ -20,12 +21,12 @@ const schema = z.object({
     name: z.string().min(1).max(200),
     email: z.string().email().max(200).optional().nullable(),
     phone: z.string().max(40).optional().nullable(),
-    hotel_role: z.enum(["bellboy", "frontdesk", "restaurant"]),
+    hotel_role: z.enum(ROLE_ENUM_VALUES),
     department: z.string().max(80).optional().nullable(),
     shift: z.enum(["morning", "afternoon", "night"]).optional().nullable(),
     whatsapp_opted_in: z.boolean().optional(),
   }),
-  module: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  module: z.enum(ROLE_ENUM_VALUES),
   exam_type: z.enum(["placement", "monthly", "final"]).optional(),
   consent_version: z.string().max(40).optional(),
   // Demo-mode passthrough so the client can keep its localStorage id stable.

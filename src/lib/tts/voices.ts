@@ -30,6 +30,10 @@ export function voiceForRole(module: RoleModule): string {
       return process.env.ELEVENLABS_VOICE_ID_BELLBOY ?? FALLBACK_VOICE;
     case "restaurant":
       return process.env.ELEVENLABS_VOICE_ID_RESTAURANT ?? FALLBACK_VOICE;
+    default:
+      // Departments added after the first three share a voice until Diego
+      // picks dedicated ones. A missing voice must never block audio.
+      return process.env.ELEVENLABS_VOICE_ID_GUEST ?? FALLBACK_VOICE;
   }
 }
 

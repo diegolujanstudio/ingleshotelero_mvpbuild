@@ -8,11 +8,12 @@ import {
 import { captureException } from "@/lib/server/sentry";
 import { DRILLS, type Role } from "@/content/practice-drills";
 import { EXAM_CONTENT } from "@/content/exam";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 
 const paramSchema = z.object({
-  module: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  module: z.enum(ROLE_ENUM_VALUES),
   level: z.enum(["A1", "A2", "B1", "B2"]),
   itemId: z.string().min(1).max(120),
 });

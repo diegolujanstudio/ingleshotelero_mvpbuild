@@ -216,7 +216,7 @@ export function variantsFor(
   role: Role,
   level: Drill["level"],
 ): { baseId: string; personality: PersonalityId; pressure: PressureId }[] {
-  const bases = DRILLS[role].filter((d) => d.level === level);
+  const bases = (DRILLS[role] ?? []).filter((d) => d.level === level);
   const out: {
     baseId: string;
     personality: PersonalityId;
@@ -236,7 +236,7 @@ export function variantsFor(
 
 /** How many distinct rehearsals a cell can produce. */
 export function countVariants(role: Role, level: Drill["level"]): number {
-  const bases = DRILLS[role].filter((d) => d.level === level).length;
+  const bases = (DRILLS[role] ?? []).filter((d) => d.level === level).length;
   return bases * PERSONALITIES.length * PRESSURES.length;
 }
 
@@ -244,7 +244,7 @@ export function countVariants(role: Role, level: Drill["level"]): number {
 export function resolveDrill(role: Role, id: string): Drill | null {
   const parsed = parseVariantId(id);
   const baseId = parsed?.baseId ?? id;
-  const base = DRILLS[role].find((d) => d.id === baseId);
+  const base = (DRILLS[role] ?? []).find((d) => d.id === baseId);
   if (!base) return null;
   if (!parsed) return base;
   return generateVariant(base, parsed.personality, parsed.pressure);

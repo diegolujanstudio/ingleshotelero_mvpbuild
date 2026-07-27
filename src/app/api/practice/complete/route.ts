@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { recordDrillCompletion } from "@/lib/practice/complete";
 import { captureException } from "@/lib/server/sentry";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,7 @@ const bodySchema = z.object({
   employee_id: z.string().uuid(),
   drill_id: z.string().min(1).max(120),
   level: z.enum(["A1", "A2", "B1", "B2"]),
-  module: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  module: z.enum(ROLE_ENUM_VALUES),
   listening_correct: z.boolean().nullable().optional(),
   speaking_score: z.number().int().min(0).max(100).nullable().optional(),
   vocab_known: z.number().int().min(0).max(20).optional(),

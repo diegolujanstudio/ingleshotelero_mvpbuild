@@ -12,13 +12,14 @@ import { planPracticeSession } from "@/lib/practice/lapse";
 import { pickDrill } from "@/content/practice-drills";
 import { captureException } from "@/lib/server/sentry";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 
 const querySchema = z.object({
   employee_id: z.string().uuid().optional(),
   /** Demo-mode fallback when there is no employee row. */
-  role: z.enum(["bellboy", "frontdesk", "restaurant"]).optional(),
+  role: z.enum(ROLE_ENUM_VALUES).optional(),
   level: z.enum(["A1", "A2", "B1", "B2"]).optional(),
 });
 
