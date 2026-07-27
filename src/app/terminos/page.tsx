@@ -68,12 +68,12 @@ export default function TerminosPage() {
               <em>Suscripción mensual.</em> Capacitación continua para los
               empleados de la propiedad. Se cobra por propiedad, no por empleado.
               Los planes vigentes y sus límites se publican en{" "}
-              <Link
-                href="/precios"
+              <a
+                href="https://ingleshotelero.com/precios/"
                 className="text-ink underline-offset-4 hover:underline"
               >
-                /precios
-              </Link>
+                ingleshotelero.com/precios
+              </a>
               . Los planes se renuevan automáticamente cada mes y pueden cancelarse
               en cualquier momento sin penalización; la cancelación surte efecto al
               final del periodo facturado.
