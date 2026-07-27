@@ -4,10 +4,23 @@
     {
       "name": "landing",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["astro", "dev"],
+      "runtimeArgs": [
+        "astro",
+        "dev"
+      ],
       "port": 4321,
       "autoPort": true,
       "cwd": "landing"
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }
