@@ -168,6 +168,36 @@ function joinSentences(...parts: string[]): string {
 }
 
 /**
+ * Does the authored response already perform this personality's repair?
+ *
+ * Many authored drills — especially the B1/B2 "something went wrong" ones —
+ * already apologise, because that IS the correct answer to the neutral
+ * situation. Prepending the `molesto` acknowledgement on top produced real
+ * stutters like:
+ *
+ *   "I'm very sorry about the wait. I'm very sorry. I'll stop the water..."
+ *   "I'm very sorry about the wait. I completely understand, and I'm sorry
+ *    for the inconvenience. ..."
+ *
+ * A learner repeating that aloud sounds broken, which is the opposite of the
+ * point. Checking only the first characters missed the second case, where the
+ * apology sits mid-sentence — so we match on MEANING anywhere in the response,
+ * keyed per personality, and let the modifier step aside when the job is done.
+ */
+const ACK_KEYWORDS: Record<PersonalityId, string[]> = {
+  neutral: [],
+  apurado: ["right away", "right now", "immediately", "straight away"],
+  molesto: ["sorry", "apolog", "i understand", "you're right"],
+  confundido: ["no problem", "let me help", "happy to help", "of course"],
+  formal: ["certainly", "of course", "absolutely"],
+};
+
+function alreadyAcknowledges(model: string, personality: PersonalityId): boolean {
+  const m = model.toLowerCase();
+  return ACK_KEYWORDS[personality].some((k) => m.includes(k));
+}
+
+/**
  * Build a concrete drill from a base situation plus a personality and a
  * pressure level. Pure — no clock, no randomness.
  */
@@ -200,7 +230,12 @@ export function generateVariant(
     },
     reinforce: {
       ...base.reinforce,
-      model_en: joinSentences(p.ack_en, base.reinforce.model_en),
+      // Only add the personality's acknowledgement when the authored response
+      // does not already perform it — otherwise the learner is taught to
+      // apologise twice in a row.
+      model_en: alreadyAcknowledges(base.reinforce.model_en, personalityId)
+        ? base.reinforce.model_en
+        : joinSentences(p.ack_en, base.reinforce.model_en),
       note_es: joinSentences(base.reinforce.note_es, p.note_es, pr.note_es),
     },
   };
