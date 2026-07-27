@@ -11,25 +11,39 @@ const STEP = PRACTICE_COPY.steps.speaking;
 
 type RecorderState = "idle" | "requesting" | "recording" | "recorded" | "scoring" | "done";
 
-interface SpeakingResult {
-  score: number;
+/**
+ * What the Coach gives back. Note there is no score field — by design.
+ * `internal_confidence` drives SRS scheduling and is never rendered.
+ */
+interface CoachFeedback {
+  understood_es: string;
   feedback_es: string;
-  level_estimate?: string;
   model_response?: string;
+  internal_confidence: "low" | "medium" | "high";
 }
 
+/** Maps the Coach's qualitative read onto the 0-100 the DB still stores. */
+const CONFIDENCE_TO_SCORE: Record<CoachFeedback["internal_confidence"], number> = {
+  low: 45,
+  medium: 70,
+  high: 88,
+};
+
 /**
- * Practice speaking step. Single 45-sec MediaRecorder capture →
- * /api/score-speaking with the demo body. The route's persisted
- * branch ignores demo bodies, so we always run via the demo path
- * here; if Supabase + AI keys are present, the real Whisper+Claude
- * pipeline runs server-side and we get a real score back. Otherwise
- * we get the deterministic mock.
+ * Practice speaking step — THE COACH, not the evaluator.
  *
- * Recording type: when wired to /api/recordings (a future enhancement
- * post-MVP), we'd pass `recording_type='practice'` so the row lands
- * with the right tag. For now we keep this lightweight and demo-mode
- * compatible — no upload, just inline scoring.
+ * Calls /api/score-speaking with `mode: "coach"`, which routes to
+ * el padre lingüístico: a persona that confirms understanding and models a
+ * better sentence, and never returns a score.
+ *
+ * Per METODO-TURNO.md Law 1, daily practice must never be scored. Showing a
+ * learner a number every day re-creates the school experience that already
+ * failed them ("ya sé, pero me da pena"). The CEFR number belongs to the
+ * monthly assessment, where the hotel is the audience.
+ *
+ * We still report a numeric `speaking_score` upward so `drill_history` and the
+ * SRS scheduler keep working — it is derived from the Coach's internal
+ * confidence and is never shown to the learner.
  */
 export function StepSpeaking({
   drill,
@@ -43,7 +57,7 @@ export function StepSpeaking({
   const [state, setState] = React.useState<RecorderState>("idle");
   const [elapsed, setElapsed] = React.useState(0);
   const [retries, setRetries] = React.useState(0);
-  const [result, setResult] = React.useState<SpeakingResult | null>(null);
+  const [result, setResult] = React.useState<CoachFeedback | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const mediaRef = React.useRef<MediaRecorder | null>(null);
@@ -150,45 +164,50 @@ export function StepSpeaking({
           level_tag: level,
           module,
           audio_data_url: dataUrl,
+          // Daily practice is coached, never scored. See METODO-TURNO.md §7.
+          mode: "coach",
         }),
       });
       if (!res.ok) throw new Error(`status_${res.status}`);
       const json = (await res.json()) as Record<string, unknown>;
-      const total =
-        typeof json.total === "number"
-          ? json.total
-          : typeof (json.scored as { total?: number } | undefined)?.total === "number"
-          ? (json.scored as { total: number }).total
-          : null;
-      if (total === null) throw new Error("no_score");
+
+      const rawConf = String(json.internal_confidence ?? "medium");
+      const internal_confidence: CoachFeedback["internal_confidence"] =
+        rawConf === "low" || rawConf === "high" ? rawConf : "medium";
+
       setResult({
-        score: total,
+        understood_es:
+          typeof json.understood_es === "string" && json.understood_es.trim()
+            ? json.understood_es
+            : "Entendí lo que quisiste decir.",
         feedback_es:
-          typeof json.feedback_es === "string"
+          typeof json.feedback_es === "string" && json.feedback_es.trim()
             ? json.feedback_es
-            : "Buena respuesta. Continúe practicando.",
-        level_estimate:
-          typeof json.level_estimate === "string" ? json.level_estimate : undefined,
+            : "Te diste a entender. Eso es lo que cuenta.",
         model_response:
           typeof json.model_response === "string"
             ? json.model_response
             : drill.reinforce.model_en,
+        internal_confidence,
       });
       setState("done");
     } catch {
-      // Fail soft — still let the user advance with no score.
+      // Fail soft. Our outage must never read to the learner as their failure,
+      // so this path is warm and still gives them the model sentence.
       setResult({
-        score: 0,
-        feedback_es:
-          "No pudimos evaluar su respuesta esta vez. Su práctica de hoy sigue contando.",
+        understood_es: "Guardamos tu práctica.",
+        feedback_es: "Tu práctica de hoy cuenta. Así se dice de forma natural:",
         model_response: drill.reinforce.model_en,
+        internal_confidence: "medium",
       });
       setState("done");
     }
   }
 
   function complete() {
-    onComplete({ speaking_score: result?.score ?? null, skipped: false });
+    // The learner never sees a number; the scheduler still needs one.
+    const derived = result ? CONFIDENCE_TO_SCORE[result.internal_confidence] : null;
+    onComplete({ speaking_score: derived, skipped: false });
   }
 
   return (
@@ -252,16 +271,23 @@ export function StepSpeaking({
 
         {state === "done" && result ? (
           <div>
-            <p className="caps mb-2">{STEP.yourScore}</p>
-            <p className="font-serif text-[2.5rem] font-medium leading-none text-espresso">
-              <em>{result.score}</em>
-              <span className="ml-1 font-sans text-t-body text-espresso-muted">/ 100</span>
+            {/*
+              No score. No percentage. No level.
+              The Coach confirms understanding, then models — it never grades.
+              METODO-TURNO.md Law 1.
+            */}
+            <p className="caps mb-2">{STEP.understood}</p>
+            <p className="font-serif text-[1.35rem] font-medium leading-snug text-espresso">
+              {result.understood_es}
             </p>
-            <p className="caps mt-6 mb-1">{STEP.feedback}</p>
-            <p className="font-sans text-t-body text-espresso-soft">{result.feedback_es}</p>
+
+            <p className="font-sans text-t-body text-espresso-soft mt-4">
+              {result.feedback_es}
+            </p>
+
             {result.model_response ? (
               <>
-                <p className="caps mt-6 mb-1">{STEP.modelResponse}</p>
+                <p className="caps mt-6 mb-1">{STEP.anotherWay}</p>
                 <p className="font-serif text-[1.15rem] font-medium text-espresso">
                   &ldquo;{result.model_response}&rdquo;
                 </p>

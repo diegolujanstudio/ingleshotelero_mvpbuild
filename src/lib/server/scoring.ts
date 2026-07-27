@@ -30,8 +30,12 @@ import {
   mockScore,
   noResponseResult,
   transcriptIsEmpty,
+  buildCoachSystemPrompt,
+  parseCoachResponse,
+  mockCoach,
   type ScoringInput,
   type ScoringResult,
+  type CoachResult,
 } from "@/lib/scoring";
 import { recomputeFinalLevel } from "./exam";
 import { addBreadcrumb, captureException } from "./sentry";
@@ -464,4 +468,84 @@ async function scoreWithClaude(
   const data = (await res.json()) as { content: { type: string; text: string }[] };
   const text = data.content.find((c) => c.type === "text")?.text ?? "";
   return parseRubricResponse(text, input.model_response_en);
+}
+
+// ─── COACH path (daily practice) ─────────────────────────────────────
+//
+// Deliberately separate from the scoring path above. The Coach never
+// produces a number — see METODO-TURNO.md Law 1. Scoring a learner every
+// day re-creates the school dynamic that already failed them.
+
+async function coachWithClaude(
+  input: ScoringInput & { transcript: string },
+): Promise<Omit<CoachResult, "transcript" | "mode">> {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error("ANTHROPIC_API_KEY missing");
+
+  const systemPrompt = buildCoachSystemPrompt({
+    scenario_es: input.scenario_es,
+    expected_keywords: input.expected_keywords,
+    level_tag: input.level_tag,
+    module: input.module,
+    transcript: input.transcript,
+  });
+
+  const res = await fetchWithTimeout(
+    `${ANTHROPIC_API}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 512,
+        system: systemPrompt,
+        messages: [
+          { role: "user", content: "Responde como su compañero de práctica. Solo JSON." },
+        ],
+      }),
+    },
+    UPSTREAM_TIMEOUT_MS,
+    "Claude(coach)",
+  );
+  if (!res.ok) throw new Error(`Claude ${res.status}: ${await res.text()}`);
+
+  const data = (await res.json()) as { content: { type: string; text: string }[] };
+  const text = data.content.find((c) => c.type === "text")?.text ?? "";
+  return parseCoachResponse(text, input.model_response_en);
+}
+
+/**
+ * Run the Coach for one daily-practice attempt.
+ *
+ * Fails soft in every direction: a silent recording, a dead upstream, or a
+ * malformed response all still return warmth and a model sentence. The
+ * learner must never experience our infrastructure as their failure.
+ */
+export async function runCoachOnce(input: ScoringInput): Promise<CoachResult> {
+  const transcript = input.audio_blob
+    ? await transcribe(input.audio_blob)
+    : input.fallback_transcript ?? "";
+
+  if (transcriptIsEmpty(transcript)) {
+    return {
+      transcript,
+      understood_es: "No alcancé a escucharte bien.",
+      feedback_es: "No te preocupes, puedes intentarlo otra vez cuando quieras.",
+      model_response: input.model_response_en,
+      internal_confidence: "low",
+      mode: "real",
+    };
+  }
+
+  try {
+    const coached = await coachWithClaude({ ...input, transcript });
+    return { transcript, ...coached, mode: "real" };
+  } catch (err) {
+    log.warn({ err: String(err) }, "coach.real.failed-fallback-mock");
+    return { ...mockCoach(transcript, input.model_response_en), mode: "mock" };
+  }
 }

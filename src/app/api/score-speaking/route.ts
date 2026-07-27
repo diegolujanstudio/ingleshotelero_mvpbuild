@@ -3,8 +3,13 @@ import { z } from "zod";
 import { isSupabaseConfigured } from "@/lib/supabase/client-or-service";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 import { captureException } from "@/lib/server/sentry";
-import { claimPending, scoreOne, runScoringOnce } from "@/lib/server/scoring";
-import { mockScore } from "@/lib/scoring";
+import {
+  claimPending,
+  scoreOne,
+  runScoringOnce,
+  runCoachOnce,
+} from "@/lib/server/scoring";
+import { mockScore, mockCoach } from "@/lib/scoring";
 
 export const runtime = "nodejs";
 
@@ -24,6 +29,14 @@ const demoSchema = z.object({
   audio_data_url: z.string().optional().nullable(),
   session_id: z.string().optional(),
   prompt_index: z.number().int().min(0).max(20).optional(),
+  /**
+   * Which persona answers. See METODO-TURNO.md §7.
+   *   "coach"  — daily practice. Returns understanding + a model sentence.
+   *              NEVER returns a score. This is el padre lingüístico.
+   *   "assess" — placement exam / monthly re-assessment. Returns CEFR + score.
+   * Defaults to "assess" so existing exam callers are unaffected.
+   */
+  mode: z.enum(["coach", "assess"]).optional(),
 });
 
 // Only permit inline base64 audio data URLs for the unauthenticated practice
@@ -138,6 +151,28 @@ export async function POST(req: Request) {
   // the real path. Otherwise mock.
   const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
   const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
+  const isCoach = parsed.data.mode === "coach";
+
+  // ── COACH branch: daily practice ────────────────────────────────
+  // Returns no score of any kind. A failure here still returns warmth and
+  // a model sentence — our outage must never read as the learner's failure.
+  if (isCoach) {
+    try {
+      const result =
+        hasOpenAI && hasAnthropic
+          ? await runCoachOnce(input)
+          : { ...mockCoach("", input.model_response_en), mode: "mock" as const };
+      return NextResponse.json(result);
+    } catch (err) {
+      captureException(err, { route: "POST /api/score-speaking (coach)", data: {} });
+      return NextResponse.json({
+        ...mockCoach("", input.model_response_en),
+        mode: "mock" as const,
+      });
+    }
+  }
+
+  // ── ASSESS branch: placement exam and monthly re-assessment ─────
   try {
     const result =
       hasOpenAI && hasAnthropic ? await runScoringOnce(input) : mockScore(input);

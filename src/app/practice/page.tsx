@@ -6,6 +6,7 @@ import {
 } from "@/lib/supabase/client-or-service";
 import { pickDrillForEmployee } from "@/lib/practice/picker";
 import { readStreak } from "@/lib/practice/streak";
+import { planPracticeSession } from "@/lib/practice/lapse";
 import { getEmployeeSession } from "@/lib/auth/employee";
 import { pickDrill, ROLE_LABELS } from "@/content/practice-drills";
 import { Logo } from "@/components/brand/Logo";
@@ -98,6 +99,11 @@ export default async function PracticeIndex({ searchParams }: PageProps) {
   const todayIso = new Date().toISOString().slice(0, 10);
   const alreadyToday = streak.last_practice_date === todayIso;
 
+  // Law 5 — el regreso suave. Someone back after 3+ days gets a welcome and a
+  // deliberately short session, never a guilt trip about the streak they lost.
+  const plan = planPracticeSession(streak.last_practice_date);
+  const isReturning = plan.showReturnWelcome && !alreadyToday;
+
   const params = new URLSearchParams();
   if (employee_id) params.set("employee_id", employee_id);
   params.set("role", role);
@@ -128,17 +134,23 @@ export default async function PracticeIndex({ searchParams }: PageProps) {
         <h1 className="font-serif text-[clamp(1.75rem,5vw,2.5rem)] font-medium leading-[1.05] tracking-[-0.02em]">
           {alreadyToday ? (
             <>
-              Ya practicó hoy. <em>Vuelva mañana.</em>
+              Ya practicaste hoy. <em>Nos vemos mañana.</em>
+            </>
+          ) : isReturning ? (
+            <>
+              Qué bueno que <em>volviste</em>.
             </>
           ) : (
             <>
-              Su práctica de <em>cinco minutos</em>.
+              Tu práctica de <em>cinco minutos</em>.
             </>
           )}
         </h1>
 
         <p className="mt-6 max-w-prose font-sans text-t-body-lg text-espresso-soft">
-          {PRACTICE_COPY.intro.description}
+          {isReturning
+            ? PRACTICE_COPY.intro.returnWelcomeBody
+            : PRACTICE_COPY.intro.description}
         </p>
 
         <dl className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3">

@@ -8,6 +8,7 @@ import { pickDrillForEmployee } from "@/lib/practice/picker";
 import { selectDueCards } from "@/lib/practice/vocab";
 import { seedVocabularyIfEmpty } from "@/lib/practice/seed-vocab";
 import { readStreak } from "@/lib/practice/streak";
+import { planPracticeSession } from "@/lib/practice/lapse";
 import { pickDrill } from "@/content/practice-drills";
 import { captureException } from "@/lib/server/sentry";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
@@ -93,10 +94,17 @@ export async function GET(req: Request) {
     // First-time vocab seeding (idempotent).
     await seedVocabularyIfEmpty(employee_id, role);
 
-    const [picked, due, streak] = await Promise.all([
+    // Read the streak first: it tells us whether this learner is returning
+    // from a lapse, which decides how heavy today's session may be.
+    const streak = await readStreak(employee_id);
+
+    // Law 5 — protect the habit above the backlog. A shift worker WILL miss
+    // days; we never greet them with a pile. See lib/practice/lapse.ts.
+    const plan = planPracticeSession(streak?.last_practice_date ?? null);
+
+    const [picked, due] = await Promise.all([
       pickDrillForEmployee(employee_id, role, level),
-      selectDueCards(employee_id, 3, role, level),
-      readStreak(employee_id),
+      selectDueCards(employee_id, plan.dueCardCount, role, level),
     ]);
 
     return NextResponse.json(
@@ -105,6 +113,11 @@ export async function GET(req: Request) {
         pick_reason: picked.reason,
         due_vocab: due,
         streak,
+        // The client uses this to show "qué bueno que volviste" instead of a
+        // broken-streak graphic, and to keep the session visibly short.
+        posture: plan.posture,
+        show_return_welcome: plan.showReturnWelcome,
+        days_since_last_practice: plan.daysSinceLastPractice,
         mode: "live",
       },
       { headers: { "cache-control": "no-store" } },
