@@ -60,7 +60,7 @@ export function createServiceClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is not set. Add it to .env.local — see SETUP.md.",
+      "SUPABASE_SERVICE_ROLE_KEY is not set. Add it to .env.local — see docs/operar/01-CREDENCIALES.md.",
     );
   }
   return createSupabaseClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {

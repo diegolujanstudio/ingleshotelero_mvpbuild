@@ -68,49 +68,41 @@ Open http://localhost:3000/e/test-hotel for the exam entry preview (works withou
 
 ```
 .
-├── .orcha/                           ← project context for future Claude Code sessions
-│   ├── vision.md                     ← why this exists
-│   ├── architecture.md               ← stack + pipelines
-│   ├── design-system.md              ← tokens, type scale, component rules
-│   ├── phase-1-foundation.md         ← this session (✅ shipped)
-│   ├── phase-2-exam-flow.md          ← next session
-│   └── phase-{3..6}-*.md             ← remaining sessions
+├── EMPIEZA-AQUI.txt        ← START HERE (Spanish, plain text)
+├── CLAUDE.md               ← conventions for AI coding tools
+├── docs/
+│   ├── operar/             ← credentials · testing the PWA · deploying
+│   ├── sistema/            ← the IP (METODO-TURNO, PRICING, GTM, LATAM-UX)
+│   ├── estado/             ← what is actually built, measured
+│   ├── research/           ← the 17 sources behind the method
+│   └── archivo/            ← superseded, ignore
+├── landing/                ← the marketing site (its OWN git repo)
 ├── src/
-│   ├── app/
-│   │   ├── layout.tsx                ← root layout, font wiring
-│   │   ├── page.tsx                  ← marketing landing
-│   │   ├── not-found.tsx             ← 404
-│   │   ├── globals.css               ← design tokens, font-face for New Spirit
-│   │   └── e/[slug]/                 ← hotel-scoped exam entry
-│   │       ├── page.tsx
-│   │       └── entry-form.tsx
+│   ├── app/                ← routes: /practice, /exam, /hr, /masteros, /api
 │   ├── components/
-│   │   ├── brand/                    ← Logo, NumberedPlaceholder
-│   │   └── ui/                       ← Button, Card, Input, HairlineRule
-│   ├── content/
-│   │   └── roles.ts                  ← three role modules + display copy
-│   └── lib/
-│       ├── cefr.ts                   ← level calculation (bible §4)
-│       ├── utils.ts                  ← cn, slugify, formatIndex
-│       └── supabase/                 ← browser, server, and service clients + types
-├── supabase/
-│   └── migrations/
-│       └── 0001_initial_schema.sql   ← full DDL + RLS (bible §11)
-├── public/
-│   └── fonts/                        ← place New Spirit woff2 files here (see SETUP)
-├── CLAUDE.md                         ← context for future Claude Code sessions
-└── SETUP.md                          ← exact steps to provision services
+│   ├── content/            ← roles, drills, variants, interference, minimal pairs
+│   └── lib/                ← supabase clients, practice engine, scoring, HR data
+├── supabase/migrations/    ← 0001 … 0014 (0014 not yet run in production)
+└── public/
 ```
 
 ---
 
 ## What's next
 
-Phase 2 — the placement exam flow (bible §20, Session 2). Start a fresh Claude Code session and paste:
+All six build phases shipped. The product now covers **8 departments × 4 CEFR
+levels** — 160 authored situations expanded to 2,400 rehearsals by the
+combinatorial engine — plus the pronunciation trainer and the Coach/Evaluator
+split described in `docs/sistema/METODO-TURNO.md`.
 
-> Build the complete placement exam flow as a multi-step form with these pages: /e/[hotel-slug] (already scaffolded — extend to create exam_sessions), /exam/[id]/diagnostic (13 questions), /exam/[id]/listening (10 audio items), /exam/[id]/speaking (6 recording prompts), /exam/[id]/results. Save every answer to the database immediately. Support session resume via URL. Play MP3 files from /public/audio/. See .orcha/phase-2-exam-flow.md for the full spec.
+**The three open blockers are operational, not code** (see `EMPIEZA-AQUI.txt`):
 
-See `CLAUDE.md` for additional conventions.
+1. Run migration `0014` so the five new departments can be assigned
+2. Move Supabase off the free tier so it stops auto-pausing
+3. Add the AI keys in Netlify so scoring uses real models, not the fallback
+
+Current state, measured: `docs/estado/PRODUCT-AUDIT.md`.
+Live system map: https://www.ingleshotelero.com/metodo
 
 ---
 

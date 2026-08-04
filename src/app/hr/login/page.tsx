@@ -158,7 +158,7 @@ export default function HRLoginPage() {
           </Button>
           {!supabaseConfigured && (
             <p className="caps">
-              Autenticación real disponible cuando Supabase esté configurado (ver SETUP.md).
+              Autenticación real disponible cuando Supabase esté configurado.
             </p>
           )}
         </form>
