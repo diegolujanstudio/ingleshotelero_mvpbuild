@@ -1,8 +1,36 @@
 # Inglés Hotelero
 
-Hotel English training and placement for Latin American hospitality staff — web app + WhatsApp bot + HR dashboard.
+Hotel English training for Latin American hospitality staff — PWA + HR dashboard
++ marketing site.
 
-**What this repo contains:** Session 1 (foundation) of the build sequence described in `.orcha/phase-1-foundation.md`. Next.js 14 + TypeScript + Tailwind + Supabase. Landing page, hotel-scoped exam entry, design system, full SQL schema.
+### 👉 Si estás buscando por dónde empezar, abre **[`EMPIEZA-AQUI.txt`](EMPIEZA-AQUI.txt)**
+
+That file is the human entry point, in Spanish, and it points at everything else.
+
+---
+
+## The two projects in this folder
+
+| | Marketing site | The app |
+|---|---|---|
+| Live | https://www.ingleshotelero.com | https://ingleshotelero.netlify.app |
+| Folder | `landing/` (its own git repo) | repo root |
+| Stack | Astro, 1,079 static pages | Next.js 14 + Supabase |
+| Audience | Hotels deciding whether to buy | Employees and HR |
+
+**The visual map of the whole system** lives at
+[/metodo](https://www.ingleshotelero.com/metodo) — 205 interactive nodes
+covering the method, the research, every route, the database and the gaps.
+
+## Documentation
+
+| Folder | What's in it |
+|---|---|
+| `docs/operar/` | Credentials map, how to test the PWA, how to deploy |
+| `docs/sistema/` | The IP — **`METODO-TURNO.md` is the key file**, plus pricing and GTM |
+| `docs/estado/` | What is actually built, measured |
+| `docs/research/` | 17 source extractions behind the method |
+| `docs/archivo/` | Superseded — ignore |
 
 ---
 
@@ -12,7 +40,7 @@ Hotel English training and placement for Latin American hospitality staff — we
 # 1. Install dependencies
 npm install
 
-# 2. Copy env template and fill in values (see SETUP.md)
+# 2. Copy env template and fill in values (see docs/operar/01-CREDENCIALES.md)
 cp .env.example .env.local
 
 # 3. Run the dev server

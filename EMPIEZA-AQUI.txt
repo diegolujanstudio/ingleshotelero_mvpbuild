@@ -1,0 +1,131 @@
+═══════════════════════════════════════════════════════════════════════
+  INGLÉS HOTELERO — EMPIEZA AQUÍ
+  Si estás perdido, este es el único archivo que necesitas abrir.
+  Actualizado: 28 de julio de 2026
+═══════════════════════════════════════════════════════════════════════
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  1. QUÉ ESTÁ VIVO AHORA MISMO                                       │
+└─────────────────────────────────────────────────────────────────────┘
+
+  SITIO WEB (lo que ve un hotel antes de comprar)
+  https://www.ingleshotelero.com
+     · 1,079 páginas. Precios, demo, cadenas, y 1,071 páginas de ciudad
+       para búsqueda en Google.
+     · OJO: el sitio vive en www. La versión sin www redirige sola.
+
+  EL MAPA DEL SISTEMA  ← esto es lo "visual" que buscabas
+  https://www.ingleshotelero.com/metodo
+     · 205 nodos. Todo el negocio en un solo mapa que puedes arrastrar
+       y hacer clic: el método, la investigación, los módulos, el
+       backend, las credenciales, y lo que falta.
+     · Hay un interruptor "Estado" arriba a la derecha. Apagado = lo
+       que ve un cliente. Encendido = tu mapa interno (verde = listo,
+       ámbar = construido, gris = diseñado, ROJO = pendiente).
+     · Cuando no sepas en qué estás parado, abre esto.
+
+  LA APLICACIÓN (lo que usan los empleados y RH)
+  https://ingleshotelero.netlify.app
+     · Examen de ubicación, práctica diaria, panel de RH, Master OS.
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  2. LOS TRES PENDIENTES QUE SÓLO TÚ PUEDES DESTRABAR                │
+└─────────────────────────────────────────────────────────────────────┘
+
+  [ ] 1. SUPABASE ESTÁ EN PLAN GRATUITO
+         Se pausa solo si nadie lo usa unos días. Si se pausa, la app
+         deja de guardar datos.
+         → app.supabase.com → tu proyecto → Settings → Billing → Pro
+
+  [ ] 2. FALTA CORRER LA MIGRACIÓN 0014
+         Los 5 puestos nuevos (ama de llaves, concierge, spa, seguridad,
+         mantenimiento) NO se pueden dar de alta hasta que corras esto.
+         Lo demás funciona normal.
+         → Ver docs/operar/03-DESPLEGAR.md
+
+  [ ] 3. FALTAN LAS LLAVES DE IA EN PRODUCCIÓN
+         Sin ellas la calificación usa un simulador, no IA real.
+         → Ver docs/operar/01-CREDENCIALES.md
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  3. DÓNDE ESTÁ CADA COSA                                            │
+└─────────────────────────────────────────────────────────────────────┘
+
+  PARA OPERAR EL NEGOCIO — docs/operar/
+     01-CREDENCIALES.md .... todas las cuentas y dónde vive cada llave
+     02-PROBAR-LA-APP.md ... cómo probar la app en tu teléfono
+     03-DESPLEGAR.md ....... cómo publicar cambios y correr migraciones
+
+  EL SISTEMA (la propiedad intelectual) — docs/sistema/
+     METODO-TURNO.md ....... las 5 leyes, el ciclo diario, la Semana
+                             Sin Pena. El documento más importante.
+     PRICING.md ............ por qué cobramos lo que cobramos
+     GTM-PLAYBOOK.md ....... cómo se vende y cómo se implementa
+     LATAM-UX-DOCTRINE.md .. cómo se le habla al usuario mexicano
+     PHILOSOPHY.md ......... por qué existe la empresa
+
+  DÓNDE ESTAMOS PARADOS — docs/estado/
+     PRODUCT-AUDIT.md ...... qué está construido de verdad
+     INVENTORY.md .......... inventario técnico
+
+  LA INVESTIGACIÓN — docs/research/
+     17 archivos, 138,684 palabras. Los libros y estudios de los que
+     salió el método. No hace falta leerlos: ya están destilados en
+     METODO-TURNO.md.
+
+  ARCHIVO — docs/archivo/
+     Documentos viejos de fases anteriores. No los necesitas.
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  4. LOS NÚMEROS, POR SI TE LOS PREGUNTAN                            │
+└─────────────────────────────────────────────────────────────────────┘
+
+  8 puestos (recepción, botones, restaurante, ama de llaves,
+             concierge, spa, seguridad, mantenimiento)
+  4 niveles CEFR por puesto (A1 → B2)
+  160 situaciones escritas a mano
+  2,400 ensayos generados por el motor combinatorio
+  480 palabras de vocabulario
+  47 grupos de interferencia
+  4 contrastes de pronunciación
+
+  Un empleado tiene ~300 ensayos en su escalera A1→B2.
+  A 4 sesiones por semana, eso es ~1.4 años antes de repetir.
+  El piloto de 14 días usa 19% de UN nivel.
+
+  PRECIO: por propiedad, nunca por persona.
+     Inicial      $2,625 MXN/mes   hasta 20 empleados
+     Profesional  $5,250 MXN/mes   de 21 a 50
+     Empresarial  desde $8,750     51 o más
+     Plan anual = pagas 10 meses de 12.
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  5. SI ALGO SE VE MAL EN EL SITIO                                   │
+└─────────────────────────────────────────────────────────────────────┘
+
+  "Veo una versión vieja del sitio"
+     Ya está resuelto, pero si vuelve a pasar en algún dispositivo:
+     abre el sitio, presiona Ctrl+Shift+R (o Cmd+Shift+R en Mac).
+     Causa original: un service worker viejo guardaba la versión en
+     inglés. Se instaló un "kill switch" en /sw.js que lo elimina solo.
+
+  "Google no encuentra mis páginas"
+     El sitemap ya está entregado en Search Console (1,076 páginas
+     descubiertas el 28 de julio). Google tarda de días a semanas en
+     indexar. Revisa Search Console → Páginas en una semana.
+
+  "Los precios se ven raros"
+     Todos los números de /precios salen de una sola calculadora.
+     Si algo no cuadra, es un bug real — avísame.
+
+
+═══════════════════════════════════════════════════════════════════════
+  REGLA DE ORO
+  Tienes más producto construido que clientes pagando. Cuando dudes
+  entre construir algo nuevo o hablarle a un hotel, háblale al hotel.
+═══════════════════════════════════════════════════════════════════════

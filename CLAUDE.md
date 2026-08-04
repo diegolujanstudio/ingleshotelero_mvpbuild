@@ -21,7 +21,29 @@ Full product bible: none in the repo — Diego holds it. Distilled into `.orcha/
 - **Phase 5 — WhatsApp.** 🟡 Demo simulator at `/demo/conversacion` is done; real Twilio webhook is scaffolded at `/api/whatsapp/incoming` — full conversation state machine is post-MVP.
 - **Phase 6 — Multi-property + billing.** 🟡 `/precios` page done with Stripe Payment Link env vars. Webhook + subscription enforcement + org hierarchy are post-MVP.
 
-**Demo-ready posture.** The whole product flows end-to-end for a prospect demo even without Supabase/OpenAI/Anthropic credentials. See `DEMO-RUNBOOK.md` for the click-by-click pitch script.
+**Demo-ready posture.** The whole product flows end-to-end for a prospect demo even without Supabase/OpenAI/Anthropic credentials. See `docs/operar/02-PROBAR-LA-APP.md` for the click-by-click pitch script (the older `docs/archivo/DEMO-RUNBOOK.md` is superseded).
+
+---
+
+## Where the docs live
+
+`EMPIEZA-AQUI.txt` at the repo root is the human entry point — Diego opens that
+one when he is lost. Everything else is filed under `docs/`:
+
+- **`docs/operar/`** — running the business: credentials map, how to test the
+  PWA, how to deploy and run migrations.
+- **`docs/sistema/`** — the IP. `METODO-TURNO.md` is the most important file in
+  the repo: the five laws, the daily loop, La Semana Sin Pena. Also `PRICING.md`
+  (why the bands are what they are), `GTM-PLAYBOOK.md`, `LATAM-UX-DOCTRINE.md`,
+  `PHILOSOPHY.md`.
+- **`docs/estado/`** — measured reality: `PRODUCT-AUDIT.md`, `INVENTORY.md`.
+- **`docs/research/`** — 17 source extractions, 138k words. Already distilled
+  into METODO-TURNO; read only to check a citation.
+- **`docs/archivo/`** — superseded phase docs. Do not act on these.
+
+The public, visual version of all this is `/metodo` on the marketing site — a
+205-node interactive map generated from `landing/src/data/metodo.ts`. **When you
+change what the product does, update that file too**, or the map starts lying.
 
 **Production hardening that remains** (post-pilot):
 - Service worker + offline answer queue (`.orcha/phase-2-exam-flow.md`)
