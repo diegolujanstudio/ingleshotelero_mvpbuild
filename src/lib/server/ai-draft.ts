@@ -18,7 +18,10 @@ import "server-only";
 const ANTHROPIC_API = "https://api.anthropic.com/v1";
 const MODEL = process.env.ANTHROPIC_SCORING_MODEL ?? "claude-sonnet-4-5";
 
-export type Role = "bellboy" | "frontdesk" | "restaurant";
+import type { RoleModule } from "@/lib/supabase/types";
+
+/** One role type across the app — see src/content/roles.ts. */
+export type Role = RoleModule;
 export type Level = "A1" | "A2" | "B1" | "B2";
 
 export interface DraftDrill {
@@ -45,6 +48,16 @@ const ROLE_CONTEXT: Record<Role, string> = {
     "a hotel front-desk agent: check-in/out, reservations, requests, problems",
   restaurant:
     "hotel restaurant/bar staff: greeting, taking orders, recommendations, the bill",
+  housekeeping:
+    "hotel housekeeping/room attendant: entering occupied rooms, amenities, linens, found items, damage",
+  concierge:
+    "a hotel concierge: restaurant and tour bookings, transport, city directions, urgent guest errands",
+  spa:
+    "hotel spa staff: intake, contraindications, explaining treatments, comfort and consent, quiet-zone etiquette",
+  security:
+    "hotel security: verifying identity politely, noise and access issues, de-escalation, emergencies",
+  maintenance:
+    "hotel maintenance: entering occupied rooms, diagnosing faults, giving realistic repair times, offering alternatives",
 };
 
 function scaffold(role: Role, level: Level, scenario: string): DraftDrill {

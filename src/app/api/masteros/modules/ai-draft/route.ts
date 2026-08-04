@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSuperAdminAPI } from "@/lib/masteros/auth";
 import { draftDrill } from "@/lib/server/ai-draft";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const Body = z.object({
-  role: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  role: z.enum(ROLE_ENUM_VALUES),
   level: z.enum(["A1", "A2", "B1", "B2"]),
   scenario: z.string().trim().min(3).max(600),
 });

@@ -15,6 +15,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Badge, LevelBadge } from "@/components/ui/Badge";
 import { MODULES } from "@/content/masteros";
 import type { CEFRLevel, Database, RoleModule } from "@/lib/supabase/types";
+import { ROLE_IDS } from "@/content/roles";
 
 type ContentItem = Database["public"]["Tables"]["content_items"]["Row"];
 
@@ -649,7 +650,7 @@ function EditDrawer({
                     setModuleSel(e.target.value as RoleModule)
                   }
                 >
-                  {["bellboy", "frontdesk", "restaurant"].map((m) => (
+                  {ROLE_IDS.map((m) => (
                     <option key={m} value={m}>
                       {m}
                     </option>

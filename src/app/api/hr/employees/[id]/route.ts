@@ -5,12 +5,13 @@ import { canManageEmployees } from "@/lib/auth/roles";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
 import { jsonError, parseBody, zEmail } from "@/lib/server/api";
 import { EMPLOYEE_STATUS_VALUES } from "@/content/hr";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 const PatchSchema = z.object({
   name: z.string().min(1).optional(),
   email: zEmail.optional().or(z.literal("")),
   phone: z.string().trim().optional().or(z.literal("")),
-  hotel_role: z.enum(["bellboy", "frontdesk", "restaurant"]).optional(),
+  hotel_role: z.enum(ROLE_ENUM_VALUES).optional(),
   department: z.string().optional(),
   shift: z.enum(["morning", "afternoon", "night"]).optional().or(z.literal("")),
   current_level: z.enum(["A1", "A2", "B1", "B2"]).optional().or(z.literal("")),

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSuperAdminAPI } from "@/lib/masteros/auth";
 import { createServiceClient } from "@/lib/supabase/client-or-service";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const dynamic = "force-dynamic";
 
-const ModuleEnum = z.enum(["bellboy", "frontdesk", "restaurant"]);
+const ModuleEnum = z.enum(ROLE_ENUM_VALUES);
 const LevelEnum = z.enum(["A1", "A2", "B1", "B2"]);
 const SkillEnum = z.enum(["listening", "speaking", "vocabulary"]);
 const TypeEnum = z.enum(["exam", "drill", "assessment"]);

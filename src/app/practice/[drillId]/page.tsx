@@ -14,6 +14,7 @@ import { pickDrill, type Role } from "@/content/practice-drills";
 import { getDrillById } from "@/lib/content/drills-store";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import { PracticeRunner, type RunnerData } from "./PracticeRunner";
+import { ROLE_IDS } from "@/content/roles";
 
 export const metadata: Metadata = {
   title: "Práctica diaria",
@@ -28,7 +29,7 @@ interface PageProps {
   searchParams: { employee_id?: string; role?: string; level?: string };
 }
 
-const VALID_ROLES: RoleModule[] = ["bellboy", "frontdesk", "restaurant"];
+const VALID_ROLES: RoleModule[] = ROLE_IDS;
 const VALID_LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2"];
 
 /**

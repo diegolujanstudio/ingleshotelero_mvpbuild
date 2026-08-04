@@ -12,6 +12,7 @@
 import { SESSION_KEY_PREFIX, type ExamSessionState } from "./exam";
 import { calculateCombinedScore, scoreToLevel } from "./cefr";
 import type { CEFRLevel, RoleModule } from "./supabase/types";
+import { ROLE_IDS } from "@/content/roles";
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
@@ -136,7 +137,9 @@ export function aggregateLevels(rows: EmployeeRow[]): Record<CEFRLevel, number> 
 }
 
 export function aggregateRoles(rows: EmployeeRow[]): Record<RoleModule, number> {
-  const out: Record<RoleModule, number> = { bellboy: 0, frontdesk: 0, restaurant: 0 };
+  const out = Object.fromEntries(
+    ROLE_IDS.map((id) => [id, 0]),
+  ) as Record<RoleModule, number>;
   for (const r of rows) out[r.hotel_role]++;
   return out;
 }

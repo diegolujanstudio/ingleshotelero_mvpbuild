@@ -16,7 +16,15 @@
  * placeholder; the full inventory work belongs in §7 of the brief).
  */
 
-export type Role = "bellboy" | "frontdesk" | "restaurant";
+import type { RoleModule } from "@/lib/supabase/types";
+import { ROLES, ROLE_IDS } from "@/content/roles";
+
+/**
+ * Role is the database's RoleModule — one type, not two. They used to be
+ * separate unions, so adding a department made every boundary between them a
+ * type error. See src/content/roles.ts for the canonical list.
+ */
+export type Role = RoleModule;
 
 export type Drill = {
   id: string;
@@ -39,7 +47,7 @@ export type Drill = {
   }[];
 };
 
-export const DRILLS: Record<Role, Drill[]> = {
+export const DRILLS: Partial<Record<Role, Drill[]>> = {
   bellboy: [
     {
       id: "b-001",
@@ -2563,6 +2571,4021 @@ export const DRILLS: Record<Role, Drill[]> = {
       ],
     },
   ],
+  housekeeping: [
+    {
+      id: "h-001",
+      level: "A1",
+      listening: {
+        audio_text: "Hi. Could we get two more towels, please?",
+        options: [
+          { emoji: "🧺", text_es: "Llevar dos toallas limpias a la habitación", correct: true },
+          { emoji: "🛏️", text_es: "Cambiar las sábanas de la cama", correct: false },
+          { emoji: "🧼", text_es: "Reponer el jabón del baño", correct: false },
+        ],
+        explanation_es:
+          "El huésped pide dos toallas más. Lo único que necesita es que le lleves toallas limpias al cuarto; no hay que cambiar nada más.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll bring you two clean towels right away.",
+        note_es:
+          "“Right away” promete rapidez sin comprometerte a una hora exacta. “Of course” suena servicial y seguro, nunca sumiso.",
+      },
+      vocabulary: [
+        {
+          word_en: "towel",
+          word_es: "toalla",
+          example_en: "How many towels do you need?",
+          example_es: "¿Cuántas toallas necesita?",
+        },
+        {
+          word_en: "clean",
+          word_es: "limpio, limpia",
+          example_en: "Here are your clean towels.",
+          example_es: "Aquí están sus toallas limpias.",
+        },
+        {
+          word_en: "right away",
+          word_es: "enseguida",
+          example_en: "I'll bring them right away.",
+          example_es: "Se las traigo enseguida.",
+        },
+      ],
+    },
+    {
+      id: "h-002",
+      level: "A1",
+      listening: {
+        audio_text: "Oh — not right now, please. Can you come back later?",
+        options: [
+          { emoji: "🚪", text_es: "Retirarte y regresar más tarde", correct: true },
+          { emoji: "🧹", text_es: "Entrar y limpiar rápido de todos modos", correct: false },
+          { emoji: "🗑️", text_es: "Entrar solo por la basura", correct: false },
+        ],
+        explanation_es:
+          "El huésped no quiere servicio en este momento. Lo correcto es retirarte, anotar el número de cuarto y volver más tarde.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "No problem. I'll come back later. Have a good day.",
+        note_es:
+          "“No problem” quita presión y evita que el huésped sienta que lo estás juzgando. Cerrar con “Have a good day” deja buena impresión aunque no hayas entrado.",
+      },
+      vocabulary: [
+        {
+          word_en: "come back later",
+          word_es: "regresar más tarde",
+          example_en: "I'll come back later, sir.",
+          example_es: "Regreso más tarde, señor.",
+        },
+        {
+          word_en: "no problem",
+          word_es: "no hay problema",
+          example_en: "No problem at all.",
+          example_es: "No hay ningún problema.",
+        },
+        {
+          word_en: "have a good day",
+          word_es: "que tenga buen día",
+          example_en: "Have a good day, ma'am.",
+          example_es: "Que tenga buen día, señora.",
+        },
+      ],
+    },
+    {
+      id: "h-003",
+      level: "A1",
+      listening: {
+        audio_text: "Yes? Who is it?",
+        options: [
+          { emoji: "🗣️", text_es: "Decir quién eres y pedir permiso para entrar", correct: true },
+          { emoji: "🔑", text_es: "Abrir con la llave maestra y entrar", correct: false },
+          { emoji: "🚪", text_es: "Contestar “cleaning” y abrir la puerta enseguida", correct: false },
+        ],
+        explanation_es:
+          "El huésped no sabe quién tocó la puerta. Hay que identificarse primero y esperar su permiso antes de entrar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Good morning, housekeeping. May I come in?",
+        note_es:
+          "Decir “housekeeping” de inmediato tranquiliza al huésped. “May I come in?” pide permiso; “Can I clean?” suena a que ya vas entrando.",
+      },
+      vocabulary: [
+        {
+          word_en: "housekeeping",
+          word_es: "servicio de limpieza",
+          example_en: "Good morning, housekeeping!",
+          example_es: "Buenos días, servicio de limpieza.",
+        },
+        {
+          word_en: "come in",
+          word_es: "entrar, pasar",
+          example_en: "Is it okay if I come in now?",
+          example_es: "¿Está bien si paso ahora?",
+        },
+        {
+          word_en: "may I",
+          word_es: "¿puedo?",
+          example_en: "May I come in, sir?",
+          example_es: "¿Puedo pasar, señor?",
+        },
+      ],
+    },
+    {
+      id: "h-004",
+      level: "A1",
+      listening: {
+        audio_text: "Excuse me. There's no soap in the bathroom.",
+        options: [
+          { emoji: "🧼", text_es: "Llevar jabón al baño de la habitación", correct: true },
+          { emoji: "🚿", text_es: "Revisar la regadera", correct: false },
+          { emoji: "🧻", text_es: "Llevar papel de baño", correct: false },
+        ],
+        explanation_es:
+          "El huésped solo reporta que falta el jabón. La acción es reponerlo en el baño de esa habitación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry about that. I'll bring you soap right now.",
+        note_es:
+          "“I'm sorry about that” reconoce la falla sin culpar a nadie ni al turno anterior. Después de disculparte, di qué vas a hacer: eso es lo que tranquiliza al huésped.",
+      },
+      vocabulary: [
+        {
+          word_en: "soap",
+          word_es: "jabón",
+          example_en: "I'm leaving new soap for you.",
+          example_es: "Le dejo jabón nuevo.",
+        },
+        {
+          word_en: "bathroom",
+          word_es: "baño",
+          example_en: "I'll check the bathroom.",
+          example_es: "Voy a revisar el baño.",
+        },
+        {
+          word_en: "bring",
+          word_es: "traer",
+          example_en: "I'll bring it in two minutes.",
+          example_es: "Se lo traigo en dos minutos.",
+        },
+      ],
+    },
+    {
+      id: "h-005",
+      level: "A1",
+      listening: {
+        audio_text: "Hey, the light in the bathroom doesn't work.",
+        options: [
+          { emoji: "🛠️", text_es: "Reportar la falla a mantenimiento", correct: true },
+          { emoji: "🧹", text_es: "Limpiar el foco", correct: false },
+          { emoji: "🪟", text_es: "Abrir las cortinas para que entre luz", correct: false },
+        ],
+        explanation_es:
+          "Es una falla eléctrica, no de limpieza. Lo correcto es avisar a mantenimiento y confirmarle al huésped que ya quedó reportado.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry. I'll tell maintenance right now.",
+        note_es:
+          "“I'll tell maintenance” muestra que sabes a quién le toca resolverlo. No prometas repararlo tú ni dar una hora exacta.",
+      },
+      vocabulary: [
+        {
+          word_en: "light",
+          word_es: "luz, foco",
+          example_en: "I'll ask them to change the light.",
+          example_es: "Voy a pedir que cambien el foco.",
+        },
+        {
+          word_en: "doesn't work",
+          word_es: "no funciona",
+          example_en: "The TV doesn't work.",
+          example_es: "La tele no funciona.",
+        },
+        {
+          word_en: "maintenance",
+          word_es: "mantenimiento",
+          example_en: "Maintenance is coming this afternoon.",
+          example_es: "Mantenimiento viene esta tarde.",
+        },
+      ],
+    },
+    {
+      id: "h-006",
+      level: "A2",
+      listening: {
+        audio_text: "Excuse me — do you know if there's an ice machine on this floor?",
+        options: [
+          { emoji: "🧊", text_es: "Decirle dónde está la máquina de hielo", correct: true },
+          { emoji: "🍾", text_es: "Ofrecerle una bebida del minibar de la habitación", correct: false },
+          { emoji: "🛎️", text_es: "Mandarlo a recepción porque no es tu área", correct: false },
+        ],
+        explanation_es:
+          "El huésped solo quiere saber dónde conseguir hielo. Tú sabes dónde está la máquina, así que dale la ubicación en lugar de mandarlo a otra área.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Yes, it's down the hall, next to the elevator. I can bring you some ice if you like.",
+        note_es:
+          "Dar la ubicación exacta —el pasillo, el elevador— vale mucho más que un “yes, we have ice”. Ofrecer llevárselo tú convierte una indicación en servicio.",
+      },
+      vocabulary: [
+        {
+          word_en: "ice",
+          word_es: "hielo",
+          example_en: "I can bring you some ice.",
+          example_es: "Le puedo llevar hielo.",
+        },
+        {
+          word_en: "down the hall",
+          word_es: "por el pasillo",
+          example_en: "It's down the hall, on the left.",
+          example_es: "Está por el pasillo, a la izquierda.",
+        },
+        {
+          word_en: "elevator",
+          word_es: "elevador",
+          example_en: "The ice machine is next to the elevator.",
+          example_es: "La máquina de hielo está junto al elevador.",
+        },
+      ],
+    },
+    {
+      id: "h-007",
+      level: "A2",
+      listening: {
+        audio_text: "Oh, hi. Sorry, we didn't call for anything. What do you need?",
+        options: [
+          { emoji: "🌙", text_es: "Explicar qué es el servicio de cobertura", correct: true },
+          { emoji: "🧹", text_es: "Decirle que vienes a limpiar el cuarto otra vez", correct: false },
+          { emoji: "🚪", text_es: "Pedir disculpas y retirarte sin explicar nada", correct: false },
+        ],
+        explanation_es:
+          "El huésped no sabe qué es el servicio de cobertura. Se explica en una frase corta y se le deja decidir si lo quiere esta noche.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Good evening. It's turndown service — I get the bed ready for the night. Would you like that?",
+        note_es:
+          "Explicar el servicio en una sola frase evita que el huésped piense que vas a limpiar otra vez. La pregunta final le deja a él la decisión.",
+      },
+      vocabulary: [
+        {
+          word_en: "turndown service",
+          word_es: "servicio de cobertura",
+          example_en: "Would you like turndown service tonight?",
+          example_es: "¿Quiere el servicio de cobertura esta noche?",
+        },
+        {
+          word_en: "evening",
+          word_es: "tarde-noche",
+          example_en: "Good evening, sir.",
+          example_es: "Buenas noches, señor.",
+        },
+        {
+          word_en: "bed",
+          word_es: "cama",
+          example_en: "I'll get the bed ready for you.",
+          example_es: "Le preparo la cama.",
+        },
+      ],
+    },
+    {
+      id: "h-008",
+      level: "A2",
+      listening: {
+        audio_text: "Hi — I've got a few things that need washing. How does the laundry work here?",
+        options: [
+          { emoji: "👕", text_es: "Explicar dónde está la bolsa de lavandería", correct: true },
+          { emoji: "🧺", text_es: "Llevarte tú la ropa y lavarla por tu cuenta", correct: false },
+          { emoji: "🏨", text_es: "Decirle que aquí no hay servicio de lavandería", correct: false },
+        ],
+        explanation_es:
+          "El huésped pregunta por el proceso, no te está pidiendo un favor personal. Se le explica dónde está la bolsa y quién pasa por ella.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "There's a laundry bag in the closet. Just leave your clothes inside and I'll take it down for you.",
+        note_es:
+          "Dar el paso concreto —la bolsa en el clóset— sirve mucho más que un “yes, we have laundry”. Si no sabes precios ni horarios, no los inventes: eso lo maneja recepción.",
+      },
+      vocabulary: [
+        {
+          word_en: "laundry bag",
+          word_es: "bolsa de lavandería",
+          example_en: "The laundry bag is in the closet.",
+          example_es: "La bolsa de lavandería está en el clóset.",
+        },
+        {
+          word_en: "closet",
+          word_es: "clóset",
+          example_en: "I'll leave it in the closet for you.",
+          example_es: "Se la dejo en el clóset.",
+        },
+        {
+          word_en: "wash",
+          word_es: "lavar",
+          example_en: "We can wash these for you.",
+          example_es: "Se los podemos lavar.",
+        },
+      ],
+    },
+    {
+      id: "h-009",
+      level: "A2",
+      listening: {
+        audio_text: "We're changing rooms today. Where should we leave our bags in the meantime?",
+        options: [
+          { emoji: "🧳", text_es: "Explicar que recepción guarda el equipaje", correct: true },
+          { emoji: "🚪", text_es: "Decirles que dejen las maletas afuera en el pasillo", correct: false },
+          { emoji: "🛏️", text_es: "Meter tú las maletas al cuarto nuevo sin avisar", correct: false },
+        ],
+        explanation_es:
+          "El equipaje no se queda en un pasillo ni se mueve sin autorización. Recepción lo guarda mientras se libera la habitación nueva.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "The front desk can store your bags until the new room is ready. I can call them for you.",
+        note_es:
+          "Ofrecer llamar tú resuelve el problema sin prometer algo que no te toca. “Store your bags” es la frase de hotel para guardar equipaje.",
+      },
+      vocabulary: [
+        {
+          word_en: "luggage",
+          word_es: "equipaje",
+          example_en: "Your luggage is safe at the front desk.",
+          example_es: "Su equipaje está seguro en recepción.",
+        },
+        {
+          word_en: "front desk",
+          word_es: "recepción",
+          example_en: "The front desk is downstairs.",
+          example_es: "La recepción está abajo.",
+        },
+        {
+          word_en: "store",
+          word_es: "guardar",
+          example_en: "We can store your bags for a few hours.",
+          example_es: "Podemos guardar sus maletas unas horas.",
+        },
+      ],
+    },
+    {
+      id: "h-010",
+      level: "A2",
+      listening: {
+        audio_text: "I think I left my charger in the room yesterday. Did anyone find it?",
+        options: [
+          { emoji: "📝", text_es: "Tomar sus datos y revisar en objetos perdidos", correct: true },
+          { emoji: "🤷", text_es: "Decirle que seguramente ya se perdió para siempre", correct: false },
+          { emoji: "🔌", text_es: "Sacar un cargador de otro cuarto y prestárselo", correct: false },
+        ],
+        explanation_es:
+          "Todo lo que se encuentra en un cuarto se entrega en objetos perdidos. Se toman los datos del huésped y se revisa; nunca se toma algo de otra habitación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let me check with lost and found. Can I get your name and room number?",
+        note_es:
+          "“Let me check” promete acción sin prometer un resultado que no controlas. Pedir nombre y número de cuarto hace posible el seguimiento.",
+      },
+      vocabulary: [
+        {
+          word_en: "charger",
+          word_es: "cargador",
+          example_en: "Is this your charger?",
+          example_es: "¿Este es su cargador?",
+        },
+        {
+          word_en: "lost and found",
+          word_es: "objetos perdidos",
+          example_en: "I'll take it to lost and found.",
+          example_es: "Lo llevo a objetos perdidos.",
+        },
+        {
+          word_en: "room number",
+          word_es: "número de habitación",
+          example_en: "Can I get your name and room number?",
+          example_es: "¿Me da su nombre y número de habitación?",
+        },
+      ],
+    },
+    {
+      id: "h-011",
+      level: "B1",
+      listening: {
+        audio_text: "Sorry to bother you — any chance you could do our room next? We're heading out in twenty minutes.",
+        options: [
+          { emoji: "🕐", text_es: "Explicar tu orden y ofrecer llegar en veinte minutos", correct: true },
+          { emoji: "⏭️", text_es: "Dejar a medias el cuarto que estás limpiando y pasar al suyo", correct: false },
+          { emoji: "🙅", text_es: "Decirle que el orden de los cuartos no se puede cambiar", correct: false },
+        ],
+        explanation_es:
+          "Sí se le puede ayudar, pero sin abandonar el cuarto que ya empezaste. Se explica el orden y se ofrece una hora concreta.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm finishing this room first, but I can be there in about twenty minutes. Would that work?",
+        note_es:
+          "Dar un tiempo concreto convierte un “no” en un “sí, en un momento”. “Would that work?” deja que el huésped confirme y se sienta atendido.",
+      },
+      vocabulary: [
+        {
+          word_en: "next",
+          word_es: "el siguiente",
+          example_en: "Your room is next.",
+          example_es: "Su habitación es la siguiente.",
+        },
+        {
+          word_en: "finish",
+          word_es: "terminar",
+          example_en: "Let me finish this room first.",
+          example_es: "Déjeme terminar este cuarto primero.",
+        },
+        {
+          word_en: "would that work?",
+          word_es: "¿le parece bien?",
+          example_en: "I can come at four. Would that work?",
+          example_es: "Puedo venir a las cuatro. ¿Le parece bien?",
+        },
+      ],
+    },
+    {
+      id: "h-012",
+      level: "B1",
+      listening: {
+        audio_text: "Look at this — there's a stain on the sheets. Was this room even cleaned?",
+        options: [
+          { emoji: "🛏️", text_es: "Disculparte y cambiar la ropa de cama de inmediato", correct: true },
+          { emoji: "🗣️", text_es: "Explicar que el turno anterior sí limpió el cuarto", correct: false },
+          { emoji: "🧽", text_es: "Tallar la mancha con un trapo húmedo", correct: false },
+        ],
+        explanation_es:
+          "El huésped no busca explicaciones, busca una cama limpia. La respuesta es disculparse y cambiar toda la ropa de cama en ese momento.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm so sorry about that. Let me change the sheets right now — it'll only take a few minutes.",
+        note_es:
+          "No defiendas al turno anterior: el huésped solo escucha excusas. “Let me change the sheets right now” convierte la queja en solución.",
+      },
+      vocabulary: [
+        {
+          word_en: "stain",
+          word_es: "mancha",
+          example_en: "I see the stain. I'll take care of it.",
+          example_es: "Ya vi la mancha. Yo me encargo.",
+        },
+        {
+          word_en: "sheets",
+          word_es: "sábanas",
+          example_en: "I'm changing the sheets now.",
+          example_es: "Estoy cambiando las sábanas.",
+        },
+        {
+          word_en: "change",
+          word_es: "cambiar",
+          example_en: "I'll change everything on the bed.",
+          example_es: "Cambio toda la cama.",
+        },
+      ],
+    },
+    {
+      id: "h-013",
+      level: "B1",
+      listening: {
+        audio_text: "I'm pretty sensitive to strong chemicals. The smell in the bathroom yesterday gave me a headache.",
+        options: [
+          { emoji: "🌬️", text_es: "Limpiar con producto suave y ventilar el cuarto", correct: true },
+          { emoji: "🚪", text_es: "Usar el mismo producto pero dejar cerrada la puerta del baño", correct: false },
+          { emoji: "🤷", text_es: "Decirle que todos los cuartos se limpian con lo mismo", correct: false },
+        ],
+        explanation_es:
+          "El huésped está reportando una reacción física, no una preferencia. Se limpia con lo más suave posible, se ventila y se le avisa a la supervisora para que quede registrado en ese cuarto.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Thank you for telling me. I'll use something mild and air out the room before you come back.",
+        note_es:
+          "“Thank you for telling me” recibe la queja sin ponerte a la defensiva. Avisa también a tu supervisora: eso protege al huésped y te protege a ti.",
+      },
+      vocabulary: [
+        {
+          word_en: "smell",
+          word_es: "olor",
+          example_en: "The smell will be gone in an hour.",
+          example_es: "El olor se quita en una hora.",
+        },
+        {
+          word_en: "mild",
+          word_es: "suave",
+          example_en: "I'll use something mild in your room.",
+          example_es: "Voy a usar algo suave en su habitación.",
+        },
+        {
+          word_en: "air out",
+          word_es: "ventilar",
+          example_en: "I'll air out the room before you come back.",
+          example_es: "Ventilo el cuarto antes de que regrese.",
+        },
+      ],
+    },
+    {
+      id: "h-014",
+      level: "B1",
+      listening: {
+        audio_text: "Sorry, the vacuum is really loud and my baby just fell asleep. Is there any way you could stop?",
+        options: [
+          { emoji: "🔇", text_es: "Parar la aspiradora y seguir con otros cuartos", correct: true },
+          { emoji: "🚪", text_es: "Cerrar la puerta del cuarto y seguir aspirando igual", correct: false },
+          { emoji: "⚡", text_es: "Aspirar más rápido para terminar cuanto antes", correct: false },
+        ],
+        explanation_es:
+          "El problema es el ruido, no la limpieza. Se detiene la aspiradora, se avanza en otros cuartos y se regresa cuando el bebé despierte.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course — I'll stop right now. I'll do the other rooms first and come back this afternoon.",
+        note_es:
+          "Actuar antes de explicar es lo que calma al huésped. Ofrecer un momento aproximado evita que piense que su cuarto se va a quedar sin limpiar.",
+      },
+      vocabulary: [
+        {
+          word_en: "vacuum",
+          word_es: "aspiradora",
+          example_en: "I'll leave the vacuum for later.",
+          example_es: "Dejo la aspiradora para más tarde.",
+        },
+        {
+          word_en: "loud",
+          word_es: "ruidoso, fuerte",
+          example_en: "I know it's loud. I'm sorry.",
+          example_es: "Sé que hace mucho ruido. Lo siento.",
+        },
+        {
+          word_en: "wake up",
+          word_es: "despertar",
+          example_en: "I don't want to wake up the baby.",
+          example_es: "No quiero despertar al bebé.",
+        },
+      ],
+    },
+    {
+      id: "h-015",
+      level: "B1",
+      listening: {
+        audio_text: "Sorry, what time is it? I thought checkout wasn't until one.",
+        options: [
+          { emoji: "🕛", text_es: "Decirle la hora de salida y ofrecer llamar a recepción", correct: true },
+          { emoji: "🧹", text_es: "Empezar a limpiar mientras el huésped se levanta", correct: false },
+          { emoji: "🚪", text_es: "Decirle que tiene que desocupar el cuarto de inmediato", correct: false },
+        ],
+        explanation_es:
+          "El huésped está confundido con la hora de salida. Se le informa con calma y se ofrece preguntar en recepción por una salida tardía: esa decisión no le toca a limpieza.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry to wake you. Checkout is at twelve, but let me call the front desk about a late checkout.",
+        note_es:
+          "Nunca autorices tú una salida tardía; eso lo aprueba recepción. “I'm sorry to wake you” suaviza un momento incómodo sin sonar a regaño.",
+      },
+      vocabulary: [
+        {
+          word_en: "checkout time",
+          word_es: "hora de salida",
+          example_en: "Checkout time is at twelve.",
+          example_es: "La hora de salida es a las doce.",
+        },
+        {
+          word_en: "late checkout",
+          word_es: "salida tardía",
+          example_en: "They can approve a late checkout downstairs.",
+          example_es: "Abajo pueden autorizar una salida tardía.",
+        },
+        {
+          word_en: "sorry to wake you",
+          word_es: "perdón por despertarlo",
+          example_en: "I'm sorry to wake you, ma'am.",
+          example_es: "Perdón por despertarla, señora.",
+        },
+      ],
+    },
+    {
+      id: "h-016",
+      level: "B2",
+      listening: {
+        audio_text: "I left about five hundred dollars on the desk this morning and now it's gone. You were in here, right?",
+        options: [
+          { emoji: "📞", text_es: "Mantener la calma y llamar a tu supervisora", correct: true },
+          { emoji: "💸", text_es: "Ofrecer pagarle de tu bolsa para que no pase a mayores", correct: false },
+          { emoji: "😠", text_es: "Molestarte y negarte a seguir hablando del tema", correct: false },
+        ],
+        explanation_es:
+          "Una acusación así se maneja con calma y con testigos. Se responde sin discutir, no se toca nada del cuarto y se pide de inmediato que la supervisora o seguridad atiendan el caso.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I understand, sir. I didn't move anything from the desk. Let me call my supervisor right now.",
+        note_es:
+          "“I understand” reconoce el problema sin admitir culpa. Pedir a tu supervisora te protege: nunca manejes solo una acusación de robo.",
+      },
+      vocabulary: [
+        {
+          word_en: "supervisor",
+          word_es: "supervisora, jefa",
+          example_en: "Let me call my supervisor.",
+          example_es: "Déjeme llamar a mi supervisora.",
+        },
+        {
+          word_en: "desk",
+          word_es: "escritorio",
+          example_en: "I didn't touch anything on the desk.",
+          example_es: "No toqué nada del escritorio.",
+        },
+        {
+          word_en: "move",
+          word_es: "mover",
+          example_en: "I didn't move your things.",
+          example_es: "No moví sus cosas.",
+        },
+      ],
+    },
+    {
+      id: "h-017",
+      level: "B2",
+      listening: {
+        audio_text: "So we're out on Thursday, but we need the room done early on Wednesday — and could you leave the bathroom until after ten?",
+        options: [
+          { emoji: "🔁", text_es: "Repetir lo que entendiste y pedirle que confirme", correct: true },
+          { emoji: "👍", text_es: "Decir que sí a todo y anotar solo lo que alcanzaste a oír", correct: false },
+          { emoji: "🚶", text_es: "Pedirle que espere y buscar a alguien que hable español", correct: false },
+        ],
+        explanation_es:
+          "El huésped dijo tres cosas seguidas y es normal perder una. Repetir lo que entendiste deja que él te corrija en el momento, antes de que el error llegue al cuarto.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Sorry, I want to get this right — the bathroom after ten, and the room early on Wednesday?",
+        note_es:
+          "“I want to get this right” explica por qué preguntas y suena profesional, no inseguro. Decir que sí sin entender sale mucho más caro que pedir que te repitan.",
+      },
+      vocabulary: [
+        {
+          word_en: "one more time",
+          word_es: "una vez más",
+          example_en: "Could you say that one more time, please?",
+          example_es: "¿Me lo puede repetir una vez más, por favor?",
+        },
+        {
+          word_en: "early",
+          word_es: "temprano",
+          example_en: "I can do your room early on Wednesday.",
+          example_es: "Puedo hacer su habitación temprano el miércoles.",
+        },
+        {
+          word_en: "Wednesday",
+          word_es: "miércoles",
+          example_en: "I'll come on Wednesday morning.",
+          example_es: "Vengo el miércoles en la mañana.",
+        },
+      ],
+    },
+    {
+      id: "h-018",
+      level: "B2",
+      listening: {
+        audio_text: "Hey, quick favor — could you leave my door open? A friend of mine is coming up later.",
+        options: [
+          { emoji: "🔑", text_es: "Explicar con amabilidad que el acceso lo autoriza recepción", correct: true },
+          { emoji: "🚪", text_es: "Dejar la puerta abierta porque el huésped lo pidió", correct: false },
+          { emoji: "🤐", text_es: "Decirle que sí y cerrar la puerta de todos modos", correct: false },
+        ],
+        explanation_es:
+          "Dejar un cuarto abierto pone en riesgo las cosas del huésped y también tu trabajo. El acceso solo lo autoriza recepción, con identificación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry, I'm not allowed to leave rooms open. The front desk can help your friend when they arrive.",
+        note_es:
+          "“I'm not allowed to” deja claro que es una regla, no un capricho tuyo, y evita que el huésped insista. Cierra siempre con una alternativa.",
+      },
+      vocabulary: [
+        {
+          word_en: "key",
+          word_es: "llave",
+          example_en: "I have a master key for cleaning only.",
+          example_es: "Tengo una llave maestra solo para limpieza.",
+        },
+        {
+          word_en: "let in",
+          word_es: "dejar entrar",
+          example_en: "I can't let anyone into your room.",
+          example_es: "No puedo dejar entrar a nadie a su habitación.",
+        },
+        {
+          word_en: "I'm not allowed",
+          word_es: "no tengo permitido",
+          example_en: "I'm sorry, I'm not allowed to do that.",
+          example_es: "Lo siento, no tengo permitido hacer eso.",
+        },
+      ],
+    },
+    {
+      id: "h-019",
+      level: "B2",
+      listening: {
+        audio_text: "We've had the do not disturb sign up for three days. We're fine, honestly — we don't need anything.",
+        options: [
+          { emoji: "🧺", text_es: "Dejar toallas en la puerta y acordar una hora", correct: true },
+          { emoji: "📋", text_es: "Anotar que no quieren servicio y no volver en toda la estancia", correct: false },
+          { emoji: "🚪", text_es: "Esperar a que salgan del cuarto y entrar sin avisarles", correct: false },
+        ],
+        explanation_es:
+          "Se respeta el letrero, pero después de varios días el cuarto tiene que revisarse por seguridad. Se negocia una hora conveniente y mientras tanto se le entrega en la puerta lo que necesite.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll leave fresh towels at your door. We just need to check the room once today — would four o'clock be okay?",
+        note_es:
+          "Primero das algo y después pides algo: así el huésped no siente que lo estás presionando. Decir “we need to” lo vuelve una regla de la casa y no un capricho tuyo.",
+      },
+      vocabulary: [
+        {
+          word_en: "do not disturb sign",
+          word_es: "letrero de no molestar",
+          example_en: "I saw the do not disturb sign, so I didn't knock.",
+          example_es: "Vi el letrero de no molestar, por eso no toqué.",
+        },
+        {
+          word_en: "check the room",
+          word_es: "revisar la habitación",
+          example_en: "We need to check the room once a day.",
+          example_es: "Tenemos que revisar la habitación una vez al día.",
+        },
+        {
+          word_en: "stop by",
+          word_es: "pasar un momento",
+          example_en: "Can I stop by at four?",
+          example_es: "¿Puedo pasar a las cuatro?",
+        },
+      ],
+    },
+    {
+      id: "h-020",
+      level: "B2",
+      listening: {
+        audio_text: "This is the third day we've asked for the coffee to be refilled and it's still empty. Honestly, I'd like to speak to a manager.",
+        options: [
+          { emoji: "🙋", text_es: "Reponer el café ahora y avisar al gerente", correct: true },
+          { emoji: "☕", text_es: "Reponer el café y convencerlo de que ya no hable con nadie", correct: false },
+          { emoji: "🗣️", text_es: "Explicar que a ti no te tocaba ese cuarto esta semana", correct: false },
+        ],
+        explanation_es:
+          "El huésped ya perdió la paciencia por una falla repetida. Se arregla al instante y se le consigue al gerente que pidió: negarle esa conversación empeora la queja.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "You're right, and I'm sorry — I'll refill it right now. I'll also ask the manager to come and speak with you.",
+        note_es:
+          "“You're right, and I'm sorry” desarma el enojo en dos segundos porque le das la razón antes de defenderte. Nunca bloquees la petición de hablar con un gerente; ofrécela tú.",
+      },
+      vocabulary: [
+        {
+          word_en: "refill",
+          word_es: "reponer, rellenar",
+          example_en: "I'll refill the coffee right now.",
+          example_es: "Repongo el café ahora mismo.",
+        },
+        {
+          word_en: "manager",
+          word_es: "gerente",
+          example_en: "I'll ask the manager to come up.",
+          example_es: "Le pido al gerente que suba.",
+        },
+        {
+          word_en: "you're right",
+          word_es: "tiene razón",
+          example_en: "You're right, and I'm sorry.",
+          example_es: "Tiene razón, y lo siento.",
+        },
+      ],
+    },
+  ],
+
+  concierge: [
+    {
+      id: "c-001",
+      level: "A1",
+      listening: {
+        audio_text: "Excuse me. Where is the nearest pharmacy?",
+        options: [
+          { emoji: "💊", text_es: "Indicarle cómo llegar a la farmacia más cercana", correct: true },
+          { emoji: "🩹", text_es: "Traerle el botiquín de primeros auxilios del hotel", correct: false },
+          { emoji: "🩺", text_es: "Llamar al médico del hotel", correct: false },
+        ],
+        explanation_es:
+          "El huésped solo quiere saber dónde queda la farmacia más cercana. La acción correcta es darle la dirección, no asumir que se trata de un problema médico.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "There's a pharmacy two blocks from here, on the left.",
+        note_es:
+          "Empezar con 'There's' suena mucho más natural que 'The pharmacy is located...'. Agregar el lado de la calle evita que el huésped se pase de largo.",
+      },
+      vocabulary: [
+        {
+          word_en: "pharmacy",
+          word_es: "farmacia",
+          example_en: "There's a pharmacy two blocks from here.",
+          example_es: "Hay una farmacia a dos cuadras de aquí.",
+        },
+        {
+          word_en: "block",
+          word_es: "cuadra",
+          example_en: "It's three blocks from the hotel.",
+          example_es: "Está a tres cuadras del hotel.",
+        },
+        {
+          word_en: "on the left",
+          word_es: "a la izquierda",
+          example_en: "It's on the left, next to the bank.",
+          example_es: "Está a la izquierda, junto al banco.",
+        },
+      ],
+    },
+    {
+      id: "c-002",
+      level: "A1",
+      listening: {
+        audio_text: "Hi — could you get me a taxi, please? I'm going downtown.",
+        options: [
+          { emoji: "🚕", text_es: "Pedir un taxi y decirle cuánto va a tardar", correct: true },
+          { emoji: "🚐", text_es: "Reservar el transporte al aeropuerto", correct: false },
+          { emoji: "🗺️", text_es: "Darle indicaciones para caminar al centro", correct: false },
+        ],
+        explanation_es:
+          "El huésped pide un taxi para ir al centro, no indicaciones ni transporte al aeropuerto. La acción correcta es pedir el taxi y avisarle el tiempo de espera.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll call a taxi right away. The driver will be here in about five minutes.",
+        note_es:
+          "'I'll call a taxi right away' se oye servicial y deja claro que tú te encargas del asunto. Decir cuánto va a tardar evita que el huésped regrese a preguntar.",
+      },
+      vocabulary: [
+        {
+          word_en: "downtown",
+          word_es: "el centro",
+          example_en: "Downtown is about ten minutes by taxi.",
+          example_es: "El centro está a unos diez minutos en taxi.",
+        },
+        {
+          word_en: "right away",
+          word_es: "enseguida",
+          example_en: "I'll call a taxi right away.",
+          example_es: "Pido un taxi enseguida.",
+        },
+        {
+          word_en: "driver",
+          word_es: "chofer",
+          example_en: "The driver is waiting outside.",
+          example_es: "El chofer está esperando afuera.",
+        },
+      ],
+    },
+    {
+      id: "c-003",
+      level: "A1",
+      listening: {
+        audio_text: "Is it hot outside today? I'm not sure what to wear.",
+        options: [
+          { emoji: "☀️", text_es: "Decirle cómo está el clima y sugerirle qué llevar", correct: true },
+          { emoji: "🌂", text_es: "Ofrecerle un paraguas del hotel", correct: false },
+          { emoji: "🧺", text_es: "Mandar su ropa a la lavandería", correct: false },
+        ],
+        explanation_es:
+          "El huésped pregunta por el clima para decidir cómo vestirse. La acción correcta es decirle cómo está el día y sugerirle qué le conviene llevar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Yes, it's very hot today. Sunscreen and a hat are a good idea.",
+        note_es:
+          "En inglés el calor se dice con 'it's hot', nunca con 'I have hot': es uno de los errores más comunes al pasar del español. La sugerencia corta al final convierte la respuesta en un servicio.",
+      },
+      vocabulary: [
+        {
+          word_en: "it's hot",
+          word_es: "hace calor",
+          example_en: "It's very hot today.",
+          example_es: "Hoy hace mucho calor.",
+        },
+        {
+          word_en: "sunscreen",
+          word_es: "bloqueador solar",
+          example_en: "Sunscreen is a good idea today.",
+          example_es: "Hoy conviene el bloqueador solar.",
+        },
+        {
+          word_en: "hat",
+          word_es: "sombrero, gorra",
+          example_en: "A hat helps a lot at midday.",
+          example_es: "Un sombrero ayuda mucho al mediodía.",
+        },
+      ],
+    },
+    {
+      id: "c-004",
+      level: "A1",
+      listening: {
+        audio_text: "What time does the museum open tomorrow?",
+        options: [
+          { emoji: "🕘", text_es: "Decirle la hora en que abre el museo", correct: true },
+          { emoji: "🎫", text_es: "Comprarle los boletos de una vez", correct: false },
+          { emoji: "🚌", text_es: "Reservarle un tour guiado al museo", correct: false },
+        ],
+        explanation_es:
+          "La pregunta es solo sobre el horario. La acción correcta es dar la hora de apertura; los boletos o el tour solo si el huésped los pide después.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "It opens at nine in the morning, and it's closed on Mondays.",
+        note_es:
+          "Decir 'nine in the morning' evita la confusión con 'nine at night'. Avisar del día de cierre le ahorra al huésped un viaje perdido.",
+      },
+      vocabulary: [
+        {
+          word_en: "opens at",
+          word_es: "abre a las",
+          example_en: "The museum opens at nine.",
+          example_es: "El museo abre a las nueve.",
+        },
+        {
+          word_en: "closed",
+          word_es: "cerrado",
+          example_en: "It's closed on Mondays.",
+          example_es: "Está cerrado los lunes.",
+        },
+        {
+          word_en: "ticket",
+          word_es: "boleto",
+          example_en: "Tickets are on sale at the entrance.",
+          example_es: "Los boletos se venden en la entrada.",
+        },
+      ],
+    },
+    {
+      id: "c-005",
+      level: "A1",
+      listening: {
+        audio_text: "How much is the boat tour for two people?",
+        options: [
+          { emoji: "💵", text_es: "Decirle el precio por persona, el total y qué incluye", correct: true },
+          { emoji: "🛥️", text_es: "Reservar el tour de inmediato para dos", correct: false },
+          { emoji: "🏦", text_es: "Indicarle dónde cambiar dólares", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere saber el costo antes de decidir, y preguntó por dos personas. La acción correcta es dar el precio por persona, el total y mencionar qué incluye.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "It's fifty dollars per person, so one hundred for both. Lunch is included.",
+        note_es:
+          "Dar el precio por persona y también el total contesta la pregunta completa y evita el malentendido más común. Mencionar qué incluye adelanta la siguiente pregunta.",
+      },
+      vocabulary: [
+        {
+          word_en: "per person",
+          word_es: "por persona",
+          example_en: "The tour is fifty dollars per person.",
+          example_es: "El tour cuesta cincuenta dólares por persona.",
+        },
+        {
+          word_en: "included",
+          word_es: "incluido",
+          example_en: "Lunch is included in the price.",
+          example_es: "La comida está incluida en el precio.",
+        },
+        {
+          word_en: "cash",
+          word_es: "efectivo",
+          example_en: "They take cash or card at the dock.",
+          example_es: "En el muelle aceptan efectivo o tarjeta.",
+        },
+      ],
+    },
+    {
+      id: "c-006",
+      level: "A2",
+      listening: {
+        audio_text: "We'd like to try somewhere nice for dinner tonight. Can you book a table for four around eight?",
+        options: [
+          { emoji: "🍽️", text_es: "Llamar al restaurante y apartar una mesa para cuatro a las ocho", correct: true },
+          { emoji: "🛎️", text_es: "Apartar una mesa para dos en el restaurante del hotel", correct: false },
+          { emoji: "🚕", text_es: "Pedir un taxi para las ocho de la noche", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere cenar fuera del hotel: cuatro personas, ocho de la noche. La acción correcta es llamar al restaurante, apartar la mesa y regresar con la confirmación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll book a table for four at eight and confirm it with you in a few minutes.",
+        note_es:
+          "'I'll book' comunica que tú te haces cargo del asunto. Cerrar con 'I'll confirm it with you' deja claro que habrá una respuesta, y el huésped se va tranquilo.",
+      },
+      vocabulary: [
+        {
+          word_en: "book a table",
+          word_es: "reservar una mesa",
+          example_en: "I'll book a table for four tonight.",
+          example_es: "Reservo una mesa para cuatro esta noche.",
+        },
+        {
+          word_en: "party of four",
+          word_es: "grupo de cuatro personas",
+          example_en: "I have a party of four at eight.",
+          example_es: "Tengo un grupo de cuatro a las ocho.",
+        },
+        {
+          word_en: "confirm",
+          word_es: "confirmar",
+          example_en: "I'll confirm the time in a few minutes.",
+          example_es: "Confirmo la hora en unos minutos.",
+        },
+      ],
+    },
+    {
+      id: "c-007",
+      level: "A2",
+      listening: {
+        audio_text: "Our flight leaves at six tomorrow morning. Can you arrange a car to the airport?",
+        options: [
+          { emoji: "🚐", text_es: "Agendar el auto al aeropuerto y decirle a qué hora sale", correct: true },
+          { emoji: "🧳", text_es: "Guardar su equipaje hasta mañana en la bodega", correct: false },
+          { emoji: "✈️", text_es: "Llamar a la aerolínea para confirmar el vuelo", correct: false },
+        ],
+        explanation_es:
+          "El huésped necesita transporte para un vuelo de las seis de la mañana. La acción correcta es agendar el auto con tiempo suficiente y decirle la hora exacta de salida del hotel.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Yes, I'll arrange a car. I'd suggest leaving around three thirty, so you get there on time.",
+        note_es:
+          "'I'd suggest' propone sin ordenar: el huésped decide, pero ya tiene el dato que necesita. Es la fórmula más segura para recomendar una hora.",
+      },
+      vocabulary: [
+        {
+          word_en: "arrange",
+          word_es: "agendar, organizar",
+          example_en: "I'll arrange a car for tomorrow morning.",
+          example_es: "Agendo un auto para mañana temprano.",
+        },
+        {
+          word_en: "pick up",
+          word_es: "pasar por",
+          example_en: "The car will pick you up at three thirty.",
+          example_es: "El auto pasa por el lobby a las tres y media.",
+        },
+        {
+          word_en: "on time",
+          word_es: "a tiempo",
+          example_en: "You'll get to the airport on time.",
+          example_es: "Van a llegar al aeropuerto a tiempo.",
+        },
+      ],
+    },
+    {
+      id: "c-008",
+      level: "A2",
+      listening: {
+        audio_text: "We were thinking about the ruins tomorrow. Is there a tour we can join?",
+        options: [
+          { emoji: "🏛️", text_es: "Apartarles lugar en el tour y decirles hora y punto de salida", correct: true },
+          { emoji: "🚗", text_es: "Rentarles un auto para que vayan por su cuenta", correct: false },
+          { emoji: "🎟️", text_es: "Venderles boletos para el museo de la ciudad", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere unirse a un tour organizado, no ir por su cuenta. La acción correcta es apartarles lugar y decirles a qué hora y dónde se reúnen.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "There's a tour that leaves at eight in the morning. I can sign you up, and they'll meet you here in the lobby.",
+        note_es:
+          "'I can sign you up' es corto, concreto y no compromete a pagar en ese momento. Decir dónde se encuentran elimina la duda más común del huésped.",
+      },
+      vocabulary: [
+        {
+          word_en: "sign up",
+          word_es: "apuntar, inscribir",
+          example_en: "I can sign you up right now.",
+          example_es: "Los puedo apuntar ahora mismo.",
+        },
+        {
+          word_en: "leaves at",
+          word_es: "sale a las",
+          example_en: "The tour leaves at eight.",
+          example_es: "El tour sale a las ocho.",
+        },
+        {
+          word_en: "lobby",
+          word_es: "lobby, recepción",
+          example_en: "They'll meet you here in the lobby.",
+          example_es: "El grupo se reúne aquí en el lobby.",
+        },
+      ],
+    },
+    {
+      id: "c-009",
+      level: "A2",
+      listening: {
+        audio_text: "We have two kids, seven and nine. Is there anything around here they'd enjoy?",
+        options: [
+          { emoji: "🐢", text_es: "Recomendar una actividad para niños y explicar cómo llegar", correct: true },
+          { emoji: "🍸", text_es: "Recomendar el bar de la azotea", correct: false },
+          { emoji: "👶", text_es: "Ofrecer servicio de niñera para esta noche", correct: false },
+        ],
+        explanation_es:
+          "El huésped busca un plan para sus hijos, no dejarlos con alguien. La acción correcta es recomendar una actividad adecuada para esa edad y decir cómo llegar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "The aquarium is great for that age, and it's only ten minutes away by taxi.",
+        note_es:
+          "Mencionar la edad demuestra que escuchaste el detalle, no que repites la recomendación de siempre. Decir cuánto se hace de camino convierte la idea en un plan.",
+      },
+      vocabulary: [
+        {
+          word_en: "kids",
+          word_es: "niños",
+          example_en: "The kids will love the aquarium.",
+          example_es: "A los niños les va a encantar el acuario.",
+        },
+        {
+          word_en: "aquarium",
+          word_es: "acuario",
+          example_en: "The aquarium is great for that age.",
+          example_es: "El acuario es ideal para esa edad.",
+        },
+        {
+          word_en: "ten minutes away",
+          word_es: "a diez minutos",
+          example_en: "It's only ten minutes away by taxi.",
+          example_es: "Está a solo diez minutos en taxi.",
+        },
+      ],
+    },
+    {
+      id: "c-010",
+      level: "A2",
+      listening: {
+        audio_text: "I need to change some dollars into pesos. Is there a good place near the hotel?",
+        options: [
+          { emoji: "🏦", text_es: "Mandarlo a una casa de cambio cercana y decirle el horario", correct: true },
+          { emoji: "🏧", text_es: "Llevarlo al cajero automático del lobby", correct: false },
+          { emoji: "💳", text_es: "Sugerirle que mejor pague todo con tarjeta", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere cambiar dólares, no sacar dinero de su cuenta ni pagar con tarjeta. La acción correcta es mandarlo a una casa de cambio y decirle hasta qué hora abre.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "There's an exchange office around the corner. Take your passport — they always ask for an ID.",
+        note_es:
+          "Avisar de la identificación antes de que salga le evita hacer el viaje dos veces. Ese tipo de detalle es lo que distingue a un buen concierge.",
+      },
+      vocabulary: [
+        {
+          word_en: "exchange office",
+          word_es: "casa de cambio",
+          example_en: "There's an exchange office around the corner.",
+          example_es: "Hay una casa de cambio a la vuelta.",
+        },
+        {
+          word_en: "around the corner",
+          word_es: "a la vuelta",
+          example_en: "The bank is around the corner.",
+          example_es: "El banco está a la vuelta.",
+        },
+        {
+          word_en: "ID",
+          word_es: "identificación",
+          example_en: "They always ask for an ID at the counter.",
+          example_es: "En la ventanilla siempre piden identificación.",
+        },
+      ],
+    },
+    {
+      id: "c-011",
+      level: "B1",
+      listening: {
+        audio_text: "We'd love to do the sunset cruise tonight. I know it's last minute — is there any chance you still have two seats?",
+        options: [
+          { emoji: "🌅", text_es: "Decirle que hoy ya no hay lugar y ofrecer una alternativa concreta", correct: true },
+          { emoji: "🎟️", text_es: "Apartarle dos lugares sin confirmar si hay disponibilidad", correct: false },
+          { emoji: "🚤", text_es: "Mandarlo temprano al muelle a ver si alcanza lugar", correct: false },
+        ],
+        explanation_es:
+          "Al ser de último momento, el paseo de hoy ya está lleno. La acción correcta es decirlo de frente, disculparse y ofrecer una alternativa concreta: el mismo paseo mañana u otro plan para esta noche.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry — tonight's cruise is sold out. I can hold two seats for tomorrow, or there's a rooftop with the same view.",
+        note_es:
+          "Un 'I'm sorry' seguido de una alternativa concreta cambia por completo el tono de la mala noticia. Nunca dejes al huésped solo con el 'no'.",
+      },
+      vocabulary: [
+        {
+          word_en: "sold out",
+          word_es: "agotado, lleno",
+          example_en: "Tonight's cruise is sold out.",
+          example_es: "El paseo de hoy está agotado.",
+        },
+        {
+          word_en: "seat",
+          word_es: "lugar, asiento",
+          example_en: "I can hold two seats for tomorrow.",
+          example_es: "Puedo apartar dos lugares para mañana.",
+        },
+        {
+          word_en: "instead",
+          word_es: "en vez de",
+          example_en: "Would you like tomorrow instead?",
+          example_es: "¿Y si mejor mañana?",
+        },
+      ],
+    },
+    {
+      id: "c-012",
+      level: "B1",
+      listening: {
+        audio_text: "We've been waiting twenty minutes. The van was supposed to be here at eight.",
+        options: [
+          { emoji: "📞", text_es: "Disculparse, llamar al operador y volver con una hora concreta", correct: true },
+          { emoji: "☕", text_es: "Ofrecerles un café y no decir nada más", correct: false },
+          { emoji: "🚕", text_es: "Mandarlos en taxi por su cuenta al punto de salida", correct: false },
+        ],
+        explanation_es:
+          "El huésped no busca un café, busca información. La acción correcta es disculparse, llamar al operador para saber cuánto falta y regresar con un dato concreto.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm so sorry about the delay. Let me call the operator right now, and I'll come back with an exact time.",
+        note_es:
+          "'Let me call the operator right now' muestra acción inmediata. Prometer 'an exact time' funciona mejor que 'soon', porque 'soon' no tranquiliza a nadie.",
+      },
+      vocabulary: [
+        {
+          word_en: "delay",
+          word_es: "retraso",
+          example_en: "I'm so sorry about the delay.",
+          example_es: "Una disculpa por el retraso.",
+        },
+        {
+          word_en: "operator",
+          word_es: "operador",
+          example_en: "Let me call the operator right now.",
+          example_es: "Llamo al operador ahora mismo.",
+        },
+        {
+          word_en: "exact time",
+          word_es: "hora exacta",
+          example_en: "I'll come back with an exact time.",
+          example_es: "Regreso con una hora exacta.",
+        },
+      ],
+    },
+    {
+      id: "c-013",
+      level: "B1",
+      listening: {
+        audio_text: "We went all the way to the restaurant you recommended and it was closed. We just came back.",
+        options: [
+          { emoji: "🍽️", text_es: "Disculparse y conseguirle ahora mismo mesa en un lugar parecido", correct: true },
+          { emoji: "📋", text_es: "Anotar la queja y decirle que lo revisas mañana", correct: false },
+          { emoji: "🚕", text_es: "Ofrecerle de inmediato el reembolso del taxi", correct: false },
+        ],
+        explanation_es:
+          "El huésped se quedó sin cenar. La acción correcta es disculparse y resolverlo en ese momento: buscar un lugar parecido, apartar mesa y confirmar que ya está listo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm so sorry, that was my mistake. Give me two minutes and I'll find you a table somewhere just as good.",
+        note_es:
+          "'That was my mistake' asume la responsabilidad sin dar explicaciones largas ni echar culpas. Ojo con 'that's on me': suena parecido, pero muchos huéspedes lo entienden como 'yo lo pago'.",
+      },
+      vocabulary: [
+        {
+          word_en: "my mistake",
+          word_es: "mi error",
+          example_en: "I'm so sorry, that was my mistake.",
+          example_es: "Una disculpa, fue mi error.",
+        },
+        {
+          word_en: "just as good",
+          word_es: "igual de bueno",
+          example_en: "I know another place just as good.",
+          example_es: "Conozco otro lugar igual de bueno.",
+        },
+        {
+          word_en: "give me two minutes",
+          word_es: "dos minutos y lo resuelvo",
+          example_en: "Give me two minutes and I'll find you a table.",
+          example_es: "En dos minutos les consigo mesa.",
+        },
+      ],
+    },
+    {
+      id: "c-014",
+      level: "B1",
+      listening: {
+        audio_text: "The tour was fine, but the guide only spoke Spanish. We didn't understand a word.",
+        options: [
+          { emoji: "🗣️", text_es: "Disculparse, reportarlo con el operador y ofrecer una opción en inglés", correct: true },
+          { emoji: "🙂", text_es: "Explicarle que aquí los tours normalmente son en español", correct: false },
+          { emoji: "💸", text_es: "Ofrecerle la devolución del dinero del tour", correct: false },
+        ],
+        explanation_es:
+          "El huésped pagó por algo que no pudo aprovechar. La acción correcta es disculparse, reportar el caso con el operador y ofrecer una alternativa con guía en inglés.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry, that shouldn't have happened. I'll report it to the operator, and I can book you a tour with an English-speaking guide.",
+        note_es:
+          "'That shouldn't have happened' valida la molestia sin culpar a nadie. Ofrecer la solución en la misma frase evita que la queja siga creciendo. Nunca prometas devoluciones que no te toca autorizar.",
+      },
+      vocabulary: [
+        {
+          word_en: "guide",
+          word_es: "guía",
+          example_en: "The guide will meet you at the entrance.",
+          example_es: "El guía espera en la entrada.",
+        },
+        {
+          word_en: "English-speaking",
+          word_es: "que habla inglés",
+          example_en: "I'll ask for an English-speaking guide.",
+          example_es: "Voy a pedir un guía que hable inglés.",
+        },
+        {
+          word_en: "report",
+          word_es: "reportar",
+          example_en: "I'll report this to the tour operator today.",
+          example_es: "Reporto esto hoy mismo con el operador.",
+        },
+      ],
+    },
+    {
+      id: "c-015",
+      level: "B1",
+      listening: {
+        audio_text: "I think I lost my passport. We fly home on Saturday and I don't know what to do.",
+        options: [
+          { emoji: "🛂", text_es: "Explicar los pasos con calma, empezando por el consulado, y ofrecerse a llamar", correct: true },
+          { emoji: "✈️", text_es: "Llamar a la aerolínea para cambiar el vuelo del sábado", correct: false },
+          { emoji: "🕔", text_es: "Decirle que sin pasaporte no se puede hacer nada hasta el lunes", correct: false },
+        ],
+        explanation_es:
+          "Con un pasaporte perdido, el primer paso es el consulado, que puede expedir un documento de emergencia. La acción correcta es explicarlo con calma, anotar la dirección y ofrecerse a llamar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let's take it step by step. The consulate is the first call — I'll write down the address and call them for you.",
+        note_es:
+          "'Let's take it step by step' baja la ansiedad antes de dar información. Ofrecerte a hacer la llamada convierte una lista de trámites en ayuda de verdad.",
+      },
+      vocabulary: [
+        {
+          word_en: "passport",
+          word_es: "pasaporte",
+          example_en: "The consulate can issue an emergency passport.",
+          example_es: "El consulado puede expedir un pasaporte de emergencia.",
+        },
+        {
+          word_en: "consulate",
+          word_es: "consulado",
+          example_en: "The consulate opens at nine in the morning.",
+          example_es: "El consulado abre a las nueve de la mañana.",
+        },
+        {
+          word_en: "step by step",
+          word_es: "paso a paso",
+          example_en: "Let's take it step by step.",
+          example_es: "Vamos paso a paso.",
+        },
+      ],
+    },
+    {
+      id: "c-016",
+      level: "B2",
+      listening: {
+        audio_text: "We were thinking of walking down to the old market after dinner. It looked lively earlier.",
+        options: [
+          { emoji: "🚕", text_es: "Sugerir con naturalidad ir en taxi y proponer mejor horario", correct: true },
+          { emoji: "🙂", text_es: "Decirles que sí caminen, para no preocuparlos", correct: false },
+          { emoji: "⚠️", text_es: "Advertirles que esa zona es peligrosa de noche", correct: false },
+        ],
+        explanation_es:
+          "La zona no conviene a esa hora, pero asustar al huésped tampoco es la solución. La acción correcta es recomendar el taxi como algo normal y sugerir el momento del día en que sí vale la pena ir.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "It's lovely during the day. At night I'd take a taxi — it's five minutes, and the driver can wait for you.",
+        note_es:
+          "Cambiar el marco a 'during the day' cuida al huésped sin usar la palabra 'dangerous'. Dar una razón práctica hace que el consejo se acepte sin generar miedo.",
+      },
+      vocabulary: [
+        {
+          word_en: "I'd take a taxi",
+          word_es: "yo tomaría un taxi",
+          example_en: "At night I'd take a taxi.",
+          example_es: "De noche yo tomaría un taxi.",
+        },
+        {
+          word_en: "during the day",
+          word_es: "de día",
+          example_en: "The market is best during the day.",
+          example_es: "El mercado se disfruta más de día.",
+        },
+        {
+          word_en: "wait for you",
+          word_es: "esperar",
+          example_en: "The driver can wait for you outside.",
+          example_es: "El chofer puede esperar afuera.",
+        },
+      ],
+    },
+    {
+      id: "c-017",
+      level: "B2",
+      listening: {
+        audio_text: "My wife has her heart set on seeing whales. We're here until Friday — can you make it happen?",
+        options: [
+          { emoji: "🐋", text_es: "Decir con honestidad que no es temporada y ofrecer la mejor alternativa real", correct: true },
+          { emoji: "📅", text_es: "Apartar un tour de ballenas aunque no sea temporada", correct: false },
+          { emoji: "🤷", text_es: "Decirle que no hay nada que se pueda hacer", correct: false },
+        ],
+        explanation_es:
+          "Las ballenas no llegan en esta temporada y prometerlas saldría peor. La acción correcta es decir la verdad rápido y llenar el hueco con un plan que sí exista y valga la pena.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I wish I could — the whales don't come through until December. What I can do is book the dolphin sanctuary. It's the closest thing right now.",
+        note_es:
+          "'I wish I could' reconoce el deseo antes de dar el no, y 'What I can do is' devuelve el control de la conversación. Prometer algo que no existe siempre cuesta más caro después.",
+      },
+      vocabulary: [
+        {
+          word_en: "I wish I could",
+          word_es: "ojalá pudiera",
+          example_en: "I wish I could, but that tour only runs in winter.",
+          example_es: "Ojalá pudiera, pero ese tour solo opera en invierno.",
+        },
+        {
+          word_en: "season",
+          word_es: "temporada",
+          example_en: "Whale season starts in December.",
+          example_es: "La temporada de ballenas empieza en diciembre.",
+        },
+        {
+          word_en: "the closest thing",
+          word_es: "lo más parecido",
+          example_en: "It's the closest thing this time of year.",
+          example_es: "Es lo más parecido en esta época del año.",
+        },
+      ],
+    },
+    {
+      id: "c-018",
+      level: "B2",
+      listening: {
+        audio_text: "Look, I know that restaurant's booked solid tonight, but I'm sure you have your ways. I'd make it worth your while.",
+        options: [
+          { emoji: "🤝", text_es: "Agradecer, no aceptar el dinero y ofrecer lista de espera con respuesta", correct: true },
+          { emoji: "💵", text_es: "Aceptar la propina y prometerle la mesa", correct: false },
+          { emoji: "🚫", text_es: "Decirle secamente que no se puede y terminar ahí", correct: false },
+        ],
+        explanation_es:
+          "El huésped ofrece dinero para conseguir una mesa que ya está llena. La acción correcta es no aceptarlo, sin hacerlo sentir mal, y comprometerte solo con lo que sí está en tus manos: llamar, dejarlo en lista de espera y avisarle.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "That's very kind, but it's not necessary. Let me call them and put you on the waiting list — I'll let you know either way.",
+        note_es:
+          "'That's very kind, but it's not necessary' rechaza la propina sin humillar al huésped. 'I'll let you know either way' promete una respuesta, no un resultado, y eso sí lo puedes cumplir.",
+      },
+      vocabulary: [
+        {
+          word_en: "waiting list",
+          word_es: "lista de espera",
+          example_en: "I'll put you on the waiting list.",
+          example_es: "Los anoto en la lista de espera.",
+        },
+        {
+          word_en: "either way",
+          word_es: "pase lo que pase",
+          example_en: "I'll let you know either way.",
+          example_es: "Yo aviso pase lo que pase.",
+        },
+        {
+          word_en: "that's not necessary",
+          word_es: "no es necesario",
+          example_en: "Thank you, but that's really not necessary.",
+          example_es: "Gracias, pero no es necesario.",
+        },
+      ],
+    },
+    {
+      id: "c-019",
+      level: "B2",
+      listening: {
+        audio_text: "My husband's been having chest pain for about an hour. Should we go to a hospital?",
+        options: [
+          { emoji: "🚑", text_es: "Llamar de inmediato a emergencias y avisar al gerente en turno", correct: true },
+          { emoji: "🚕", text_es: "Pedirles un taxi al hospital y seguir con lo tuyo", correct: false },
+          { emoji: "💊", text_es: "Mandarlos a la farmacia por un medicamento", correct: false },
+        ],
+        explanation_es:
+          "Un dolor de pecho de una hora es una urgencia médica. La acción correcta es llamar a la ambulancia enseguida, quedarte con ellos y avisar al gerente en turno.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm calling an ambulance right now. Please stay here with me — help will be here in a few minutes.",
+        note_es:
+          "'I'm calling' en presente continuo comunica que ya está pasando, no que lo vas a pensar. En una urgencia, las frases cortas y claras tranquilizan más que las muy amables.",
+      },
+      vocabulary: [
+        {
+          word_en: "chest pain",
+          word_es: "dolor de pecho",
+          example_en: "He has chest pain.",
+          example_es: "Tiene dolor de pecho.",
+        },
+        {
+          word_en: "ambulance",
+          word_es: "ambulancia",
+          example_en: "I'm calling an ambulance right now.",
+          example_es: "Estoy llamando una ambulancia ahora mismo.",
+        },
+        {
+          word_en: "stay with you",
+          word_es: "acompañar",
+          example_en: "I'll stay with you until they arrive.",
+          example_es: "Los acompaño hasta que lleguen.",
+        },
+      ],
+    },
+    {
+      id: "c-020",
+      level: "B2",
+      listening: {
+        audio_text: "It's our thirtieth anniversary tonight. I'd love to do something she'll remember — money isn't really the issue.",
+        options: [
+          { emoji: "🌹", text_es: "Proponer un plan concreto y confirmar solo lo que sí se puede lograr hoy", correct: true },
+          { emoji: "🎉", text_es: "Prometerle una sorpresa espectacular sin haber confirmado nada", correct: false },
+          { emoji: "🍽️", text_es: "Apartarle la mesa de siempre en el restaurante del hotel", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere una noche memorable y está confiando en tu criterio. La acción correcta es proponer un plan concreto, confirmar cada parte y no prometer nada que todavía no esté cerrado.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Congratulations. Let me suggest a table by the water at eight, with flowers waiting for her — I'll confirm both within the hour.",
+        note_es:
+          "Felicitar primero reconoce el momento, no solo la petición. 'Let me suggest' pone tu criterio de experto sobre la mesa, y dar un plazo real vale más que una promesa vaga.",
+      },
+      vocabulary: [
+        {
+          word_en: "anniversary",
+          word_es: "aniversario",
+          example_en: "Congratulations on your anniversary.",
+          example_es: "Felicidades por el aniversario.",
+        },
+        {
+          word_en: "flowers",
+          word_es: "flores",
+          example_en: "We can have flowers waiting at the table.",
+          example_es: "Podemos dejar flores en la mesa.",
+        },
+        {
+          word_en: "within the hour",
+          word_es: "en menos de una hora",
+          example_en: "I'll confirm everything within the hour.",
+          example_es: "Confirmo todo en menos de una hora.",
+        },
+      ],
+    },
+  ],
+
+  spa: [
+    {
+      id: "s-001",
+      level: "A1",
+      listening: {
+        audio_text: "Hi, I have a massage at four. Am I in the right place?",
+        options: [
+          { emoji: "🧾", text_es: "Le das la bienvenida y le entregas el formulario de salud para llenar.", correct: true },
+          { emoji: "🍵", text_es: "Le ofreces un té y le dices que espere afuera del spa.", correct: false },
+          { emoji: "🗓️", text_es: "Le dices que no aparece en la agenda y que tiene que hacer una reservación nueva.", correct: false },
+        ],
+        explanation_es:
+          "El huésped solo quiere confirmar que llegó al lugar correcto para su cita. Lo primero es darle la bienvenida y pedirle que llene el formulario de salud antes del tratamiento.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Yes, you're in the right place. Welcome! Please fill out this short form.",
+        note_es:
+          "«You're in the right place» tranquiliza de inmediato a alguien que llega perdido. Decir «short form» avisa que es rápido y baja la resistencia a llenarlo.",
+      },
+      vocabulary: [
+        {
+          word_en: "welcome",
+          word_es: "bienvenido",
+          example_en: "Welcome to the spa. What is your name?",
+          example_es: "Bienvenido al spa. ¿Cuál es tu nombre?",
+        },
+        {
+          word_en: "form",
+          word_es: "formulario",
+          example_en: "Please fill out this form before we start.",
+          example_es: "Por favor llena este formulario antes de empezar.",
+        },
+        {
+          word_en: "appointment",
+          word_es: "cita",
+          example_en: "Your appointment is at four o'clock.",
+          example_es: "Tu cita es a las cuatro.",
+        },
+      ],
+    },
+    {
+      id: "s-002",
+      level: "A1",
+      listening: {
+        audio_text: "Sorry, where do I change?",
+        options: [
+          { emoji: "🚪", text_es: "Lo llevas al vestidor, le das una bata y le asignas un casillero.", correct: true },
+          { emoji: "💧", text_es: "Le dices que se cambie en el baño de la alberca.", correct: false },
+          { emoji: "🛏️", text_es: "Lo pasas directo a la sala de masaje sin darle bata.", correct: false },
+        ],
+        explanation_es:
+          "El huésped pregunta dónde cambiarse de ropa. Hay que acompañarlo al vestidor y darle bata y casillero antes del tratamiento.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Right this way. Here's your robe and your locker key.",
+        note_es:
+          "«Right this way» sirve para acompañar a alguien sin dar una dirección larga que no vas a poder explicar. Entregar bata y llave en la misma frase evita que el huésped tenga que preguntar dos veces.",
+      },
+      vocabulary: [
+        {
+          word_en: "changing room",
+          word_es: "vestidor",
+          example_en: "The changing room is on your left.",
+          example_es: "El vestidor está a tu izquierda.",
+        },
+        {
+          word_en: "robe",
+          word_es: "bata",
+          example_en: "Here is a robe and a towel.",
+          example_es: "Aquí tienes una bata y una toalla.",
+        },
+        {
+          word_en: "locker",
+          word_es: "casillero",
+          example_en: "Your locker number is twelve.",
+          example_es: "Tu casillero es el número doce.",
+        },
+      ],
+    },
+    {
+      id: "s-003",
+      level: "A1",
+      listening: {
+        audio_text: "Ooh, it's a little cold in here.",
+        options: [
+          { emoji: "🔥", text_es: "Le pones una manta encima y subes la temperatura del cuarto.", correct: true },
+          { emoji: "❄️", text_es: "Bajas más la temperatura del cuarto porque entendiste que tenía calor.", correct: false },
+          { emoji: "🧊", text_es: "Le ofreces un vaso de agua fría.", correct: false },
+        ],
+        explanation_es:
+          "El huésped tiene frío y está acostado, cubierto solo con una toalla. La respuesta correcta es ponerle una manta encima y subir la temperatura del cuarto.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'll get you a blanket and turn up the heat.",
+        note_es:
+          "«Turn up the heat» es lo que de verdad dice la gente; «put more temperature» no existe en inglés. Ofrecer las dos cosas a la vez muestra atención sin tener que preguntar.",
+      },
+      vocabulary: [
+        {
+          word_en: "blanket",
+          word_es: "manta, cobija",
+          example_en: "Would you like another blanket?",
+          example_es: "¿Quieres otra manta?",
+        },
+        {
+          word_en: "cold",
+          word_es: "frío",
+          example_en: "Tell me if you get cold.",
+          example_es: "Dime si te da frío.",
+        },
+        {
+          word_en: "warm",
+          word_es: "tibio, cálido",
+          example_en: "The room will be warm in a minute.",
+          example_es: "El cuarto va a estar cálido en un minuto.",
+        },
+      ],
+    },
+    {
+      id: "s-004",
+      level: "A1",
+      listening: {
+        audio_text: "Could you turn the music down a bit?",
+        options: [
+          { emoji: "🔉", text_es: "Bajas el volumen de la música.", correct: true },
+          { emoji: "🎶", text_es: "Cambias la música por otra canción.", correct: false },
+          { emoji: "🔊", text_es: "Subes el volumen porque crees que no la escucha bien.", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere el mismo ambiente pero con menos volumen. «Turn down» significa bajar, no cambiar ni quitar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. Let me know if it's still too loud.",
+        note_es:
+          "«Turn down» es bajar y «turn up» es subir: es la trampa más común de este par. Cerrar con «let me know» le deja al huésped el control del segundo ajuste.",
+      },
+      vocabulary: [
+        {
+          word_en: "turn down",
+          word_es: "bajar el volumen",
+          example_en: "I'll turn down the music for you.",
+          example_es: "Te bajo la música.",
+        },
+        {
+          word_en: "loud",
+          word_es: "fuerte, alto",
+          example_en: "Is the music too loud?",
+          example_es: "¿La música está muy fuerte?",
+        },
+        {
+          word_en: "let me know",
+          word_es: "avísame",
+          example_en: "Let me know if you need anything.",
+          example_es: "Avísame si necesitas algo.",
+        },
+      ],
+    },
+    {
+      id: "s-005",
+      level: "A1",
+      listening: {
+        audio_text: "Do I need to take my ring off?",
+        options: [
+          { emoji: "💍", text_es: "Le pides que se lo quite y lo guarde él mismo en su casillero.", correct: true },
+          { emoji: "🧴", text_es: "Le dices que no importa y empiezas a poner aceite.", correct: false },
+          { emoji: "🤲", text_es: "Le pides el anillo y lo guardas tú para cuidarlo.", correct: false },
+        ],
+        explanation_es:
+          "El aceite y el calor pueden dañar las joyas y estorban durante el masaje. El huésped guarda sus cosas de valor él mismo, nunca tú.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Please take it off and leave it in your locker. The oil can damage it.",
+        note_es:
+          "Dar la razón convierte una orden en un consejo, y el huésped obedece sin sentirse mandado. Nunca recibas joyas en tu mano: eso te deja a ti como responsable si algo se pierde.",
+      },
+      vocabulary: [
+        {
+          word_en: "ring",
+          word_es: "anillo",
+          example_en: "You can leave your ring in the locker.",
+          example_es: "Puedes dejar tu anillo en el casillero.",
+        },
+        {
+          word_en: "take off",
+          word_es: "quitarse",
+          example_en: "Please take off your watch.",
+          example_es: "Por favor quítate el reloj.",
+        },
+        {
+          word_en: "oil",
+          word_es: "aceite",
+          example_en: "I use warm oil for the massage.",
+          example_es: "Uso aceite tibio para el masaje.",
+        },
+      ],
+    },
+    {
+      id: "s-006",
+      level: "A2",
+      listening: {
+        audio_text: "I've never had a deep tissue massage. What actually happens?",
+        options: [
+          { emoji: "🗣️", text_es: "Le explicas el tratamiento paso a paso antes de empezar: duración, aceite y postura.", correct: true },
+          { emoji: "⏱️", text_es: "Le dices que ya no hay tiempo para explicar y empiezas de una vez.", correct: false },
+          { emoji: "💆", text_es: "Le recomiendas cambiarse a un facial porque es más sencillo.", correct: false },
+        ],
+        explanation_es:
+          "El huésped nunca ha tomado ese masaje y quiere saber qué esperar. Explicar los pasos antes de empezar baja la ansiedad y evita sorpresas a mitad del tratamiento.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "It's sixty minutes with warm oil. You'll start face down, and I'll ask you to turn over halfway through.",
+        note_es:
+          "Dar duración, producto y postura en ese orden responde las tres dudas más comunes de una sola vez. «I'll ask you to turn over» deja claro que el huésped se mueve solo, no que tú lo mueves.",
+      },
+      vocabulary: [
+        {
+          word_en: "deep tissue",
+          word_es: "masaje profundo",
+          example_en: "Deep tissue is stronger than a relaxing massage.",
+          example_es: "El masaje profundo es más fuerte que uno relajante.",
+        },
+        {
+          word_en: "face down",
+          word_es: "boca abajo",
+          example_en: "Please lie face down on the table.",
+          example_es: "Por favor acuéstate boca abajo en la camilla.",
+        },
+        {
+          word_en: "turn over",
+          word_es: "voltearse",
+          example_en: "I'll ask you to turn over in thirty minutes.",
+          example_es: "Te voy a pedir que te voltees en treinta minutos.",
+        },
+      ],
+    },
+    {
+      id: "s-007",
+      level: "A2",
+      listening: {
+        audio_text: "I filled out the form, but I forgot to mention I'm allergic to almonds.",
+        options: [
+          { emoji: "🧴", text_es: "Cambias el aceite por uno sin almendra y lo anotas en su ficha.", correct: true },
+          { emoji: "📄", text_es: "Le dices que el formulario ya está entregado y no se puede cambiar.", correct: false },
+          { emoji: "🥜", text_es: "Le dices que como el aceite no se come, la alergia no importa.", correct: false },
+        ],
+        explanation_es:
+          "Muchos aceites de masaje son de almendra dulce, así que el producto sí tiene que cambiar. Además se anota en su ficha para que no tenga que repetirlo en la próxima visita.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm glad you mentioned it. I'll use a different oil and add it to your file.",
+        note_es:
+          "«I'm glad you mentioned it» premia que el huésped hable de su salud, en lugar de hacerlo sentir un problema. «Add it to your file» le promete que no va a tener que explicarlo otra vez.",
+      },
+      vocabulary: [
+        {
+          word_en: "allergic",
+          word_es: "alérgico",
+          example_en: "Are you allergic to any products?",
+          example_es: "¿Eres alérgico a algún producto?",
+        },
+        {
+          word_en: "almond",
+          word_es: "almendra",
+          example_en: "This oil is made from almonds.",
+          example_es: "Este aceite está hecho de almendra.",
+        },
+        {
+          word_en: "file",
+          word_es: "ficha, expediente",
+          example_en: "I'll add it to your file.",
+          example_es: "Lo anoto en tu ficha.",
+        },
+      ],
+    },
+    {
+      id: "s-008",
+      level: "A2",
+      listening: {
+        audio_text: "That's a bit much on my shoulders.",
+        options: [
+          { emoji: "🤲", text_es: "Bajas la presión de inmediato y le preguntas si así está mejor.", correct: true },
+          { emoji: "💪", text_es: "Sigues igual porque así se deshacen los nudos.", correct: false },
+          { emoji: "❄️", text_es: "Le pones una compresa fría en el hombro y sigues.", correct: false },
+        ],
+        explanation_es:
+          "El huésped te está diciendo con mucha cortesía que le duele. Se baja la presión en ese mismo momento y se confirma con él el nuevo nivel.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Thanks for telling me — I'll go lighter. Is this better?",
+        note_es:
+          "Los huéspedes casi nunca dicen «it hurts»: dicen «a bit much» o «that's intense». Trata cualquiera de esas frases como un alto inmediato y confirma con una pregunta corta.",
+      },
+      vocabulary: [
+        {
+          word_en: "pressure",
+          word_es: "presión",
+          example_en: "Is the pressure okay for you?",
+          example_es: "¿La presión está bien para ti?",
+        },
+        {
+          word_en: "lighter",
+          word_es: "más suave",
+          example_en: "I can go lighter on your back.",
+          example_es: "Puedo ir más suave en tu espalda.",
+        },
+        {
+          word_en: "shoulders",
+          word_es: "hombros",
+          example_en: "Which shoulder is bothering you more?",
+          example_es: "¿Cuál hombro te molesta más?",
+        },
+      ],
+    },
+    {
+      id: "s-009",
+      level: "A2",
+      listening: {
+        audio_text: "Quick question, do I take everything off for this?",
+        options: [
+          { emoji: "🚪", text_es: "Le explicas que se desviste hasta donde se sienta cómodo y que vas a tocar antes de entrar.", correct: true },
+          { emoji: "🙅", text_es: "Le dices que tiene que quitarse toda la ropa porque es obligatorio.", correct: false },
+          { emoji: "👕", text_es: "Le dices que puede quedarse con toda su ropa puesta.", correct: false },
+        ],
+        explanation_es:
+          "Nadie está obligado a desvestirse por completo. El huésped decide hasta dónde, se cubre con la toalla, y tú tocas la puerta antes de volver a entrar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Undress to your comfort level and lie face down under the towel. I'll knock before I come back in.",
+        note_es:
+          "«To your comfort level» es la frase estándar en spas del mundo entero: le da el control al huésped sin entrar en detalles incómodos. Anunciar que vas a tocar la puerta cierra el tema de la privacidad de una vez.",
+      },
+      vocabulary: [
+        {
+          word_en: "undress",
+          word_es: "desvestirse",
+          example_en: "You can undress here in the room.",
+          example_es: "Te puedes desvestir aquí en el cuarto.",
+        },
+        {
+          word_en: "comfort",
+          word_es: "comodidad",
+          example_en: "Undress to your comfort level.",
+          example_es: "Desvístete hasta donde te sientas cómodo.",
+        },
+        {
+          word_en: "knock",
+          word_es: "tocar la puerta",
+          example_en: "I'll knock before I come in.",
+          example_es: "Voy a tocar antes de entrar.",
+        },
+      ],
+    },
+    {
+      id: "s-010",
+      level: "A2",
+      listening: {
+        audio_text: "That was amazing. Anything I should do now?",
+        options: [
+          { emoji: "💧", text_es: "Le dices que tome mucha agua y que se levante despacio, sin prisa.", correct: true },
+          { emoji: "🏋️", text_es: "Le recomiendas ir al gimnasio para aprovechar los músculos sueltos.", correct: false },
+          { emoji: "🚿", text_es: "Le dices que se bañe con agua muy caliente de inmediato.", correct: false },
+        ],
+        explanation_es:
+          "Después de un masaje el cuerpo necesita agua y unos minutos de reposo. Es el consejo estándar y evita que el huésped se maree al levantarse.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Drink plenty of water today, and take your time getting up. You might feel a little sore tomorrow.",
+        note_es:
+          "«Take your time» previene el mareo y suena amable, no como una orden médica. Avisar del dolor de mañana hace que el huésped no piense después que algo salió mal.",
+      },
+      vocabulary: [
+        {
+          word_en: "water",
+          word_es: "agua",
+          example_en: "Please drink plenty of water today.",
+          example_es: "Por favor toma mucha agua hoy.",
+        },
+        {
+          word_en: "sore",
+          word_es: "adolorido",
+          example_en: "Your legs may feel sore tomorrow.",
+          example_es: "Tus piernas pueden sentirse adoloridas mañana.",
+        },
+        {
+          word_en: "rest",
+          word_es: "descansar",
+          example_en: "You can rest here for a few minutes.",
+          example_es: "Puedes descansar aquí unos minutos.",
+        },
+      ],
+    },
+    {
+      id: "s-011",
+      level: "B1",
+      listening: {
+        audio_text: "I've looked everywhere. I think I left my watch in the changing room.",
+        options: [
+          { emoji: "🔎", text_es: "Vas de inmediato a revisar el casillero y el área, y si no aparece levantas el reporte de objetos perdidos con sus datos.", correct: true },
+          { emoji: "🤷", text_es: "Le dices que el spa no se hace responsable por objetos olvidados.", correct: false },
+          { emoji: "🏨", text_es: "Lo mandas a preguntar a la recepción del hotel, sin acompañarlo ni avisar a nadie.", correct: false },
+        ],
+        explanation_es:
+          "El huésped perdió algo dentro del spa, así que la búsqueda empieza contigo. Se revisa el casillero y el área en ese momento, y si no aparece se levanta el reporte de objetos perdidos con sus datos.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let me check the changing room right now. If it's not there, I'll report it to lost and found and call your room.",
+        note_es:
+          "«Right now» le baja la angustia: le confirma que la búsqueda empieza en este segundo y no cuando haya tiempo. Prometer que tú le hablas al cuarto evita que se quede esperando sin saber nada.",
+      },
+      vocabulary: [
+        {
+          word_en: "watch",
+          word_es: "reloj",
+          example_en: "I'll look for your watch right now.",
+          example_es: "Voy a buscar tu reloj ahora mismo.",
+        },
+        {
+          word_en: "lost and found",
+          word_es: "objetos perdidos",
+          example_en: "Let me check with lost and found.",
+          example_es: "Déjame preguntar en objetos perdidos.",
+        },
+        {
+          word_en: "check",
+          word_es: "revisar",
+          example_en: "I'll check the changing room for you.",
+          example_es: "Voy a revisar el vestidor por ti.",
+        },
+      ],
+    },
+    {
+      id: "s-012",
+      level: "B1",
+      listening: {
+        audio_text: "I know I'm late, sorry — traffic was awful. We can still do the full ninety, right?",
+        options: [
+          { emoji: "🕰️", text_es: "Le explicas que solo quedan sesenta minutos y le ofreces reagendar si prefiere el tratamiento completo.", correct: true },
+          { emoji: "✅", text_es: "Le dices que sí, aunque eso retrase al huésped que sigue.", correct: false },
+          { emoji: "🚫", text_es: "Le dices que perdió su cita y que ya no hay nada que hacer.", correct: false },
+        ],
+        explanation_es:
+          "La siguiente cita ya está agendada, así que el horario no se puede recorrer. Se le ofrece el tiempo que sí alcanza hoy y la opción de reagendar el tratamiento completo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "No problem at all. I have you until three, so we can do sixty minutes today — or I can check tomorrow and reschedule the full ninety.",
+        note_es:
+          "Empezar con «no problem at all» le quita la culpa antes de darle la mala noticia, y así no se pone a la defensiva. Decir «I can check» en lugar de prometer el horario te deja verificar la agenda sin quedar mal.",
+      },
+      vocabulary: [
+        {
+          word_en: "late",
+          word_es: "tarde",
+          example_en: "Don't worry about being late.",
+          example_es: "No te preocupes por llegar tarde.",
+        },
+        {
+          word_en: "reschedule",
+          word_es: "reagendar",
+          example_en: "I can reschedule you for tomorrow morning.",
+          example_es: "Te puedo reagendar para mañana en la mañana.",
+        },
+        {
+          word_en: "full",
+          word_es: "completo",
+          example_en: "The full treatment takes ninety minutes.",
+          example_es: "El tratamiento completo dura noventa minutos.",
+        },
+      ],
+    },
+    {
+      id: "s-013",
+      level: "B1",
+      listening: {
+        audio_text: "Sorry to interrupt, but my face is really starting to sting.",
+        options: [
+          { emoji: "🧽", text_es: "Retiras el producto de inmediato con agua fresca y avisas a tu supervisor.", correct: true },
+          { emoji: "⏳", text_es: "Le dices que es normal y que aguante dos minutos más.", correct: false },
+          { emoji: "🤐", text_es: "Le quitas el producto pero sigues con el resto del facial sin avisarle a nadie.", correct: false },
+        ],
+        explanation_es:
+          "El ardor en la piel puede ser una reacción al producto y no se espera a ver si pasa. Se retira de inmediato, se enjuaga con agua fresca y se reporta.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let's take that off right now. I'm going to rinse your face with cool water and get my supervisor.",
+        note_es:
+          "«Right now» le confirma al huésped que lo tomaste en serio desde el primer segundo. Decir que vas por tu supervisor es más seguro que decidir tú solo qué producto aplicar después.",
+      },
+      vocabulary: [
+        {
+          word_en: "sting",
+          word_es: "arder",
+          example_en: "Tell me right away if it starts to sting.",
+          example_es: "Dime de inmediato si te empieza a arder.",
+        },
+        {
+          word_en: "rinse",
+          word_es: "enjuagar",
+          example_en: "I'm going to rinse it off with water.",
+          example_es: "Lo voy a enjuagar con agua.",
+        },
+        {
+          word_en: "supervisor",
+          word_es: "supervisor",
+          example_en: "Let me get my supervisor for you.",
+          example_es: "Déjame traer a mi supervisor.",
+        },
+      ],
+    },
+    {
+      id: "s-014",
+      level: "B1",
+      listening: {
+        audio_text: "We were really looking forward to the steam room. Is it open today?",
+        options: [
+          { emoji: "🛠️", text_es: "Le dices que está en mantenimiento, te disculpas y le ofreces el sauna seco o el jacuzzi.", correct: true },
+          { emoji: "🙂", text_es: "Le dices que sí y dejas que lo descubran solos.", correct: false },
+          { emoji: "⏰", text_es: "Le dices que abre más tarde, aunque no sabes a qué hora.", correct: false },
+        ],
+        explanation_es:
+          "El vapor está cerrado por mantenimiento y el huésped lo va a notar de todos modos. Hay que decirlo claro, disculparse y ofrecer lo que sí está disponible hoy.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm really sorry — the steam room is closed for maintenance today. The dry sauna and the jacuzzi are both open, if you'd like.",
+        note_es:
+          "Decir la razón evita que suene a capricho del hotel y baja el enojo casi siempre. Cerrar con «if you'd like» ofrece la alternativa sin empujarla.",
+      },
+      vocabulary: [
+        {
+          word_en: "steam room",
+          word_es: "cuarto de vapor",
+          example_en: "The steam room opens at seven.",
+          example_es: "El cuarto de vapor abre a las siete.",
+        },
+        {
+          word_en: "closed",
+          word_es: "cerrado",
+          example_en: "The pool is closed today.",
+          example_es: "La alberca está cerrada hoy.",
+        },
+        {
+          word_en: "maintenance",
+          word_es: "mantenimiento",
+          example_en: "It's closed for maintenance until Friday.",
+          example_es: "Está cerrado por mantenimiento hasta el viernes.",
+        },
+      ],
+    },
+    {
+      id: "s-015",
+      level: "B1",
+      listening: {
+        audio_text: "Ah, careful there — I had surgery on that knee last year.",
+        options: [
+          { emoji: "🦵", text_es: "Dejas esa zona, le preguntas qué otra área debes evitar y sigues con el resto del cuerpo.", correct: true },
+          { emoji: "💪", text_es: "Trabajas más fuerte esa zona para soltar la cicatriz.", correct: false },
+          { emoji: "🖐️", text_es: "Le preguntas si le duele y sigues masajeando la rodilla, pero más suave.", correct: false },
+        ],
+        explanation_es:
+          "Una zona operada no se trabaja sin indicación médica, aunque la cirugía ya tenga tiempo. Se evita esa área, se pregunta si hay otras, y el tratamiento sigue normal en el resto del cuerpo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Good to know — I'll stay away from that knee. Is there anything else I should avoid?",
+        note_es:
+          "«Stay away from» suena a cuidado, no a rechazo del huésped ni de su cuerpo. La pregunta final abre la puerta a todo lo que se le olvidó poner en el formulario.",
+      },
+      vocabulary: [
+        {
+          word_en: "surgery",
+          word_es: "cirugía",
+          example_en: "Have you had any surgery this year?",
+          example_es: "¿Has tenido alguna cirugía este año?",
+        },
+        {
+          word_en: "knee",
+          word_es: "rodilla",
+          example_en: "I won't touch your knee today.",
+          example_es: "Hoy no voy a tocar tu rodilla.",
+        },
+        {
+          word_en: "avoid",
+          word_es: "evitar",
+          example_en: "Is there any area I should avoid?",
+          example_es: "¿Hay alguna zona que deba evitar?",
+        },
+      ],
+    },
+    {
+      id: "s-016",
+      level: "B2",
+      listening: {
+        audio_text: "I'm six months pregnant, but I'd still love the hot stone massage. My doctor says I'm fine.",
+        options: [
+          { emoji: "🤰", text_es: "Le explicas con calma que el spa no da piedras calientes durante el embarazo y le ofreces el masaje prenatal.", correct: true },
+          { emoji: "🔥", text_es: "Le das el masaje de piedras calientes porque su doctor ya la autorizó.", correct: false },
+          { emoji: "📵", text_es: "Le dices que estando embarazada no puede recibir ningún tratamiento.", correct: false },
+        ],
+        explanation_es:
+          "El calor profundo de las piedras no se aplica durante el embarazo, aunque la huésped diga que su doctor la autorizó. Se explica que es una regla del spa y se le ofrece el masaje prenatal, que sí está hecho para esta etapa.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Congratulations! We don't do hot stone during pregnancy, but our prenatal massage is designed exactly for this stage. Can I switch you over to that?",
+        note_es:
+          "«We don't do hot stone» habla del spa y no de la huésped, así que no suena a que la estás juzgando ni contradiciendo a su médico. Ofrecer el cambio en la misma frase impide que sienta que se queda sin nada.",
+      },
+      vocabulary: [
+        {
+          word_en: "pregnant",
+          word_es: "embarazada",
+          example_en: "Please tell us if you are pregnant.",
+          example_es: "Por favor dinos si estás embarazada.",
+        },
+        {
+          word_en: "hot stone",
+          word_es: "piedras calientes",
+          example_en: "We can't do hot stone today.",
+          example_es: "Hoy no podemos hacer piedras calientes.",
+        },
+        {
+          word_en: "switch",
+          word_es: "cambiar",
+          example_en: "Can I switch you to a different treatment?",
+          example_es: "¿Te puedo cambiar a otro tratamiento?",
+        },
+      ],
+    },
+    {
+      id: "s-017",
+      level: "B2",
+      listening: {
+        audio_text: "Look, I've had a couple of drinks, that's all. I'm not going to pass out in a sauna.",
+        options: [
+          { emoji: "🚱", text_es: "Sostienes la regla en voz baja, le ofreces agua y la sala de descanso, y avisas a tu supervisor.", correct: true },
+          { emoji: "🍷", text_es: "Lo dejas entrar porque él dice que está bien y no quieres discutir.", correct: false },
+          { emoji: "📢", text_es: "Le dices delante de los demás huéspedes que viene tomado.", correct: false },
+        ],
+        explanation_es:
+          "El alcohol junto con el calor del sauna sube el riesgo de desmayo, y el spa no puede darle el acceso. Se sostiene la regla en voz baja, se ofrece una alternativa y se le informa al supervisor.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I hear you, and I'm not questioning how you feel. It's a safety rule after alcohol — let me set you up in the lounge with some water instead.",
+        note_es:
+          "«I'm not questioning how you feel» desarma el pleito: no discutes si está tomado o no, hablas solo de la regla. Decir «it's a safety rule» pone el límite en el spa y no en ti, así que no queda como algo personal.",
+      },
+      vocabulary: [
+        {
+          word_en: "safety",
+          word_es: "seguridad",
+          example_en: "This is a safety rule for every guest.",
+          example_es: "Es una regla de seguridad para todos los huéspedes.",
+        },
+        {
+          word_en: "rule",
+          word_es: "regla",
+          example_en: "I'm sorry, it's a rule I can't change.",
+          example_es: "Lo siento, es una regla que no puedo cambiar.",
+        },
+        {
+          word_en: "lounge",
+          word_es: "sala de descanso",
+          example_en: "You're welcome to wait in the lounge.",
+          example_es: "Puedes esperar en la sala de descanso.",
+        },
+      ],
+    },
+    {
+      id: "s-018",
+      level: "B2",
+      listening: {
+        audio_text: "Yeah, tell him the contract isn't signed yet. Hold on, hold on, I can hear you fine.",
+        options: [
+          { emoji: "🤫", text_es: "Te acercas, le hablas en voz baja y le ofreces tomar la llamada justo afuera.", correct: true },
+          { emoji: "📣", text_es: "Le pides desde lejos y en voz alta que cuelgue.", correct: false },
+          { emoji: "🙈", text_es: "No haces nada porque no quieres incomodar al huésped.", correct: false },
+        ],
+        explanation_es:
+          "El huésped no se dio cuenta de que está en área de silencio y hay otras personas en tratamiento. Se le avisa de cerca, en voz baja y sin exhibirlo frente a nadie.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Excuse me, sorry to interrupt — this is a quiet area. You're welcome to take the call just outside, and I'll keep your spot.",
+        note_es:
+          "«I'll keep your spot» convierte la petición en un favor: no lo estás corriendo, le estás guardando el lugar. Acercarte y hablar bajo hace que el resto de los huéspedes ni se entere.",
+      },
+      vocabulary: [
+        {
+          word_en: "quiet area",
+          word_es: "área de silencio",
+          example_en: "This is a quiet area for all guests.",
+          example_es: "Esta es un área de silencio para todos los huéspedes.",
+        },
+        {
+          word_en: "interrupt",
+          word_es: "interrumpir",
+          example_en: "Sorry to interrupt you.",
+          example_es: "Perdón por interrumpirte.",
+        },
+        {
+          word_en: "outside",
+          word_es: "afuera",
+          example_en: "You can take the call just outside.",
+          example_es: "Puedes tomar la llamada justo afuera.",
+        },
+      ],
+    },
+    {
+      id: "s-019",
+      level: "B2",
+      listening: {
+        audio_text: "My shoulders are still tight. I've got two more days here — what would you suggest?",
+        options: [
+          { emoji: "🗓️", text_es: "Le sugieres una segunda sesión más corta, le explicas para qué serviría y dejas la decisión abierta.", correct: true },
+          { emoji: "💳", text_es: "Le vendes el paquete de tres días, el más caro que hay.", correct: false },
+          { emoji: "🤷", text_es: "Le dices que descanse y no le ofreces nada más.", correct: false },
+        ],
+        explanation_es:
+          "El huésped está pidiendo una recomendación, no una venta. Se le ofrece una opción concreta con una razón física, y se deja claro que puede decir que no.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Tension like that usually needs a second session. A shorter thirty-minute neck and shoulders tomorrow would help a lot — no pressure either way.",
+        note_es:
+          "Recomendar por una razón del cuerpo, y no por el precio, es lo que separa un consejo de una venta. «No pressure either way» le deja salida y, por eso mismo, hace que confíe más en ti.",
+      },
+      vocabulary: [
+        {
+          word_en: "tight",
+          word_es: "tenso",
+          example_en: "Your neck is very tight today.",
+          example_es: "Tu cuello está muy tenso hoy.",
+        },
+        {
+          word_en: "session",
+          word_es: "sesión",
+          example_en: "One more session would help a lot.",
+          example_es: "Una sesión más ayudaría bastante.",
+        },
+        {
+          word_en: "suggest",
+          word_es: "sugerir",
+          example_en: "May I suggest something for tomorrow?",
+          example_es: "¿Te puedo sugerir algo para mañana?",
+        },
+      ],
+    },
+    {
+      id: "s-020",
+      level: "B2",
+      listening: {
+        audio_text: "You've got great hands. Any chance you do something a little more private after your shift?",
+        options: [
+          { emoji: "🛑", text_es: "Detienes el tratamiento con calma, marcas el límite y sales a reportarlo con tu supervisor.", correct: true },
+          { emoji: "😅", text_es: "Te ríes y sigues el masaje para no hacer más incómodo el momento.", correct: false },
+          { emoji: "🗣️", text_es: "Le contestas de mala manera y sales azotando la puerta.", correct: false },
+        ],
+        explanation_es:
+          "Es una propuesta fuera de lugar y tú no tienes ninguna obligación de seguir en ese cuarto. Se corta con una frase firme y corta, y se reporta de inmediato al supervisor.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "That's not something I do. This is a professional treatment, and I'm going to stop here and step out.",
+        note_es:
+          "Nombrar el tratamiento como profesional cierra el tema sin volverlo un pleito. No tienes que explicar más ni quedarte a discutir: dices la frase, sales del cuarto y lo reportas con tu supervisor.",
+      },
+      vocabulary: [
+        {
+          word_en: "professional",
+          word_es: "profesional",
+          example_en: "This is a professional treatment.",
+          example_es: "Este es un tratamiento profesional.",
+        },
+        {
+          word_en: "step out",
+          word_es: "salir un momento",
+          example_en: "I'm going to step out for a moment.",
+          example_es: "Voy a salir un momento.",
+        },
+        {
+          word_en: "shift",
+          word_es: "turno",
+          example_en: "My shift ends at eight.",
+          example_es: "Mi turno termina a las ocho.",
+        },
+      ],
+    },
+  ],
+
+  security: [
+    {
+      id: "g-001",
+      level: "A1",
+      listening: {
+        audio_text: "Hi. I forgot my key card in the room. Can you open the door for me?",
+        options: [
+          { emoji: "🪪", text_es: "Pedirle una identificación y verificar el nombre antes de abrir", correct: true },
+          { emoji: "🔑", text_es: "Abrir la puerta de inmediato", correct: false },
+          { emoji: "🧹", text_es: "Llamar a limpieza para que abra", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere entrar a su habitación, pero nadie abre una puerta sin confirmar quién es. Primero pides identificación y verificas que el nombre coincida con el registro.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. Can I see your ID, please?",
+        note_es:
+          "Empezar con “Of course” evita que la petición suene a sospecha. Pides la identificación como parte del servicio, no como una acusación.",
+      },
+      vocabulary: [
+        {
+          word_en: "ID",
+          word_es: "identificación",
+          example_en: "Can I see your ID, please?",
+          example_es: "¿Me permite su identificación, por favor?",
+        },
+        {
+          word_en: "key card",
+          word_es: "tarjeta de acceso",
+          example_en: "Do you have your key card with you?",
+          example_es: "¿Trae consigo su tarjeta de acceso?",
+        },
+        {
+          word_en: "room number",
+          word_es: "número de habitación",
+          example_en: "What's your room number, sir?",
+          example_es: "¿Cuál es su número de habitación, señor?",
+        },
+      ],
+    },
+    {
+      id: "g-002",
+      level: "A1",
+      listening: {
+        audio_text: "Excuse me, can I smoke here? I don't see an ashtray anywhere.",
+        options: [
+          { emoji: "🚭", text_es: "Explicarle que adentro no se puede y decirle dónde sí", correct: true },
+          { emoji: "🚬", text_es: "Traerle un cenicero", correct: false },
+          { emoji: "👍", text_es: "Dejarlo fumar porque no hay nadie cerca", correct: false },
+        ],
+        explanation_es:
+          "Pregunta si puede fumar adentro. La respuesta útil no es solo “no”: incluye el lugar donde sí puede hacerlo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Sorry, sir. You can smoke on the terrace.",
+        note_es:
+          "Un “no” solo deja al huésped sin salida. “Sorry” al inicio y el lugar correcto al final convierten una regla en un servicio.",
+      },
+      vocabulary: [
+        {
+          word_en: "smoke",
+          word_es: "fumar",
+          example_en: "You can smoke on the terrace, sir.",
+          example_es: "Puede fumar en la terraza, señor.",
+        },
+        {
+          word_en: "terrace",
+          word_es: "terraza",
+          example_en: "The terrace is next to the lobby bar.",
+          example_es: "La terraza está junto al bar del lobby.",
+        },
+        {
+          word_en: "ashtray",
+          word_es: "cenicero",
+          example_en: "There's an ashtray by the door outside.",
+          example_es: "Hay un cenicero junto a la puerta, afuera.",
+        },
+      ],
+    },
+    {
+      id: "g-003",
+      level: "A1",
+      listening: {
+        audio_text: "What's that alarm? Where do I go?",
+        options: [
+          { emoji: "🪜", text_es: "Indicarle las escaleras y decirle que no use el elevador", correct: true },
+          { emoji: "🛗", text_es: "Llevarlo al elevador para bajar más rápido", correct: false },
+          { emoji: "🚪", text_es: "Pedirle que espere en su habitación", correct: false },
+        ],
+        explanation_es:
+          "Con la alarma sonando, el huésped necesita una instrucción corta y clara. Las escaleras son la salida segura; el elevador nunca se usa.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Please take the stairs. Don't use the elevator.",
+        note_es:
+          "Dos frases imperativas cortas. En una emergencia, mientras más corta es la instrucción, más rápido la obedece la gente.",
+      },
+      vocabulary: [
+        {
+          word_en: "stairs",
+          word_es: "escaleras",
+          example_en: "Please take the stairs on your left.",
+          example_es: "Por favor tome las escaleras a su izquierda.",
+        },
+        {
+          word_en: "exit",
+          word_es: "salida",
+          example_en: "The exit is at the end of the hallway.",
+          example_es: "La salida está al final del pasillo.",
+        },
+        {
+          word_en: "alarm",
+          word_es: "alarma",
+          example_en: "When the alarm rings, everyone goes outside.",
+          example_es: "Cuando suena la alarma, todos salen.",
+        },
+      ],
+    },
+    {
+      id: "g-004",
+      level: "A1",
+      listening: {
+        audio_text: "Hey. I left my phone by the pool this morning. Did anyone find it?",
+        options: [
+          { emoji: "📱", text_es: "Revisar objetos perdidos y avisarle", correct: true },
+          { emoji: "🏊", text_es: "Decirle que vuelva a buscar en la alberca", correct: false },
+          { emoji: "🙅", text_es: "Decirle que el hotel no se hace responsable", correct: false },
+        ],
+        explanation_es:
+          "Reporta un objeto olvidado. Lo que corresponde es revisar el registro de objetos perdidos, no mandarlo a buscar por su cuenta ni cerrarle la puerta.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let me check the lost and found. What color is it?",
+        note_es:
+          "“Let me check” promete acción sin prometer resultado. La pregunta al final te da algo con qué buscar.",
+      },
+      vocabulary: [
+        {
+          word_en: "lost and found",
+          word_es: "objetos perdidos",
+          example_en: "Let me check the lost and found for you.",
+          example_es: "Déjeme revisar objetos perdidos.",
+        },
+        {
+          word_en: "phone",
+          word_es: "teléfono",
+          example_en: "Is your phone black or white?",
+          example_es: "¿Su teléfono es negro o blanco?",
+        },
+        {
+          word_en: "pool",
+          word_es: "alberca",
+          example_en: "The pool closes at ten at night.",
+          example_es: "La alberca cierra a las diez de la noche.",
+        },
+      ],
+    },
+    {
+      id: "g-005",
+      level: "A1",
+      listening: {
+        audio_text: "It's really dark out there. Could you walk me to my car?",
+        options: [
+          { emoji: "🔦", text_es: "Acompañar al huésped hasta su coche", correct: true },
+          { emoji: "🅿️", text_es: "Explicarle dónde está el estacionamiento", correct: false },
+          { emoji: "🚕", text_es: "Pedirle un taxi", correct: false },
+        ],
+        explanation_es:
+          "No pide indicaciones: pide compañía. La acción correcta es caminar con el huésped hasta el coche.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll walk you to your car.",
+        note_es:
+          "“I'll walk you” significa acompañar, no caminar solo. Es la diferencia entre dar una indicación y dar seguridad.",
+      },
+      vocabulary: [
+        {
+          word_en: "walk you to",
+          word_es: "acompañar a",
+          example_en: "I can walk you to your car.",
+          example_es: "Puedo acompañarlo a su coche.",
+        },
+        {
+          word_en: "parking lot",
+          word_es: "estacionamiento",
+          example_en: "The parking lot is behind the hotel.",
+          example_es: "El estacionamiento está detrás del hotel.",
+        },
+        {
+          word_en: "flashlight",
+          word_es: "lámpara",
+          example_en: "I have a flashlight. Please stay next to me.",
+          example_es: "Traigo una lámpara. Por favor manténgase a mi lado.",
+        },
+      ],
+    },
+    {
+      id: "g-006",
+      level: "A2",
+      listening: {
+        audio_text: "Hey, I'm meeting a friend in room 412. Can I just head up?",
+        options: [
+          { emoji: "☎️", text_es: "Llamar a la habitación y registrarlo antes de que suba", correct: true },
+          { emoji: "🛗", text_es: "Dejarlo subir porque sabe el número de habitación", correct: false },
+          { emoji: "🪪", text_es: "Pedirle una identificación y dejarlo subir", correct: false },
+        ],
+        explanation_es:
+          "Saber un número de habitación no confirma que lo estén esperando, y una identificación tampoco. Se llama al cuarto y el visitante se registra antes de subir.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let me call the room first. If they're expecting you, I'll take you up.",
+        note_es:
+          "La condición (“if they're expecting you”) deja clara la regla sin acusar al visitante de nada.",
+      },
+      vocabulary: [
+        {
+          word_en: "visitor",
+          word_es: "visitante",
+          example_en: "Every visitor signs in at the front desk.",
+          example_es: "Todo visitante se registra en recepción.",
+        },
+        {
+          word_en: "front desk",
+          word_es: "recepción",
+          example_en: "Please wait for your friend at the front desk.",
+          example_es: "Por favor espere a su amigo en recepción.",
+        },
+        {
+          word_en: "expecting",
+          word_es: "estar esperando a alguien",
+          example_en: "Is she expecting you?",
+          example_es: "¿Ella lo está esperando?",
+        },
+      ],
+    },
+    {
+      id: "g-007",
+      level: "A2",
+      listening: {
+        audio_text: "The room next to mine has had music going since midnight. I've got a flight at six.",
+        options: [
+          { emoji: "🔇", text_es: "Subir a pedir que bajen el volumen y regresar a confirmarle", correct: true },
+          { emoji: "🛏️", text_es: "Ofrecerle cambiarlo de habitación esta noche", correct: false },
+          { emoji: "⏰", text_es: "Decirle que el ruido termina a las dos", correct: false },
+        ],
+        explanation_es:
+          "Tiene un vuelo temprano y necesita dormir ya. Subes, pides que le bajen y regresas a confirmarle que se resolvió. Cambiar habitaciones no te toca a ti.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry about that. I'll go up now and ask them to turn it down.",
+        note_es:
+          "“I'm sorry about that” reconoce la molestia sin culpar a nadie. Después va la acción concreta y el tiempo: ahora.",
+      },
+      vocabulary: [
+        {
+          word_en: "turn it down",
+          word_es: "bajarle al volumen",
+          example_en: "Could you please turn it down?",
+          example_es: "¿Podrían bajarle, por favor?",
+        },
+        {
+          word_en: "next door",
+          word_es: "de al lado",
+          example_en: "The guest next door is trying to sleep.",
+          example_es: "El huésped de al lado está tratando de dormir.",
+        },
+        {
+          word_en: "noise",
+          word_es: "ruido",
+          example_en: "We had a noise complaint from the fourth floor.",
+          example_es: "Recibimos una queja por ruido del cuarto piso.",
+        },
+      ],
+    },
+    {
+      id: "g-008",
+      level: "A2",
+      listening: {
+        audio_text: "Is my car okay where it is? I left it by the big blue doors for a minute.",
+        options: [
+          { emoji: "🚗", text_es: "Decirle que ahí es salida de emergencia y pedirle que la mueva", correct: true },
+          { emoji: "⏱️", text_es: "Decirle que unos minutos no hay problema", correct: false },
+          { emoji: "🔑", text_es: "Pedirle las llaves para moverla tú", correct: false },
+        ],
+        explanation_es:
+          "Las puertas azules son la salida de emergencia y no pueden quedar bloqueadas. Le explicas por qué y le dices dónde sí puede dejarla. Las llaves de un huésped no se toman.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Those doors are a fire exit, sir. Could you move it to the parking lot?",
+        note_es:
+          "Primero la razón, después la petición. Cuando el huésped entiende por qué, mueve el coche sin discutir.",
+      },
+      vocabulary: [
+        {
+          word_en: "fire exit",
+          word_es: "salida de emergencia",
+          example_en: "Those doors are a fire exit.",
+          example_es: "Esas puertas son salida de emergencia.",
+        },
+        {
+          word_en: "move your car",
+          word_es: "mover su coche",
+          example_en: "Could you move your car, please?",
+          example_es: "¿Podría mover su coche, por favor?",
+        },
+        {
+          word_en: "blocking",
+          word_es: "bloqueando",
+          example_en: "Your car is blocking the door.",
+          example_es: "Su coche está bloqueando la puerta.",
+        },
+      ],
+    },
+    {
+      id: "g-009",
+      level: "A2",
+      listening: {
+        audio_text: "We're not staying at the hotel, we just came in with a friend to use the pool. Is that a problem?",
+        options: [
+          { emoji: "🏊", text_es: "Explicar que la alberca es solo para huéspedes y mandarlos a preguntar en recepción", correct: true },
+          { emoji: "🧾", text_es: "Cobrarles la entrada ahí mismo", correct: false },
+          { emoji: "👥", text_es: "Dejarlos quedarse porque vienen con un huésped", correct: false },
+        ],
+        explanation_es:
+          "No están mintiendo: están preguntando. La respuesta correcta explica la regla y los manda a recepción, que es quien decide si pueden quedarse. Tú no cobras ni autorizas.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "The pool is for hotel guests. Your friend can check with the front desk for you.",
+        note_es:
+          "Separar la regla del siguiente paso deja claro que no es una decisión tuya en contra de ellos. La gente acepta mejor un “no” cuando trae una salida.",
+      },
+      vocabulary: [
+        {
+          word_en: "guests only",
+          word_es: "solo para huéspedes",
+          example_en: "The pool is for hotel guests only.",
+          example_es: "La alberca es solo para huéspedes del hotel.",
+        },
+        {
+          word_en: "staying here",
+          word_es: "hospedarse aquí",
+          example_en: "Are you staying here at the hotel?",
+          example_es: "¿Se está hospedando aquí en el hotel?",
+        },
+        {
+          word_en: "check with",
+          word_es: "preguntar con",
+          example_en: "You can check with the front desk.",
+          example_es: "Puede preguntar en recepción.",
+        },
+      ],
+    },
+    {
+      id: "g-010",
+      level: "A2",
+      listening: {
+        audio_text: "I can't find my daughter. She was at the kids' club twenty minutes ago and now she's gone.",
+        options: [
+          { emoji: "🧒", text_es: "Preguntar cómo va vestida, avisar por radio a todo el equipo y no dejar sola a la persona", correct: true },
+          { emoji: "🚪", text_es: "Salir a buscarla tú solo y dejar sola a la persona", correct: false },
+          { emoji: "📞", text_es: "Pedirle que espere en su habitación", correct: false },
+        ],
+        explanation_es:
+          "Una niña perdida se busca con todo el equipo al mismo tiempo. Preguntas cómo va vestida, avisas por radio y no dejas sola a la persona que la está buscando.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "What is she wearing? I'll radio my team right now.",
+        note_es:
+          "La pregunta primero te da información útil de inmediato; “right now” avisa que la búsqueda ya empezó.",
+      },
+      vocabulary: [
+        {
+          word_en: "missing",
+          word_es: "perdida, desaparecida",
+          example_en: "I'm looking for a missing child.",
+          example_es: "Estoy buscando a una niña perdida.",
+        },
+        {
+          word_en: "kids' club",
+          word_es: "club infantil",
+          example_en: "The kids' club closes at eight.",
+          example_es: "El club infantil cierra a las ocho.",
+        },
+        {
+          word_en: "radio",
+          word_es: "avisar por radio",
+          example_en: "I'll radio my team right now.",
+          example_es: "Voy a avisar a mi equipo por radio ahora mismo.",
+        },
+      ],
+    },
+    {
+      id: "g-011",
+      level: "B1",
+      listening: {
+        audio_text: "My watch is gone. It was right here on the desk, and only your housekeeping has been in this room.",
+        options: [
+          { emoji: "📝", text_es: "Disculparte, levantar el reporte y llamar a tu gerente", correct: true },
+          { emoji: "🙅", text_es: "Explicarle que el personal del hotel no roba", correct: false },
+          { emoji: "🔍", text_es: "Revisar tú mismo el cuarto y cerrar el tema", correct: false },
+        ],
+        explanation_es:
+          "El huésped está señalando al personal. No defiendes ni acusas: levantas el reporte y subes el caso a tu gerente, que es quien puede investigarlo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry to hear that, sir. Let's fill out a report right now, and I'll ask my manager to come up.",
+        note_es:
+          "“I'm sorry to hear that” muestra preocupación sin admitir culpa del hotel. Y “let's fill out a report” convierte una acusación en un procedimiento, que es lo que baja la tensión.",
+      },
+      vocabulary: [
+        {
+          word_en: "report",
+          word_es: "reporte",
+          example_en: "Let's fill out a report right now.",
+          example_es: "Levantemos un reporte ahora mismo.",
+        },
+        {
+          word_en: "manager",
+          word_es: "gerente",
+          example_en: "My manager will come up in five minutes.",
+          example_es: "Mi gerente subirá en cinco minutos.",
+        },
+        {
+          word_en: "safe",
+          word_es: "caja fuerte",
+          example_en: "There's a safe in the closet for valuables.",
+          example_es: "Hay una caja fuerte en el clóset para objetos de valor.",
+        },
+      ],
+    },
+    {
+      id: "g-012",
+      level: "B1",
+      listening: {
+        audio_text: "My husband is really dizzy and he can't stand up. Should we just drive to a hospital?",
+        options: [
+          { emoji: "🚑", text_es: "Pedir que no lo muevan, llamar una ambulancia y quedarte con ellos", correct: true },
+          { emoji: "🚕", text_es: "Conseguirles un taxi al hospital", correct: false },
+          { emoji: "💊", text_es: "Ofrecerle una pastilla del botiquín", correct: false },
+        ],
+        explanation_es:
+          "Mover a alguien que no puede sostenerse puede empeorar la situación, y dar medicamento no te corresponde. Llamas a la ambulancia y te quedas con ellos.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Please don't move him. I'm calling an ambulance now, and I'll stay with you.",
+        note_es:
+          "Tres cosas en orden: la instrucción, la acción y el acompañamiento. “I'll stay with you” es lo que calma a la familia.",
+      },
+      vocabulary: [
+        {
+          word_en: "ambulance",
+          word_es: "ambulancia",
+          example_en: "I'm calling an ambulance now.",
+          example_es: "Estoy llamando una ambulancia ahora.",
+        },
+        {
+          word_en: "dizzy",
+          word_es: "mareado",
+          example_en: "Is he dizzy or is he in pain?",
+          example_es: "¿Está mareado o tiene dolor?",
+        },
+        {
+          word_en: "stay with you",
+          word_es: "quedarse con alguien",
+          example_en: "I'll stay with you until they get here.",
+          example_es: "Me quedo con usted hasta que lleguen.",
+        },
+      ],
+    },
+    {
+      id: "g-013",
+      level: "B1",
+      listening: {
+        audio_text: "Come on, man, just one more drink. The bar's closed but you can get me something, right?",
+        options: [
+          { emoji: "💧", text_es: "Ofrecerle agua y acompañarlo a su habitación", correct: true },
+          { emoji: "🍺", text_es: "Conseguirle una bebida para evitar el problema", correct: false },
+          { emoji: "🚶", text_es: "Dejarlo ahí y seguir con tu ronda", correct: false },
+        ],
+        explanation_es:
+          "No es una emergencia, es un huésped tomado. Le ofreces agua, no discutes el tema del bar y lo acompañas a su cuarto. Dejarlo solo es como empiezan los accidentes.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "The bar's closed, my friend. Let me get you some water and walk you upstairs.",
+        note_es:
+          "“My friend” mantiene el tono de compañero, no de autoridad. Ofrecer algo concreto funciona mejor que repetir la negativa.",
+      },
+      vocabulary: [
+        {
+          word_en: "let me get you",
+          word_es: "permítame traerle",
+          example_en: "Let me get you a glass of water.",
+          example_es: "Permítame traerle un vaso de agua.",
+        },
+        {
+          word_en: "closed",
+          word_es: "cerrado",
+          example_en: "The bar is closed now, sir.",
+          example_es: "El bar ya está cerrado, señor.",
+        },
+        {
+          word_en: "upstairs",
+          word_es: "arriba",
+          example_en: "I can walk you upstairs.",
+          example_es: "Puedo acompañarlo arriba.",
+        },
+      ],
+    },
+    {
+      id: "g-014",
+      level: "B1",
+      listening: {
+        audio_text: "Is this a drill? I'm not walking down twenty floors in a bathrobe.",
+        options: [
+          { emoji: "🧥", text_es: "Explicarle que todos tienen que bajar, conseguirle una cobija y llevarlo a la escalera", correct: true },
+          { emoji: "⏳", text_es: "Decirle que espere en su cuarto mientras confirmas", correct: false },
+          { emoji: "👕", text_es: "Esperar a que se cambie de ropa antes de bajar", correct: false },
+        ],
+        explanation_es:
+          "Con la alarma activa nadie se queda en el piso y nadie espera a cambiarse. Reconoces la incomodidad, le consigues una cobija y lo llevas a la escalera y de ahí al punto de reunión.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry, sir, but everyone has to go down. I'll get you a blanket outside and walk down with you.",
+        note_es:
+          "Reconoces la molestia sin negociar la salida. La cobija le da algo concreto y hace que el “no” sea aceptable.",
+      },
+      vocabulary: [
+        {
+          word_en: "drill",
+          word_es: "simulacro",
+          example_en: "This is not a drill, sir.",
+          example_es: "Esto no es un simulacro, señor.",
+        },
+        {
+          word_en: "meeting point",
+          word_es: "punto de reunión",
+          example_en: "The meeting point is in the front parking lot.",
+          example_es: "El punto de reunión es el estacionamiento de enfrente.",
+        },
+        {
+          word_en: "blanket",
+          word_es: "cobija",
+          example_en: "I'll get you a blanket outside.",
+          example_es: "Le consigo una cobija afuera.",
+        },
+      ],
+    },
+    {
+      id: "g-015",
+      level: "B1",
+      listening: {
+        audio_text: "There's a guy knocking on doors on my floor. He said he's maintenance but he's not wearing a uniform.",
+        options: [
+          { emoji: "🚶", text_es: "Subir de inmediato a verificar y acompañar al huésped a su habitación", correct: true },
+          { emoji: "📋", text_es: "Anotar el reporte y revisarlo al terminar tu turno", correct: false },
+          { emoji: "🤷", text_es: "Explicarle que seguramente es personal del hotel", correct: false },
+        ],
+        explanation_es:
+          "El huésped detectó algo que no cuadra: alguien sin uniforme tocando puertas. Se verifica en el momento, no después, y el huésped no regresa solo al pasillo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Thank you for telling me. I'm going up right away. Let me walk you to your room.",
+        note_es:
+          "Agradecer primero valida lo que el huésped vio. Todo el personal trae uniforme, así que su duda era razonable y hay que tratarla así.",
+      },
+      vocabulary: [
+        {
+          word_en: "uniform",
+          word_es: "uniforme",
+          example_en: "All our staff wear a uniform.",
+          example_es: "Todo nuestro personal usa uniforme.",
+        },
+        {
+          word_en: "thank you for telling me",
+          word_es: "gracias por avisarme",
+          example_en: "Thank you for telling me, sir.",
+          example_es: "Gracias por avisarme, señor.",
+        },
+        {
+          word_en: "right away",
+          word_es: "de inmediato",
+          example_en: "I'm going up right away.",
+          example_es: "Voy a subir de inmediato.",
+        },
+      ],
+    },
+    {
+      id: "g-016",
+      level: "B2",
+      listening: {
+        audio_text: "That's my dad. What happened? How long was he out, and was anyone with him?",
+        options: [
+          { emoji: "🚑", text_es: "Dar los tres datos en orden y llevar a la familia directo con él", correct: true },
+          { emoji: "📄", text_es: "Ir a recepción por el registro del huésped", correct: false },
+          { emoji: "🙋", text_es: "Buscar a alguien que hable mejor inglés que tú", correct: false },
+        ],
+        explanation_es:
+          "La familia pregunta tres cosas: qué pasó, cuánto tiempo estuvo inconsciente y si alguien lo acompañó. Contestas en ese mismo orden y llevas a la familia con él, sin escalas.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "He collapsed by the pool ten minutes ago. He was unconscious for about a minute, and I've been with him ever since. This way, please.",
+        note_es:
+          "Contestas en el mismo orden en que te preguntaron y cierras con una sola frase para guiar. Bajo presión, la claridad vale más que la gramática perfecta.",
+      },
+      vocabulary: [
+        {
+          word_en: "unconscious",
+          word_es: "inconsciente",
+          example_en: "He was unconscious for about a minute.",
+          example_es: "Estuvo inconsciente como un minuto.",
+        },
+        {
+          word_en: "collapsed",
+          word_es: "se desmayó",
+          example_en: "The guest collapsed near the pool.",
+          example_es: "El huésped se desmayó cerca de la alberca.",
+        },
+        {
+          word_en: "this way",
+          word_es: "por aquí",
+          example_en: "This way, please. It's faster.",
+          example_es: "Por aquí, por favor. Es más rápido.",
+        },
+      ],
+    },
+    {
+      id: "g-017",
+      level: "B2",
+      listening: {
+        audio_text: "Look, I'm his wife. I just need to know if he's in room 508. I've been flying for six hours.",
+        options: [
+          { emoji: "🔒", text_es: "Explicar que no puedes confirmar datos de huéspedes y ofrecer llamar a la habitación", correct: true },
+          { emoji: "🪪", text_es: "Pedirle una identificación y confirmarle si el apellido coincide", correct: false },
+          { emoji: "🗝️", text_es: "Confirmarle el número y acompañarla", correct: false },
+        ],
+        explanation_es:
+          "No puedes confirmar si alguien se hospeda ni en qué cuarto, aunque la historia suene creíble y aunque el apellido coincida. Sí puedes ofrecer llamar a la habitación y dejar que esa persona decida.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry, ma'am. I'm not able to confirm that, but I can call the room and let them know you're here.",
+        note_es:
+          "“I'm not able to” señala una regla del hotel, no una decisión tuya en contra de ella. La alternativa deja la puerta abierta sin romper la privacidad.",
+      },
+      vocabulary: [
+        {
+          word_en: "confirm",
+          word_es: "confirmar",
+          example_en: "I'm not able to confirm that.",
+          example_es: "No puedo confirmar eso.",
+        },
+        {
+          word_en: "not able to",
+          word_es: "no poder hacer algo",
+          example_en: "I'm not able to do that, ma'am.",
+          example_es: "No puedo hacer eso, señora.",
+        },
+        {
+          word_en: "let them know",
+          word_es: "avisarles",
+          example_en: "I can call the room and let them know you're here.",
+          example_es: "Puedo llamar a la habitación y avisarles que está aquí.",
+        },
+      ],
+    },
+    {
+      id: "g-018",
+      level: "B2",
+      listening: {
+        audio_text: "Who called a tow truck for my car? I want your name and your badge number. I'm going to sue this hotel.",
+        options: [
+          { emoji: "🤝", text_es: "Darle tu nombre, moverse a un lado y traer al gerente", correct: true },
+          { emoji: "🧾", text_es: "Explicarle que él se estacionó mal y no es tu problema", correct: false },
+          { emoji: "🤐", text_es: "No darle tu nombre hasta que se tranquilice", correct: false },
+        ],
+        explanation_es:
+          "Está gritando frente a otros huéspedes. Le das tu nombre sin discutir, lo llevas a un lado y traes al gerente, que es quien resuelve el tema de la grúa.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "My name is Luis, sir. Could we step over here? I'll get my manager and we'll look into it.",
+        note_es:
+          "Cambia “Luis” por tu nombre: darlo de inmediato le quita fuerza a la pelea. Y “could we step over here” saca la discusión del público sin pedirle que se calme.",
+      },
+      vocabulary: [
+        {
+          word_en: "tow truck",
+          word_es: "grúa",
+          example_en: "A tow truck moved the car this morning.",
+          example_es: "Una grúa movió el coche esta mañana.",
+        },
+        {
+          word_en: "step over here",
+          word_es: "pasar hacia acá",
+          example_en: "Could we step over here for a moment?",
+          example_es: "¿Podemos pasar hacia acá un momento?",
+        },
+        {
+          word_en: "look into",
+          word_es: "revisar a fondo",
+          example_en: "I'll look into it right now.",
+          example_es: "Lo voy a revisar ahora mismo.",
+        },
+      ],
+    },
+    {
+      id: "g-019",
+      level: "B2",
+      listening: {
+        audio_text: "It's nothing, we're just talking. You can go now, everything's fine.",
+        options: [
+          { emoji: "🚪", text_es: "Pedir hablar un momento a solas con la otra persona y avisar a tu supervisor", correct: true },
+          { emoji: "👋", text_es: "Retirarte porque el huésped dijo que todo está bien", correct: false },
+          { emoji: "📣", text_es: "Entrar a la habitación a revisar", correct: false },
+        ],
+        explanation_es:
+          "Alguien puede decir que todo está bien delante de la otra persona sin que sea cierto. Sin entrar ni acusar, pides hablar un momento a solas con la otra persona y le avisas a tu supervisor.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I understand, sir. I'd just like to make sure everyone's okay. Could I speak with her for a moment?",
+        note_es:
+          "“Make sure everyone's okay” explica tu presencia sin acusar a nadie. Nunca entras a la habitación: pides permiso, no exiges.",
+      },
+      vocabulary: [
+        {
+          word_en: "make sure",
+          word_es: "asegurarse",
+          example_en: "I just want to make sure everyone is okay.",
+          example_es: "Solo quiero asegurarme de que todos estén bien.",
+        },
+        {
+          word_en: "for a moment",
+          word_es: "un momento",
+          example_en: "Could I speak with you for a moment?",
+          example_es: "¿Podría hablar con usted un momento?",
+        },
+        {
+          word_en: "let my manager know",
+          word_es: "avisarle a mi gerente",
+          example_en: "I'll let my manager know right away.",
+          example_es: "Le voy a avisar a mi gerente de inmediato.",
+        },
+      ],
+    },
+    {
+      id: "g-020",
+      level: "B2",
+      listening: {
+        audio_text: "Hi, I'm with the local press. Can you tell me what happened here last night? Just off the record.",
+        options: [
+          { emoji: "🗞️", text_es: "No comentar nada y remitirlo a la gerencia", correct: true },
+          { emoji: "🎙️", text_es: "Contarle lo que viste si no da tu nombre", correct: false },
+          { emoji: "📱", text_es: "Confirmarle solo lo que ya se dijo en redes", correct: false },
+        ],
+        explanation_es:
+          "Nada es “off the record” para un empleado, y confirmar algo que ya circula sigue siendo confirmarlo. No comentas nada y lo mandas con la gerencia, que es quien habla por el hotel.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I can't comment on that, sir. Our management can speak with you. Let me take your name.",
+        note_es:
+          "“I can't comment on that” es una frase completa y educada que cierra el tema sin sonar grosero. Tomar su nombre te deja bien parado y le da algo con qué irse.",
+      },
+      vocabulary: [
+        {
+          word_en: "press",
+          word_es: "prensa",
+          example_en: "A reporter from the press is in the lobby.",
+          example_es: "Un reportero de la prensa está en el lobby.",
+        },
+        {
+          word_en: "comment",
+          word_es: "comentar",
+          example_en: "I can't comment on that.",
+          example_es: "No puedo comentar sobre eso.",
+        },
+        {
+          word_en: "management",
+          word_es: "la gerencia",
+          example_en: "Management will answer your questions.",
+          example_es: "La gerencia responderá sus preguntas.",
+        },
+      ],
+    },
+  ],
+
+  maintenance: [
+    {
+      id: "m-001",
+      level: "A1",
+      listening: {
+        audio_text: "Oh, hi. Yes, come in. The light in the bathroom doesn't work.",
+        options: [
+          { emoji: "💡", text_es: "Cambiar el foco del baño", correct: true },
+          { emoji: "🛏️", text_es: "Cambiar el foco de la lámpara del buró", correct: false },
+          { emoji: "🚿", text_es: "Revisar la regadera del baño", correct: false },
+        ],
+        explanation_es:
+          "El huésped te deja pasar y dice que la luz del baño no funciona. Lo correcto es entrar y cambiar el foco del baño, no el de otra lámpara.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Thank you. I'll change the light bulb right now.",
+        note_es:
+          "Decir “thank you” al entrar reconoce que te dieron permiso. “I'll change” avisa qué vas a hacer, así el huésped no se queda con la duda.",
+      },
+      vocabulary: [
+        {
+          word_en: "come in",
+          word_es: "pasar, entrar",
+          example_en: "May I come in? I'm from maintenance.",
+          example_es: "¿Puedo pasar? Soy de mantenimiento.",
+        },
+        {
+          word_en: "light bulb",
+          word_es: "foco",
+          example_en: "I'll change the light bulb in the bathroom.",
+          example_es: "Voy a cambiar el foco del baño.",
+        },
+        {
+          word_en: "doesn't work",
+          word_es: "no funciona",
+          example_en: "The light in the bathroom doesn't work.",
+          example_es: "La luz del baño no funciona.",
+        },
+      ],
+    },
+    {
+      id: "m-002",
+      level: "A1",
+      listening: {
+        audio_text: "Hey. The TV won't turn on. Can you take a look?",
+        options: [
+          { emoji: "📺", text_es: "Revisar la televisión y el control", correct: true },
+          { emoji: "📶", text_es: "Reiniciar el módem del wifi", correct: false },
+          { emoji: "📞", text_es: "Reportar la televisión a recepción para que la cambien", correct: false },
+        ],
+        explanation_es:
+          "El huésped dice que la tele no enciende y te pide que la veas. Primero revisa el control y la conexión del televisor tú mismo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "No problem. Let me check the TV and the remote control.",
+        note_es:
+          "“Let me check” suena tranquilo y profesional: dices que vas a revisar antes de prometer que ya quedó.",
+      },
+      vocabulary: [
+        {
+          word_en: "turn on",
+          word_es: "encender",
+          example_en: "I'll turn on the TV to check it.",
+          example_es: "Voy a encender la televisión para revisarla.",
+        },
+        {
+          word_en: "remote control",
+          word_es: "control remoto",
+          example_en: "The remote control needs new batteries.",
+          example_es: "El control remoto necesita pilas nuevas.",
+        },
+        {
+          word_en: "check",
+          word_es: "revisar",
+          example_en: "Let me check the cable behind the TV.",
+          example_es: "Voy a revisar el cable de atrás de la televisión.",
+        },
+      ],
+    },
+    {
+      id: "m-003",
+      level: "A1",
+      listening: {
+        audio_text: "Good morning. There's no hot water in the shower.",
+        options: [
+          { emoji: "🔥", text_es: "Revisar el calentador de agua", correct: true },
+          { emoji: "🚰", text_es: "Revisar el lavabo por una fuga", correct: false },
+          { emoji: "🚿", text_es: "Cambiar la regadera por una nueva", correct: false },
+        ],
+        explanation_es:
+          "No sale agua caliente en la regadera, así que el problema está en el calentador. Revísalo primero y avisa cuánto tiempo va a tardar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry. Let me check the water heater for you.",
+        note_es:
+          "Empezar con “I'm sorry” no es aceptar la culpa: en inglés es la forma normal de mostrar que el problema te importa.",
+      },
+      vocabulary: [
+        {
+          word_en: "hot water",
+          word_es: "agua caliente",
+          example_en: "There is no hot water in room 210.",
+          example_es: "No hay agua caliente en la habitación 210.",
+        },
+        {
+          word_en: "shower",
+          word_es: "regadera",
+          example_en: "The shower is working now.",
+          example_es: "La regadera ya funciona.",
+        },
+        {
+          word_en: "water heater",
+          word_es: "calentador",
+          example_en: "The water heater is on the roof.",
+          example_es: "El calentador está en la azotea.",
+        },
+      ],
+    },
+    {
+      id: "m-004",
+      level: "A1",
+      listening: {
+        audio_text: "Excuse me. The air conditioning isn't cold. Can you fix it?",
+        options: [
+          { emoji: "❄️", text_es: "Revisar el aire acondicionado", correct: true },
+          { emoji: "🌀", text_es: "Traer un ventilador a la habitación", correct: false },
+          { emoji: "🪟", text_es: "Abrir la ventana para que entre aire", correct: false },
+        ],
+        explanation_es:
+          "El huésped dice que el aire no enfría y te pide que lo arregles. La acción correcta es revisar el equipo antes de ofrecer cualquier otra cosa.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Yes, of course. I'll check the air conditioning now.",
+        note_es:
+          "“Yes, of course” es más cálido que “OK”. Agregar “now” le da al huésped una idea clara de cuándo pasa algo.",
+      },
+      vocabulary: [
+        {
+          word_en: "air conditioning",
+          word_es: "aire acondicionado",
+          example_en: "The air conditioning is working now.",
+          example_es: "El aire acondicionado ya está funcionando.",
+        },
+        {
+          word_en: "cold",
+          word_es: "frío",
+          example_en: "The room will be cold in twenty minutes.",
+          example_es: "La habitación va a estar fría en veinte minutos.",
+        },
+        {
+          word_en: "fix",
+          word_es: "arreglar",
+          example_en: "I can fix it today.",
+          example_es: "Lo puedo arreglar hoy.",
+        },
+      ],
+    },
+    {
+      id: "m-005",
+      level: "A1",
+      listening: {
+        audio_text: "Excuse me, are you finished in the bathroom? I need to get ready.",
+        options: [
+          { emoji: "⚠️", text_es: "Decirle que ya terminaste y avisarle que el piso está mojado", correct: true },
+          { emoji: "🧽", text_es: "Pedirle veinte minutos más para terminar el trabajo", correct: false },
+          { emoji: "🚻", text_es: "Mandarlo al baño del lobby mientras terminas", correct: false },
+        ],
+        explanation_es:
+          "El huésped quiere entrar al baño donde acabas de trabajar y tú ya terminaste. Dile que sí y avisa del piso mojado para que nadie se resbale.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Yes, I'm finished. Please be careful — the floor is wet.",
+        note_es:
+          "“Please be careful” avisa sin sonar a orden. En inglés, “please” antes del verbo suaviza cualquier instrucción.",
+      },
+      vocabulary: [
+        {
+          word_en: "wet",
+          word_es: "mojado",
+          example_en: "The floor is still wet.",
+          example_es: "El piso todavía está mojado.",
+        },
+        {
+          word_en: "floor",
+          word_es: "piso",
+          example_en: "I will dry the floor in five minutes.",
+          example_es: "Voy a secar el piso en cinco minutos.",
+        },
+        {
+          word_en: "careful",
+          word_es: "cuidado",
+          example_en: "Please be careful, the floor is wet.",
+          example_es: "Por favor, cuidado, el piso está mojado.",
+        },
+      ],
+    },
+    {
+      id: "m-006",
+      level: "A2",
+      listening: {
+        audio_text: "Sorry to bother you, but the toilet is blocked. It won't flush at all.",
+        options: [
+          { emoji: "🚽", text_es: "Destapar el inodoro y probar que descargue", correct: true },
+          { emoji: "🧼", text_es: "Limpiar el baño y reponer el papel", correct: false },
+          { emoji: "🚿", text_es: "Revisar el drenaje de la regadera", correct: false },
+        ],
+        explanation_es:
+          "El inodoro está tapado y no descarga. Destápalo y prueba que funcione antes de salir del cuarto.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry about that. I'll unblock it now — it'll take about ten minutes.",
+        note_es:
+          "Dar un tiempo aproximado (“about ten minutes”) tranquiliza más que decir solo “now”, porque el huésped puede planear su día.",
+      },
+      vocabulary: [
+        {
+          word_en: "toilet",
+          word_es: "inodoro, escusado",
+          example_en: "I need to check the toilet in room 512.",
+          example_es: "Necesito revisar el inodoro de la habitación 512.",
+        },
+        {
+          word_en: "blocked",
+          word_es: "tapado",
+          example_en: "The drain is blocked.",
+          example_es: "El drenaje está tapado.",
+        },
+        {
+          word_en: "flush",
+          word_es: "descargar, jalarle",
+          example_en: "It flushes normally now.",
+          example_es: "Ya descarga normal.",
+        },
+      ],
+    },
+    {
+      id: "m-007",
+      level: "A2",
+      listening: {
+        audio_text: "The wifi keeps dropping. I typed the password twice and it still won't connect.",
+        options: [
+          { emoji: "📶", text_es: "Reiniciar el módem y probar la señal en el cuarto", correct: true },
+          { emoji: "🔑", text_es: "Anotarle la contraseña otra vez en una tarjeta", correct: false },
+          { emoji: "📺", text_es: "Revisar el cable de la televisión", correct: false },
+        ],
+        explanation_es:
+          "La contraseña no es el problema: la conexión se cae sola. Reinicia el módem y comprueba la señal dentro de la habitación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Let me restart the router. It should work again in about five minutes.",
+        note_es:
+          "“It should work” promete menos que “it will work”, y eso te protege si la falla viene de la señal de todo el hotel.",
+      },
+      vocabulary: [
+        {
+          word_en: "router",
+          word_es: "módem, router",
+          example_en: "The router is behind the TV.",
+          example_es: "El módem está detrás de la televisión.",
+        },
+        {
+          word_en: "restart",
+          word_es: "reiniciar",
+          example_en: "I'm going to restart the router.",
+          example_es: "Voy a reiniciar el módem.",
+        },
+        {
+          word_en: "signal",
+          word_es: "señal",
+          example_en: "The signal is weak in this room.",
+          example_es: "La señal está débil en esta habitación.",
+        },
+      ],
+    },
+    {
+      id: "m-008",
+      level: "A2",
+      listening: {
+        audio_text: "Sorry, I'm on a call with my family right now. Could you come back later?",
+        options: [
+          { emoji: "🕓", text_es: "Acordar una hora concreta para regresar", correct: true },
+          { emoji: "🔧", text_es: "Entrar de todos modos porque es un trabajo rápido", correct: false },
+          { emoji: "🚪", text_es: "Decirle que regresas más tarde sin fijar una hora", correct: false },
+        ],
+        explanation_es:
+          "El huésped no está cancelando el servicio, solo pide un momento. Acuerda una hora concreta para volver y avísale a recepción.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Of course. I'll come back at four o'clock — does that work for you?",
+        note_es:
+          "Proponer una hora exacta evita el “más tarde” que nunca llega. La pregunta al final deja la decisión con el huésped.",
+      },
+      vocabulary: [
+        {
+          word_en: "come back",
+          word_es: "regresar",
+          example_en: "I'll come back after lunch.",
+          example_es: "Regreso después de la comida.",
+        },
+        {
+          word_en: "later",
+          word_es: "más tarde",
+          example_en: "I can come back later if you prefer.",
+          example_es: "Puedo regresar más tarde si prefieres.",
+        },
+        {
+          word_en: "work for you",
+          word_es: "quedar bien, convenir",
+          example_en: "Does four o'clock work for you?",
+          example_es: "¿Te queda bien a las cuatro?",
+        },
+      ],
+    },
+    {
+      id: "m-009",
+      level: "A2",
+      listening: {
+        audio_text: "There's a loud noise coming from the bathroom fan at night. It woke me up twice.",
+        options: [
+          { emoji: "🌀", text_es: "Revisar y darle servicio al extractor del baño", correct: true },
+          { emoji: "🔇", text_es: "Apagar el extractor y dejarlo apagado", correct: false },
+          { emoji: "❄️", text_es: "Revisar el aire acondicionado del cuarto", correct: false },
+        ],
+        explanation_es:
+          "El ruido viene del extractor del baño, no del aire. Dale servicio al motor y confirma con el huésped que ya quedó.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry you couldn't sleep. I'll fix the fan today, so it should be quiet tonight.",
+        note_es:
+          "Nombrar la molestia real (“you couldn't sleep”) vale más que una disculpa general. “It should be” promete el resultado sin exagerar.",
+      },
+      vocabulary: [
+        {
+          word_en: "noise",
+          word_es: "ruido",
+          example_en: "The noise comes from the fan, not the air conditioning.",
+          example_es: "El ruido viene del extractor, no del aire acondicionado.",
+        },
+        {
+          word_en: "fan",
+          word_es: "ventilador, extractor",
+          example_en: "I'll clean the fan in the bathroom.",
+          example_es: "Voy a limpiar el extractor del baño.",
+        },
+        {
+          word_en: "at night",
+          word_es: "por la noche",
+          example_en: "Does it only happen at night?",
+          example_es: "¿Sólo pasa por la noche?",
+        },
+      ],
+    },
+    {
+      id: "m-010",
+      level: "A2",
+      listening: {
+        audio_text: "The curtain doesn't close all the way, so the sun comes in really early.",
+        options: [
+          { emoji: "🪟", text_es: "Reparar el riel de la cortina", correct: true },
+          { emoji: "😴", text_es: "Ofrecerle un antifaz para dormir de recepción", correct: false },
+          { emoji: "🧺", text_es: "Pedir que se lleven la cortina a lavar", correct: false },
+        ],
+        explanation_es:
+          "La cortina se atora en el riel y por eso deja pasar la luz. Repara el riel para que cierre por completo.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I see. The rail is stuck — I'll repair it now so it closes completely.",
+        note_es:
+          "“I see” muestra que entendiste antes de actuar. Explicar la causa le da al huésped confianza en tu trabajo.",
+      },
+      vocabulary: [
+        {
+          word_en: "curtain",
+          word_es: "cortina",
+          example_en: "The curtain closes completely now.",
+          example_es: "La cortina ya cierra por completo.",
+        },
+        {
+          word_en: "curtain rail",
+          word_es: "riel de la cortina",
+          example_en: "I need to change the curtain rail.",
+          example_es: "Necesito cambiar el riel de la cortina.",
+        },
+        {
+          word_en: "stuck",
+          word_es: "atorado",
+          example_en: "The curtain is stuck on this side.",
+          example_es: "La cortina está atorada de este lado.",
+        },
+      ],
+    },
+    {
+      id: "m-011",
+      level: "B1",
+      listening: {
+        audio_text: "There's water dripping from the ceiling onto the bed. I moved my bag, but it hasn't stopped.",
+        options: [
+          { emoji: "💧", text_es: "Cerrar el agua del cuarto de arriba y avisar a recepción", correct: true },
+          { emoji: "🪣", text_es: "Poner una cubeta y seguir con los otros reportes", correct: false },
+          { emoji: "🛏️", text_es: "Mover la cama al otro lado del cuarto", correct: false },
+        ],
+        explanation_es:
+          "La fuga viene del piso de arriba, así que hay que cortar el agua ahí. Avisa a recepción para que ofrezcan otra habitación mientras reparas.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm very sorry. I'll stop the water upstairs, and I'll ask reception about another room for you.",
+        note_es:
+          "Dos acciones concretas en una sola frase: lo que haces tú y lo que pides a recepción. Nunca prometas el cambio de cuarto, solo di que lo vas a pedir.",
+      },
+      vocabulary: [
+        {
+          word_en: "leak",
+          word_es: "fuga, gotera",
+          example_en: "The leak is coming from the room above.",
+          example_es: "La fuga viene de la habitación de arriba.",
+        },
+        {
+          word_en: "ceiling",
+          word_es: "techo",
+          example_en: "There is water on the ceiling.",
+          example_es: "Hay agua en el techo.",
+        },
+        {
+          word_en: "drip",
+          word_es: "gotear",
+          example_en: "The water is still dripping.",
+          example_es: "El agua sigue goteando.",
+        },
+      ],
+    },
+    {
+      id: "m-012",
+      level: "B1",
+      listening: {
+        audio_text: "So how long is this going to take? I've got calls all afternoon and I need that outlet for my laptop.",
+        options: [
+          { emoji: "🔌", text_es: "Explicar que la refacción llega mañana y traerle una extensión hoy", correct: true },
+          { emoji: "⏱️", text_es: "Prometerle que quedará listo en una hora", correct: false },
+          { emoji: "📞", text_es: "Mandarlo a recepción para que pidan cambio de habitación", correct: false },
+        ],
+        explanation_es:
+          "El huésped necesita la verdad para planear su tarde. Dile cuándo llega la refacción y qué le puedes dar mientras tanto.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry — the part arrives tomorrow morning. Meanwhile, I can bring you an extension cord.",
+        note_es:
+          "Decir la fecha real evita un enojo mucho mayor mañana. “Meanwhile” demuestra que no lo dejas sin nada mientras llega la refacción.",
+      },
+      vocabulary: [
+        {
+          word_en: "part",
+          word_es: "refacción, pieza",
+          example_en: "We don't have that part in the hotel.",
+          example_es: "No tenemos esa refacción en el hotel.",
+        },
+        {
+          word_en: "outlet",
+          word_es: "contacto, enchufe",
+          example_en: "The outlet next to the desk isn't working.",
+          example_es: "El contacto de junto al escritorio no funciona.",
+        },
+        {
+          word_en: "meanwhile",
+          word_es: "mientras tanto",
+          example_en: "Meanwhile, I can bring you an extension cord.",
+          example_es: "Mientras tanto, puedo traer una extensión.",
+        },
+      ],
+    },
+    {
+      id: "m-013",
+      level: "B1",
+      listening: {
+        audio_text: "The safe won't open and my passport's inside. I've tried the code three times.",
+        options: [
+          { emoji: "🔐", text_es: "Llamar al supervisor para abrirla con la llave maestra", correct: true },
+          { emoji: "🔑", text_es: "Pedirle el código y seguir intentando tú", correct: false },
+          { emoji: "🧾", text_es: "Mandarlo a recepción a levantar el reporte", correct: false },
+        ],
+        explanation_es:
+          "Solo el supervisor puede abrir la caja fuerte con la llave maestra. Explica quién lo va a hacer y da un tiempo aproximado, porque el pasaporte adentro es urgente.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I understand. My supervisor has the master key and can open it in about ten minutes.",
+        note_es:
+          "“I understand” reconoce la urgencia sin prometer algo que no te toca. Nombrar quién resuelve y en cuánto tiempo baja la ansiedad.",
+      },
+      vocabulary: [
+        {
+          word_en: "safe",
+          word_es: "caja fuerte",
+          example_en: "The safe in the closet is not opening.",
+          example_es: "La caja fuerte del clóset no está abriendo.",
+        },
+        {
+          word_en: "master key",
+          word_es: "llave maestra",
+          example_en: "Only my supervisor has the master key.",
+          example_es: "Sólo mi supervisor tiene la llave maestra.",
+        },
+        {
+          word_en: "unlock",
+          word_es: "abrir, desbloquear",
+          example_en: "My supervisor can unlock it in ten minutes.",
+          example_es: "Mi supervisor la puede abrir en diez minutos.",
+        },
+      ],
+    },
+    {
+      id: "m-014",
+      level: "B1",
+      listening: {
+        audio_text: "This room smells like paint. It's really strong and it's giving me a headache.",
+        options: [
+          { emoji: "🪟", text_es: "Ventilar el cuarto y avisar a recepción por si quiere cambiarse", correct: true },
+          { emoji: "🌸", text_es: "Poner aromatizante para tapar el olor", correct: false },
+          { emoji: "🎨", text_es: "Explicarle que el olor es normal y se quita solo", correct: false },
+        ],
+        explanation_es:
+          "El olor a pintura fresca puede causar dolor de cabeza, así que ventilar es lo primero. Avisa a recepción por si el huésped prefiere otra habitación.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry about the smell. Let me air out the room, and I'll tell reception in case you'd prefer another one.",
+        note_es:
+          "Tapar el olor con aromatizante empeora el problema; ventilar lo resuelve. “In case you'd prefer” ofrece la opción sin prometer el cambio.",
+      },
+      vocabulary: [
+        {
+          word_en: "smell",
+          word_es: "olor",
+          example_en: "The smell will go away in a few hours.",
+          example_es: "El olor se va a quitar en unas horas.",
+        },
+        {
+          word_en: "paint",
+          word_es: "pintura",
+          example_en: "We painted this room yesterday.",
+          example_es: "Pintamos esta habitación ayer.",
+        },
+        {
+          word_en: "air out",
+          word_es: "ventilar",
+          example_en: "I'll open the windows to air out the room.",
+          example_es: "Voy a abrir las ventanas para ventilar la habitación.",
+        },
+      ],
+    },
+    {
+      id: "m-015",
+      level: "B1",
+      listening: {
+        audio_text: "The door doesn't lock properly. I don't feel comfortable leaving my laptop in here.",
+        options: [
+          { emoji: "🔒", text_es: "Reparar la cerradura de inmediato y probarla frente al huésped", correct: true },
+          { emoji: "🧳", text_es: "Ofrecerle guardar la laptop en la caja de recepción", correct: false },
+          { emoji: "📝", text_es: "Anotar el reporte para el siguiente turno", correct: false },
+        ],
+        explanation_es:
+          "Una puerta que no cierra bien es un tema de seguridad y no puede esperar al siguiente turno. Repárala y prueba la cerradura frente al huésped.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "You're right to tell us. I'll repair the lock right away, and I'll check it with you before I leave.",
+        note_es:
+          "“You're right to tell us” valida la preocupación sin admitir una negligencia del hotel. Probar la cerradura delante del huésped es lo que devuelve la confianza.",
+      },
+      vocabulary: [
+        {
+          word_en: "lock",
+          word_es: "cerradura, cerrar con llave",
+          example_en: "The lock is not closing well.",
+          example_es: "La cerradura no cierra bien.",
+        },
+        {
+          word_en: "repair",
+          word_es: "reparar",
+          example_en: "I can repair it right now.",
+          example_es: "Lo puedo reparar ahora mismo.",
+        },
+        {
+          word_en: "right away",
+          word_es: "de inmediato",
+          example_en: "I'll do it right away.",
+          example_es: "Lo hago de inmediato.",
+        },
+      ],
+    },
+    {
+      id: "m-016",
+      level: "B2",
+      listening: {
+        audio_text: "Look, while you're in here — could you just disconnect the smoke detector? I only smoke by the window.",
+        options: [
+          { emoji: "🚭", text_es: "Explicar con calma que no puedes desconectarlo y ofrecer una alternativa", correct: true },
+          { emoji: "🔧", text_es: "Desconectarlo porque el huésped lo pidió amablemente", correct: false },
+          { emoji: "📞", text_es: "Reportarlo con seguridad sin comentárselo al huésped", correct: false },
+        ],
+        explanation_es:
+          "Desconectar un detector de humo pone en riesgo a todo el piso y no es una decisión tuya. Dilo con respeto y ofrece el lugar donde sí se puede fumar.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I'm sorry, I can't disconnect it — it protects the whole floor. There's a smoking area outside, and I can show you where it is.",
+        note_es:
+          "“I can't” es más claro que “I don't think so” y no deja la puerta abierta a insistir. Ofrecer el área de fumar convierte el no en una salida para el huésped.",
+      },
+      vocabulary: [
+        {
+          word_en: "smoke detector",
+          word_es: "detector de humo",
+          example_en: "I can't turn off the smoke detector.",
+          example_es: "No puedo apagar el detector de humo.",
+        },
+        {
+          word_en: "not allowed",
+          word_es: "no está permitido",
+          example_en: "Smoking is not allowed in the rooms.",
+          example_es: "No está permitido fumar en las habitaciones.",
+        },
+        {
+          word_en: "smoking area",
+          word_es: "área de fumar",
+          example_en: "There's a smoking area outside.",
+          example_es: "Hay un área de fumar afuera.",
+        },
+      ],
+    },
+    {
+      id: "m-017",
+      level: "B2",
+      listening: {
+        audio_text: "This is the third time someone's come up here and it's still not cold. I want to talk to a manager.",
+        options: [
+          { emoji: "🧊", text_es: "Reconocer la molestia, probar el equipo frente al huésped y llamar al gerente", correct: true },
+          { emoji: "🙅", text_es: "Explicar que tus compañeros ya lo habían dejado bien", correct: false },
+          { emoji: "📞", text_es: "Llamar al gerente y esperar afuera a que llegue", correct: false },
+        ],
+        explanation_es:
+          "Después de tres visitas, el huésped necesita ver una prueba, no otra promesa. Reconoce la molestia, revisa el equipo delante de él y llama al gerente como lo pidió.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "You're right to be upset, and I'm sorry. Let me test it in front of you, and I'll have the manager come up either way.",
+        note_es:
+          "“You're right to be upset” desarma el enojo sin culpar a tus compañeros. “Either way” cumple lo que el huésped pidió aunque tú resuelvas la falla.",
+      },
+      vocabulary: [
+        {
+          word_en: "test",
+          word_es: "probar",
+          example_en: "I'm going to test it in front of you.",
+          example_es: "Lo voy a probar aquí enfrente.",
+        },
+        {
+          word_en: "manager",
+          word_es: "gerente",
+          example_en: "I'll ask the manager to come up.",
+          example_es: "Voy a pedirle al gerente que suba.",
+        },
+        {
+          word_en: "make sure",
+          word_es: "asegurarse",
+          example_en: "I want to make sure it's really working.",
+          example_es: "Quiero asegurarme de que sí esté funcionando.",
+        },
+      ],
+    },
+    {
+      id: "m-018",
+      level: "B2",
+      listening: {
+        audio_text: "This might be nothing, but I keep smelling gas in the hallway. It comes and goes.",
+        options: [
+          { emoji: "🚨", text_es: "Tomarlo en serio, revisar el pasillo y avisar al supervisor en ese momento", correct: true },
+          { emoji: "🤷", text_es: "Decirle que seguramente es olor de la cocina", correct: false },
+          { emoji: "🪟", text_es: "Abrir una ventana del pasillo y seguir con tu trabajo", correct: false },
+        ],
+        explanation_es:
+          "Un olor a gas nunca se descarta, aunque aparezca y desaparezca. Agradece el aviso, revisa el pasillo y reporta al supervisor de inmediato.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Thank you for telling me. I'm taking this seriously — I'll check the hallway and call my supervisor now.",
+        note_es:
+          "“Thank you for telling me” premia que el huésped avise en lugar de quedarse callado. Decir que lo tomas en serio evita que insista o que se asuste más.",
+      },
+      vocabulary: [
+        {
+          word_en: "hallway",
+          word_es: "pasillo",
+          example_en: "I'm going to check the hallway.",
+          example_es: "Voy a revisar el pasillo.",
+        },
+        {
+          word_en: "come and go",
+          word_es: "aparecer y desaparecer",
+          example_en: "The smell comes and goes.",
+          example_es: "El olor aparece y desaparece.",
+        },
+        {
+          word_en: "serious",
+          word_es: "serio, grave",
+          example_en: "This is serious, so I'm calling now.",
+          example_es: "Esto es serio, por eso estoy llamando ahora.",
+        },
+      ],
+    },
+    {
+      id: "m-019",
+      level: "B2",
+      listening: {
+        audio_text: "I think I cracked the shower door when I leaned on it. Can we just not mention it to the front desk?",
+        options: [
+          { emoji: "🤝", text_es: "Explicar con calma que sí tienes que reportarlo y tranquilizarlo", correct: true },
+          { emoji: "🤐", text_es: "Aceptar no decir nada y repararlo por tu cuenta", correct: false },
+          { emoji: "💸", text_es: "Decirle que tendrá que pagar el daño completo", correct: false },
+        ],
+        explanation_es:
+          "Reportar la falla es parte de tu trabajo y no significa acusar a nadie. Explica el proceso sin regañar y sin hablar de cobros, porque eso lo define recepción.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "Don't worry, these things happen. I do have to report it so it gets repaired, but reception will take care of it with you.",
+        note_es:
+          "“These things happen” quita la culpa sin mentir. Nunca hables de cargos: decidir si se cobra no es tu papel, y prometer que no se cobra te deja mal parado.",
+      },
+      vocabulary: [
+        {
+          word_en: "report",
+          word_es: "reportar",
+          example_en: "I have to report it so we can repair it.",
+          example_es: "Tengo que reportarlo para que lo puedan reparar.",
+        },
+        {
+          word_en: "cracked",
+          word_es: "estrellado, cuarteado",
+          example_en: "The shower door is cracked.",
+          example_es: "La puerta de la regadera está estrellada.",
+        },
+        {
+          word_en: "take care of it",
+          word_es: "encargarse de ello",
+          example_en: "Reception will take care of it.",
+          example_es: "Recepción se va a encargar.",
+        },
+      ],
+    },
+    {
+      id: "m-020",
+      level: "B2",
+      listening: {
+        audio_text: "I'd rather you didn't come in today — I've got work papers everywhere. Can it wait until Friday?",
+        options: [
+          { emoji: "💧", text_es: "Explicar que el agua ya afecta el cuarto de abajo y pedir diez minutos con él presente", correct: true },
+          { emoji: "📅", text_es: "Aceptar esperar hasta el viernes como lo pidió", correct: false },
+          { emoji: "🔑", text_es: "Entrar con la llave maestra cuando el huésped salga", correct: false },
+        ],
+        explanation_es:
+          "Respetar la privacidad es correcto, pero la fuga ya está dañando el cuarto de abajo. Explica por qué no puede esperar y ofrece entrar poco tiempo mientras él está presente.",
+      },
+      reinforce: {
+        title_es: "Frase modelo",
+        model_en: "I completely understand. The problem is the water is reaching the room downstairs — could I come in for ten minutes while you're here?",
+        note_es:
+          "Primero validas, después explicas la razón real y al final vuelves a pedir permiso. Pedir permiso aunque traigas llave maestra es lo que mantiene la confianza.",
+      },
+      vocabulary: [
+        {
+          word_en: "downstairs",
+          word_es: "abajo, el piso de abajo",
+          example_en: "The water is reaching the room downstairs.",
+          example_es: "El agua está llegando a la habitación de abajo.",
+        },
+        {
+          word_en: "damage",
+          word_es: "dañar, daño",
+          example_en: "It could damage the ceiling.",
+          example_es: "Podría dañar el techo.",
+        },
+        {
+          word_en: "get worse",
+          word_es: "empeorar",
+          example_en: "If we wait, it will get worse.",
+          example_es: "Si esperamos, va a empeorar.",
+        },
+      ],
+    },
+  ],
+
 };
 
 /**
@@ -2573,7 +6596,9 @@ export const DRILLS: Record<Role, Drill[]> = {
  *     drill twice in a row
  */
 export function pickDrill(role: Role, level: "A1" | "A2" | "B1" | "B2"): Drill {
-  const pool = DRILLS[role];
+  // A role with no authored content yet falls back to frontdesk rather than
+  // crashing — demo mode must always render something.
+  const pool = DRILLS[role] ?? DRILLS.frontdesk ?? [];
 
   // Prefer same-level drills
   const sameLevel = pool.filter((d) => d.level === level);
@@ -2588,8 +6613,7 @@ export function pickDrill(role: Role, level: "A1" | "A2" | "B1" | "B2"): Drill {
   return fromPool[dayOfYear % fromPool.length];
 }
 
-export const ROLE_LABELS: Record<Role, string> = {
-  bellboy: "Botones",
-  frontdesk: "Recepción",
-  restaurant: "Restaurante / Bar",
-};
+/** Display labels. Derived from the canonical role registry. */
+export const ROLE_LABELS: Record<Role, string> = Object.fromEntries(
+  ROLE_IDS.map((id) => [id, ROLES[id].label_es]),
+) as Record<Role, string>;

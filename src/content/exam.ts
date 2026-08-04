@@ -788,9 +788,14 @@ export const RESTAURANT_SPEAKING: SpeakingPrompt[] = [
 
 // ─── Role → content lookup ─────────────────────────────────────────────
 
-export const EXAM_CONTENT: Record<
-  RoleModule,
-  { listening: ListeningItem[]; speaking: SpeakingPrompt[] }
+/**
+ * Role -> exam content. Partial on purpose: the placement exam has been
+ * authored for the three original departments. A department without its own
+ * exam falls back to front desk (see examContentFor) so a housekeeping hire
+ * can still be placed rather than hitting a blank screen.
+ */
+export const EXAM_CONTENT: Partial<
+  Record<RoleModule, { listening: ListeningItem[]; speaking: SpeakingPrompt[] }>
 > = {
   bellboy: { listening: BELLBOY_LISTENING, speaking: BELLBOY_SPEAKING },
   frontdesk: { listening: FRONTDESK_LISTENING, speaking: FRONTDESK_SPEAKING },
@@ -798,9 +803,14 @@ export const EXAM_CONTENT: Record<
 };
 
 export function getListening(role: RoleModule): ListeningItem[] {
-  return EXAM_CONTENT[role].listening;
+  return examContentFor(role).listening;
 }
 
 export function getSpeaking(role: RoleModule): SpeakingPrompt[] {
-  return EXAM_CONTENT[role].speaking;
+  return examContentFor(role).speaking;
+}
+
+/** Exam content for a department, falling back to front desk when unauthored. */
+export function examContentFor(role: RoleModule) {
+  return EXAM_CONTENT[role] ?? EXAM_CONTENT.frontdesk!;
 }

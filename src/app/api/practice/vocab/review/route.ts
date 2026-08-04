@@ -3,13 +3,14 @@ import { z } from "zod";
 import { isSupabaseConfigured } from "@/lib/supabase/client-or-service";
 import { applyReview } from "@/lib/practice/vocab";
 import { captureException } from "@/lib/server/sentry";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
   employee_id: z.string().uuid(),
   word: z.string().min(1).max(80),
-  module: z.enum(["bellboy", "frontdesk", "restaurant"]),
+  module: z.enum(ROLE_ENUM_VALUES),
   level: z.enum(["A1", "A2", "B1", "B2"]),
   grade: z.union([
     z.literal(0),

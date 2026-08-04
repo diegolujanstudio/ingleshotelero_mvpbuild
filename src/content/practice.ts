@@ -7,11 +7,14 @@
 
 export const PRACTICE_COPY = {
   intro: {
-    eyebrow: "Su práctica diaria",
-    titleNew: "Su práctica de cinco minutos.",
-    titleAgain: "Ya practicó hoy. Vuelva mañana.",
+    // Learner-facing copy is `tú` per LATAM-UX-DOCTRINE §1.1. `usted` is the
+    // register of the government trámite — the institution that already failed
+    // this learner at school. We do not import that association.
+    eyebrow: "Tu práctica diaria",
+    titleNew: "Tu práctica de cinco minutos.",
+    titleAgain: "Ya practicaste hoy. Nos vemos mañana.",
     description:
-      "Cuatro pasos: escuchar, responder, reforzar la frase modelo y repasar tres palabras.",
+      "Cuatro pasos: escuchar, responder, reforzar la frase modelo y repasar unas palabras.",
     moduleLabel: "Módulo",
     levelLabel: "Nivel",
     cta: "Empezar",
@@ -19,8 +22,15 @@ export const PRACTICE_COPY = {
     streak: (n: number) => `Racha · ${n} ${n === 1 ? "día" : "días"}`,
     longest: (n: number) => `Más larga · ${n} ${n === 1 ? "día" : "días"}`,
     alreadyDone:
-      "Hoy ya cuenta para su racha. Si quiere repasar otra vez, puede continuar — solo se cuenta una práctica por día.",
+      "Hoy ya cuenta. Si quieres repasar otra vez, adelante — solo contamos una práctica por día.",
     backHome: "Salir",
+
+    // ── El regreso suave (Law 5) ────────────────────────────────────
+    // Shown when a learner returns after 3+ days away. No guilt, no mention
+    // of the streak they lost, no backlog. Just a welcome and a short session.
+    returnWelcomeTitle: "Qué bueno que volviste.",
+    returnWelcomeBody:
+      "Hoy la hacemos cortita. Un par de minutos y listo.",
   },
   steps: {
     listening: {
@@ -36,21 +46,24 @@ export const PRACTICE_COPY = {
     speaking: {
       number: "02",
       label: "Responder",
-      title: "Lea el escenario en español. Responda en inglés.",
-      micRequest: "Solicitando acceso al micrófono…",
+      // Coach voice, not evaluator voice: we ask them to say it, not to be
+      // graded on it. Learner-facing copy is `tú` per LATAM-UX-DOCTRINE §1.1.
+      title: "Lee la situación. Contéstala en inglés.",
+      micRequest: "Pidiendo acceso al micrófono…",
       micDenied:
-        "No se pudo acceder al micrófono. Revise los permisos del navegador y vuelva a intentar.",
-      record: "Grabar respuesta",
-      stop: "Detener",
-      reRecord: "Volver a grabar",
-      submit: "Evaluar respuesta",
-      evaluating: "Evaluando…",
+        "No pudimos usar el micrófono. Revisa los permisos de tu navegador e inténtalo otra vez.",
+      record: "Grabar mi respuesta",
+      stop: "Listo",
+      reRecord: "Grabar otra vez",
+      submit: "Enviar",
+      evaluating: "Escuchando…",
       maxDuration: "Máximo 45 segundos",
       skip: "Saltar este paso",
-      yourScore: "Su calificación",
-      feedback: "Retroalimentación",
-      modelResponse: "Respuesta modelo",
-      continue: "Continuar",
+      /** What the Coach understood. Replaces the old score display. */
+      understood: "Te entendí",
+      /** Modeling, framed as an option — never as a correction. */
+      anotherWay: "Otra forma de decirlo",
+      continue: "Seguir",
     },
     reinforce: {
       number: "03",

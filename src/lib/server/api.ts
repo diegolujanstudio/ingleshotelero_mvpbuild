@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { z, type ZodSchema } from "zod";
 import { addBreadcrumb } from "./sentry";
 import { log } from "./log";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 export interface ApiError {
   code: string;
@@ -80,7 +81,7 @@ export async function parseBody<T>(
  * Common zod primitives reused across routes.
  */
 export const zUuid = z.string().uuid();
-export const zModule = z.enum(["bellboy", "frontdesk", "restaurant"]);
+export const zModule = z.enum(ROLE_ENUM_VALUES);
 export const zLevel = z.enum(["A1", "A2", "B1", "B2"]);
 export const zShift = z.enum(["morning", "afternoon", "night"]);
 export const zEmail = z

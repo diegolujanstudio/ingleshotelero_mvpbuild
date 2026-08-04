@@ -4,12 +4,13 @@ import { getHRUser } from "@/lib/auth/session";
 import { jsonError, parseBody } from "@/lib/server/api";
 import { loadEmployees, loadPropertyInfo, cohortEmployeeIds } from "@/lib/hr/data";
 import { buildReportPdf } from "@/lib/hr/pdf";
+import { ROLE_ENUM_VALUES } from "@/content/roles";
 
 const Schema = z.object({
   filters: z
     .object({
       cohort: z.string().optional(),
-      role: z.union([z.enum(["bellboy", "frontdesk", "restaurant"]), z.literal("all")]).optional(),
+      role: z.union([z.enum(ROLE_ENUM_VALUES), z.literal("all")]).optional(),
       level: z.union([z.enum(["A1", "A2", "B1", "B2"]), z.literal("all")]).optional(),
       from: z.string().optional(),
       to: z.string().optional(),

@@ -40,7 +40,7 @@ function buildJobs(): Job[] {
 
   // Practice drills.
   for (const module of Object.keys(DRILLS) as RoleModule[]) {
-    for (const drill of DRILLS[module]) {
+    for (const drill of DRILLS[module] ?? []) {
       jobs.push({
         id: `${drill.id}-listen`,
         module,
@@ -61,6 +61,7 @@ function buildJobs(): Job[] {
   // Exam content.
   for (const module of Object.keys(EXAM_CONTENT) as RoleModule[]) {
     const mod = EXAM_CONTENT[module];
+    if (!mod) continue;
     for (const item of mod.listening) {
       jobs.push({
         id: `listening-${item.index}`,

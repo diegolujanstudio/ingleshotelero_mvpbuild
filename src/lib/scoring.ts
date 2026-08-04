@@ -37,6 +37,36 @@ export interface ScoringResult {
 }
 
 /**
+ * Which persona is answering.
+ *
+ * `assess` — the Evaluator. Placement exam and the monthly re-assessment.
+ *   Produces a CEFR number. This is the evidence the hotel buys.
+ *
+ * `coach`  — the Coach (el padre lingüístico). Daily practice. NEVER produces
+ *   a number, never corrects, never shames. It confirms understanding and
+ *   models a better sentence.
+ *
+ * Rationale (METODO-TURNO.md, Law 1): scoring a learner every single day
+ * re-creates the school experience that already failed them. The two jobs
+ * are different and must not share a persona.
+ */
+export type CoachMode = "coach" | "assess";
+
+/** What the Coach returns. Deliberately has no score field of any kind. */
+export interface CoachResult {
+  transcript: string;
+  /** What the coach understood the learner to mean. Confirms, never corrects. */
+  understood_es: string;
+  /** One encouraging, concrete observation. Always opens with what worked. */
+  feedback_es: string;
+  /** A natural way to say it — modeling, not correction. */
+  model_response: string;
+  /** Internal only. Drives SRS scheduling. NEVER rendered to the learner. */
+  internal_confidence: "low" | "medium" | "high";
+  mode: "real" | "mock";
+}
+
+/**
  * The exact rubric prompt sent to Claude. Calibration phrasing
  * ("be GENEROUS", "NEVER score 0 if they attempted English") is load-bearing
  * per bible §6 — do not soften.
@@ -73,6 +103,128 @@ CALIBRATION:
 
 Return ONLY this JSON (no other text):
 {"intent":<number>,"vocabulary":<number>,"fluency":<number>,"tone":<number>,"total":<number>,"level_estimate":"A1|A2|B1|B2","feedback_es":"<one actionable sentence in Spanish>","model_response":"<what a good response would sound like>"}`;
+}
+
+/**
+ * The COACH prompt — el padre lingüístico.
+ *
+ * Used for daily practice only. This persona implements Chris Lonsdale's four
+ * rules of a "language parent", which is the relationship that reliably
+ * produces fluency:
+ *
+ *   1. Work hard to understand them even when they are badly off
+ *   2. NEVER correct their mistakes
+ *   3. Feed back your understanding so they can respond
+ *   4. Use words they already know
+ *
+ * It must never emit a score, a percentage, a level, or a grade. Those belong
+ * to the Evaluator (buildRubricSystemPrompt) and appear once a month.
+ *
+ * `internal_confidence` is for our SRS scheduler only and is never rendered.
+ */
+export function buildCoachSystemPrompt(
+  input: Pick<
+    ScoringInput,
+    "scenario_es" | "expected_keywords" | "level_tag" | "module"
+  > & { transcript: string },
+): string {
+  return `Eres el compañero de práctica de inglés de un trabajador de hotel en México. Trabajas como ${input.module}. Su nivel es ${input.level_tag}.
+
+Tu papel es el de un "padre lingüístico": la persona que le enseña a hablar a un niño. NO eres un maestro y NO eres un evaluador.
+
+TUS CUATRO REGLAS (obligatorias):
+1. Te esfuerzas por entender lo que quiso decir, aunque lo haya dicho mal.
+2. NUNCA corriges sus errores. No los mencionas. No los señalas.
+3. Le devuelves lo que entendiste, para que sepa que se dio a entender.
+4. Usas palabras que él ya conoce.
+
+SITUACIÓN A LA QUE RESPONDIÓ:
+${input.scenario_es}
+
+LO QUE DIJO:
+"${input.transcript}"
+
+CÓMO RESPONDES:
+- Primero confirma que lo entendiste. Sé específico sobre el mensaje, no sobre la forma.
+- Luego di UNA cosa concreta que le funcionó. Siempre hay algo.
+- Después ofrece una forma natural de decirlo, presentada como una opción más, nunca como una corrección. Di "otra forma de decirlo es..." y NUNCA "lo correcto es..." ni "deberías decir...".
+- Si no dijo casi nada o no se entiende, no lo señales: dale la frase modelo con calidez y sigue adelante.
+
+TONO:
+- Español de México, tú (nunca usted), cálido y directo.
+- Frases cortas. Máximo 15 palabras por oración.
+- Sin tecnicismos, sin gramática, sin nombres de tiempos verbales.
+- Sin emoji. Sin signos de admiración excesivos.
+- Prohibido: "error", "incorrecto", "mal", "deberías", "te faltó", "corrige".
+
+internal_confidence es SOLO para nuestro sistema de repaso. El aprendiz nunca lo ve. Úsalo así:
+- "low" = no logró comunicar la idea
+- "medium" = se dio a entender con esfuerzo
+- "high" = se comunicó con claridad
+
+Devuelve SOLO este JSON (sin ningún otro texto):
+{"understood_es":"<lo que entendiste que quiso decir, en español, una oración>","feedback_es":"<una observación concreta y alentadora, en español, máximo dos oraciones>","model_response":"<una forma natural de decirlo en inglés>","internal_confidence":"low|medium|high"}`;
+}
+
+/**
+ * Strict parser for the Coach response. Fails closed to a warm, safe default
+ * rather than throwing at the learner — a failed API call must never look
+ * like a failed attempt.
+ */
+export function parseCoachResponse(
+  raw: string,
+  fallbackModelResponse: string,
+): Omit<CoachResult, "transcript" | "mode"> {
+  const trimmed = raw
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+
+  const understood_es = String(parsed.understood_es ?? "").trim();
+  const feedback_es = String(parsed.feedback_es ?? "").trim();
+  const model_response =
+    String(parsed.model_response ?? "").trim() || fallbackModelResponse;
+  const rawConf = String(parsed.internal_confidence ?? "medium").toLowerCase();
+  const internal_confidence: CoachResult["internal_confidence"] =
+    rawConf === "low" || rawConf === "high" ? rawConf : "medium";
+
+  if (!understood_es && !feedback_es) throw new Error("coach_empty_response");
+
+  return {
+    understood_es: understood_es || "Entendí lo que quisiste decir.",
+    feedback_es: feedback_es || "Te diste a entender. Eso es lo que cuenta.",
+    model_response,
+    internal_confidence,
+  };
+}
+
+/**
+ * Deterministic Coach fallback for demo mode and upstream failures.
+ * Never punishes: an unscoreable attempt still gets warmth and a model.
+ */
+export function mockCoach(
+  transcript: string,
+  modelResponse: string,
+): Omit<CoachResult, "mode"> {
+  const words = transcript.trim().split(/\s+/).filter(Boolean);
+  const internal_confidence: CoachResult["internal_confidence"] =
+    words.length >= 8 ? "high" : words.length >= 3 ? "medium" : "low";
+
+  return {
+    transcript,
+    understood_es:
+      words.length >= 3
+        ? "Entendí que querías ayudar al huésped con eso."
+        : "Entendí la idea.",
+    feedback_es:
+      words.length >= 3
+        ? "Te diste a entender, que es lo que cuenta frente al huésped."
+        : "Lo intentaste en inglés. Eso ya es avanzar.",
+    model_response: modelResponse,
+    internal_confidence,
+  };
 }
 
 /**
