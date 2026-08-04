@@ -13,7 +13,7 @@
 - Hotel-scoped exam entry at `/e/[slug]` — registration + role selection + consent + mic/audio check stub.
 - Utilities: `src/lib/cefr.ts` (level calculation from bible §4 rubric), `src/lib/utils.ts`, `src/content/roles.ts`.
 - **PWA baseline:** `src/app/manifest.ts` (installable, themed, categorized), `src/app/icon.tsx` (512×512 dynamic PNG from New Spirit monogram), `src/app/apple-icon.tsx` (180×180), viewport-fit:cover for iOS safe areas, apple-web-app meta tags.
-- Docs: `README.md`, `CLAUDE.md`, `EMPIEZA-AQUI.txt`, `docs/operar/` (setup and onboarding; the old SETUP.md and GETTING-STARTED.md are in `docs/archivo/`).
+- Docs: `README.md`, `CLAUDE.md`, `START-HERE.txt`, `docs/operar/` (setup and onboarding; the old SETUP.md and GETTING-STARTED.md are in `docs/archivo/`).
 
 ## Not yet in Phase 1
 - Actual exam pages (diagnostic / listening / speaking / results) → Phase 2.
