@@ -3,9 +3,10 @@
 Hotel English training for Latin American hospitality staff — PWA + HR dashboard
 + marketing site.
 
-### 👉 Si estás buscando por dónde empezar, abre **[`EMPIEZA-AQUI.txt`](EMPIEZA-AQUI.txt)**
+### 👉 Lost? Open **[`START-HERE.txt`](START-HERE.txt)**
 
-That file is the human entry point, in Spanish, and it points at everything else.
+Where your keys are, how to test the app on your phone, and the three things
+only you can unblock.
 
 ---
 
@@ -68,7 +69,7 @@ Open http://localhost:3000/e/test-hotel for the exam entry preview (works withou
 
 ```
 .
-├── EMPIEZA-AQUI.txt        ← START HERE (Spanish, plain text)
+├── START-HERE.txt          ← START HERE (plain text)
 ├── CLAUDE.md               ← conventions for AI coding tools
 ├── docs/
 │   ├── operar/             ← credentials · testing the PWA · deploying
@@ -95,7 +96,7 @@ levels** — 160 authored situations expanded to 2,400 rehearsals by the
 combinatorial engine — plus the pronunciation trainer and the Coach/Evaluator
 split described in `docs/sistema/METODO-TURNO.md`.
 
-**The three open blockers are operational, not code** (see `EMPIEZA-AQUI.txt`):
+**The three open blockers are operational, not code** (see `START-HERE.txt`):
 
 1. Run migration `0014` so the five new departments can be assigned
 2. Move Supabase off the free tier so it stops auto-pausing

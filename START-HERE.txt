@@ -1,0 +1,135 @@
+INGLES HOTELERO — START HERE
+Updated 28 July 2026
+
+
+===========================================================
+ 1. WHERE YOUR KEYS ARE
+===========================================================
+
+ON YOUR COMPUTER (for local development)
+  Open this file in Notepad or VS Code:
+
+     .env.local
+
+  It is in this same folder. It has 8 keys in it.
+  Git ignores it, so it never gets uploaded anywhere.
+
+IN PRODUCTION (what the live app actually uses)
+  app.netlify.com  ->  project "ingleshotelero"
+  ->  Site configuration  ->  Environment variables
+
+  There are 7 keys there right now.
+
+
+WHAT YOU HAVE (both places, checked 28 July):
+  OK  NEXT_PUBLIC_SUPABASE_URL          database address
+  OK  NEXT_PUBLIC_SUPABASE_ANON_KEY     public database access
+  OK  SUPABASE_SERVICE_ROLE_KEY         server database access
+  OK  SUPABASE_URL                      same address, server side
+  OK  ELEVENLABS_API_KEY                the voices
+  OK  NEXT_PUBLIC_APP_URL               the app's own address
+  OK  NEXT_PUBLIC_DEMO_MODE             demo toggle
+
+WHAT IS MISSING (this is why AI scoring is fake right now):
+  --  ANTHROPIC_API_KEY     the AI that scores and coaches
+  --  OPENAI_API_KEY        turns voice recordings into text
+  --  STRIPE_WEBHOOK_SECRET makes a payment actually activate the account
+
+  Without the first two, the app still works but scoring uses a
+  simulator instead of real AI. Get them at console.anthropic.com
+  and platform.openai.com, then add them in Netlify (link above)
+  and hit Deploys -> Trigger deploy.
+
+
+===========================================================
+ 2. TEST THE APP ON YOUR PHONE (2 minutes)
+===========================================================
+
+Open this on your phone:
+
+     ingleshotelero.netlify.app/practice/pronunciacion
+
+That is the pronunciation trainer. Listen, tap which word you
+heard, get green or red. This is the best thing to show a hotel.
+
+Then try the daily practice:
+
+     ingleshotelero.netlify.app/practice
+
+And the HR dashboard (no password, click "Entrar en modo demo"):
+
+     ingleshotelero.netlify.app/hr/login
+
+
+TO INSTALL IT LIKE A REAL APP:
+  Android/Chrome:  menu (3 dots) -> Add to home screen
+  iPhone/Safari:   share button  -> Add to Home Screen
+
+  Now it opens full screen with no browser bar. That is exactly
+  what a bellboy sees.
+
+
+===========================================================
+ 3. THE 3 THINGS ONLY YOU CAN DO
+===========================================================
+
+[ ] 1. Add the AI keys        (see section 1 above)
+
+[ ] 2. Upgrade Supabase off the free plan
+       app.supabase.com -> your project -> Settings -> Billing
+       Why: the free plan pauses itself and the app stops saving.
+
+[ ] 3. Run database migration 0014
+       app.supabase.com -> SQL Editor -> New query
+       Paste everything from: supabase/migrations/0014_role_modules.sql
+       Click Run.
+       Why: the 5 new departments (housekeeping, concierge, spa,
+       security, maintenance) cannot be assigned until you do.
+
+
+===========================================================
+ 4. YOUR LINKS
+===========================================================
+
+  Marketing site   www.ingleshotelero.com
+  System map       www.ingleshotelero.com/metodo
+  The app          ingleshotelero.netlify.app
+  Netlify          app.netlify.com
+  Database         app.supabase.com
+  Google           search.google.com/search-console
+                   (use the "www" property, not the old one)
+
+
+===========================================================
+ 5. IF SOMETHING LOOKS WRONG
+===========================================================
+
+  Old version of the site showing up
+     Press Ctrl+Shift+R. It is fixed, but that clears it.
+
+  Google can't find my pages
+     Sitemap was submitted 28 July, 1,076 pages found.
+     Indexing takes days to weeks. Nothing to do but wait.
+
+  Cannot add a housekeeping employee
+     Migration 0014 has not been run yet. See section 3.
+
+
+===========================================================
+ 6. WHERE THE DOCS ARE
+===========================================================
+
+  docs/operar/     credentials, testing, deploying
+  docs/sistema/    the method and the strategy
+                   (METODO-TURNO.md is the important one)
+  docs/estado/     what is actually built
+  docs/research/   the 17 books and studies behind the method
+  docs/archivo/    old stuff, ignore it
+
+
+===========================================================
+ ONE RULE
+ You have more product built than customers paying. When in
+ doubt between building something and calling a hotel, call
+ the hotel.
+===========================================================

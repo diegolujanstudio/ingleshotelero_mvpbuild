@@ -27,8 +27,10 @@ Full product bible: none in the repo — Diego holds it. Distilled into `.orcha/
 
 ## Where the docs live
 
-`EMPIEZA-AQUI.txt` at the repo root is the human entry point — Diego opens that
-one when he is lost. Everything else is filed under `docs/`:
+`START-HERE.txt` at the repo root is the human entry point — Diego opens that
+one when he is lost. **Write it in English**: the product UI is Spanish because
+the learners are Mexican hotel staff, but Diego reads English and gets
+frustrated when internal docs are in Spanish. Everything else is filed under `docs/`:
 
 - **`docs/operar/`** — running the business: credentials map, how to test the
   PWA, how to deploy and run migrations.
