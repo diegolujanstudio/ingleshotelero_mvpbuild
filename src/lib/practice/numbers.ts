@@ -164,6 +164,14 @@ function buildPrice(level: CEFRLevel, rand: () => number): NumberQuestion {
   const opts = distractors
     .filter(([d, c]) => !(d === dollars && c === cents) && d > 0)
     .slice(0, 2);
+  // Guarantee three options: pad with near-miss dollar amounts when the
+  // teen/ty trap didn't apply (e.g. even whole-dollar prices).
+  while (opts.length < 2) {
+    const d = dollars + Math.ceil(rand() * 5) * (rand() < 0.5 ? 1 : -1);
+    if (d > 0 && d !== dollars && !opts.some(([x, c]) => x === d && c === cents)) {
+      opts.push([d, cents]);
+    }
+  }
   const options = [[dollars, cents] as [number, number], ...opts]
     .map(([d, c]) => ({
       display: fmt(d, c),
