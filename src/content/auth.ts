@@ -45,8 +45,7 @@ export const EMPLOYEE = {
     after: ".",
   },
   sub: "Ábrelo desde tu WhatsApp o correo. Te lleva directo a tu práctica.",
-  fallbackHint:
-    "¿No tienes enlace? Escribe el código de tu hotel y comienza así:",
+  fallbackHint: "¿No tienes enlace? Escribe el código de tu hotel:",
   inputLabel: "Código de tu hotel",
   inputPlaceholder: "ej. gran-hotel-cancun",
   submit: "Empezar",
@@ -171,4 +170,41 @@ export const FOOTER = {
     { href: "/aviso-de-privacidad", label: "Privacidad" },
     { href: "/terminos", label: "Términos" },
   ],
+};
+
+// ── The front door — two-path chooser ─────────────────────────
+//
+// One decision on landing: employee or HR. Voice stays `tú` for the
+// employee side; the door labels are identities, not features, because
+// a satisficing user matches "that's me" faster than "that's the thing
+// I need" (NN/g lower-literacy).
+export const CHOOSER = {
+  eyebrow: "Inglés Hotelero",
+  title: { before: "Hola. ¿", em: "Quién eres", after: "?" },
+  back: "Cambiar",
+  employee: {
+    eyebrow: "Empleado",
+    title: "Trabajo en el hotel",
+    sub: "Tu práctica de 5 minutos, en tu turno.",
+  },
+  hr: {
+    eyebrow: "Recursos Humanos",
+    title: "Soy de RH",
+    sub: "Ver el avance de mi equipo.",
+  },
+  employeeSteps: {
+    title: { before: "Dos pasos y ", em: "estás dentro", after: "." },
+  },
+  stepInstall: {
+    eyebrow: "Primero",
+    title: "Instala la app en tu teléfono.",
+    why: "Funciona sin internet. Se abre como cualquier app.",
+    already: "¿Ya la tienes? Sigue al paso 02.",
+  },
+  stepEnter: {
+    eyebrow: "Después",
+    title: "Entra con tu enlace.",
+    linkFirst:
+      "Te mandaron un enlace por WhatsApp. Ábrelo y ya. Sin contraseña.",
+  },
 };

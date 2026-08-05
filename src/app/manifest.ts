@@ -48,7 +48,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.png",
+        // Dedicated maskable tile: monogram shrunk into the safe zone so
+        // Android's circle/squircle masks never clip a letter.
+        src: "/icons/maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
