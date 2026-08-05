@@ -50,10 +50,10 @@ export default async function ProgressPage({
   return (
     <main className="min-h-screen bg-ivory text-espresso">
       <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-6 md:px-12 md:pt-10">
-        <Logo />
+        <Logo className="min-h-[44px] items-center" />
         <Link
           href="/practice"
-          className="caps text-espresso transition-colors hover:text-ink"
+          className="caps inline-flex min-h-[44px] items-center text-espresso transition-colors hover:text-ink"
         >
           Volver a practicar →
         </Link>
