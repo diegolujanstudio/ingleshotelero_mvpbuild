@@ -12,7 +12,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const APP = "https://ingleshotelero.netlify.app";
+const APP = "https://app.ingleshotelero.com";
 const LANDING = "https://ingleshotelero.com";
 
 interface Card {

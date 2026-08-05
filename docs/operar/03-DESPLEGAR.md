@@ -10,7 +10,7 @@ Esto confunde a todo el mundo, así que quede claro:
 
 | | El sitio web | La aplicación |
 |---|---|---|
-| **URL** | www.ingleshotelero.com | ingleshotelero.netlify.app |
+| **URL** | www.ingleshotelero.com | app.ingleshotelero.com |
 | **Carpeta** | `landing/` | la raíz del proyecto |
 | **Tecnología** | Astro (páginas estáticas) | Next.js |
 | **Repo de GitHub** | `ingleshotelero-landing` | `ingleshotelero_mvpbuild` |

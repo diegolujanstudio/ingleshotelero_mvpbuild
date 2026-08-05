@@ -17,7 +17,7 @@
 
 ## 1. Live websites (public URLs)
 - ✅ **Marketing site** — https://ingleshotelero.com (Astro, static, on Netlify)
-- ✅ **Product app** — https://ingleshotelero.netlify.app (Next.js 14 PWA, on Netlify)
+- ✅ **Product app** — https://app.ingleshotelero.com (Next.js 14 PWA, on Netlify)
 - ✅ Google Search Console verification tag is **live** on the marketing site (pending your final "Verify" + sitemap submit)
 
 ## 2. Marketing site — every page live (ingleshotelero.com)
@@ -32,7 +32,7 @@
 - ✅ **~1,071 total pages**, one unified navbar/footer across all of them
 - ✅ **SEO assets:** sitemap.xml (1,068 URLs), robots.txt, canonicals, hreflang, Organization/Service/FAQPage/Breadcrumb JSON-LD, on-brand OG share images
 
-## 3. Product app — every surface built & deployed (ingleshotelero.netlify.app)
+## 3. Product app — every surface built & deployed (app.ingleshotelero.com)
 *(All routes return 200; full function depends on the backend being up — see §0.)*
 
 **Public / sales**

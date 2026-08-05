@@ -47,18 +47,18 @@ WHAT IS MISSING (this is why AI scoring is fake right now):
 
 Open this on your phone:
 
-     ingleshotelero.netlify.app/practice/pronunciacion
+     app.ingleshotelero.com/practice/pronunciacion
 
 That is the pronunciation trainer. Listen, tap which word you
 heard, get green or red. This is the best thing to show a hotel.
 
 Then try the daily practice:
 
-     ingleshotelero.netlify.app/practice
+     app.ingleshotelero.com/practice
 
 And the HR dashboard (no password, click "Entrar en modo demo"):
 
-     ingleshotelero.netlify.app/hr/login
+     app.ingleshotelero.com/hr/login
 
 
 TO INSTALL IT LIKE A REAL APP:
@@ -93,7 +93,7 @@ TO INSTALL IT LIKE A REAL APP:
 
   Marketing site   www.ingleshotelero.com
   System map       www.ingleshotelero.com/metodo
-  The app          ingleshotelero.netlify.app
+  The app          app.ingleshotelero.com
   Netlify          app.netlify.com
   Database         app.supabase.com
   Google           search.google.com/search-console

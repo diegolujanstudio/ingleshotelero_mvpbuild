@@ -6,7 +6,7 @@ La app es una **PWA** — una página web que se instala en el teléfono como si
 fuera una app, pero sin App Store, sin descarga y sin contraseña. Así es como
 la va a usar un botones en su turno, y así es como debes probarla tú.
 
-**La app vive en:** https://ingleshotelero.netlify.app
+**La app vive en:** https://app.ingleshotelero.com
 
 ---
 
@@ -15,7 +15,7 @@ la va a usar un botones en su turno, y así es como debes probarla tú.
 Esto es lo que le enseñas a un hotel en una junta.
 
 ### 1. Abre la app en tu teléfono
-Ve a **ingleshotelero.netlify.app** en Chrome o Safari.
+Ve a **app.ingleshotelero.com** en Chrome o Safari.
 
 ### 2. Instálala en la pantalla de inicio
 - **Android/Chrome:** menú ⋮ → *Agregar a pantalla principal*
@@ -121,7 +121,7 @@ F12 → Application → Service Workers → Unregister.
 
 **"El micrófono no funciona"**
 El navegador necesita permiso y **HTTPS**. En `localhost` funciona; en una IP
-local (`192.168.x.x`) no. Prueba desde la URL real de Netlify.
+local (`192.168.x.x`) no. Prueba desde la URL real: app.ingleshotelero.com.
 
 **"No hay audio"**
 Sin `ELEVENLABS_API_KEY` usa la voz del navegador, que suena robótica pero

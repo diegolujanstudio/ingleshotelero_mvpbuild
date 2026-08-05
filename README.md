@@ -14,7 +14,7 @@ only you can unblock.
 
 | | Marketing site | The app |
 |---|---|---|
-| Live | https://www.ingleshotelero.com | https://ingleshotelero.netlify.app |
+| Live | https://www.ingleshotelero.com | https://app.ingleshotelero.com |
 | Folder | `landing/` (its own git repo) | repo root |
 | Stack | Astro, 1,079 static pages | Next.js 14 + Supabase |
 | Audience | Hotels deciding whether to buy | Employees and HR |

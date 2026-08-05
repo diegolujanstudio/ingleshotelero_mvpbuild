@@ -56,7 +56,7 @@ export default async function ColocacionPage() {
           <input
             type="hidden"
             name="source_url"
-            value="https://ingleshotelero.netlify.app/colocacion"
+            value="https://app.ingleshotelero.com/colocacion"
           />
           <p hidden>
             <label>

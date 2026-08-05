@@ -30,7 +30,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
   process.env.URL ||
-  "https://ingleshotelero.netlify.app";
+  "https://app.ingleshotelero.com";
 
 const EMAIL = (process.env.TEST_EMPLOYEE_EMAIL || "diego+empleado@diegolujanstudio.com")
   .trim()

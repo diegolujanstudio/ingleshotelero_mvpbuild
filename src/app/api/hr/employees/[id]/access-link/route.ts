@@ -51,7 +51,7 @@ function appUrl() {
   return (
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.URL ||                  // Netlify sets this
-    "https://ingleshotelero.netlify.app"
+    "https://app.ingleshotelero.com"
   );
 }
 

@@ -8,7 +8,7 @@ import type { MetadataRoute } from "next";
  * keeping the three lists in sync is what prevents crawlers from indexing
  * the app shell or any per-tenant surface.
  */
-const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://ingleshotelero.netlify.app";
+const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.ingleshotelero.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

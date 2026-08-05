@@ -125,7 +125,7 @@ async function main() {
   if (error) throw error;
 
   console.log("\n[provision-test-hr] ✓ Test HR hotel-manager ready:");
-  console.log(`  URL:      ${process.env.NEXT_PUBLIC_APP_URL || "https://ingleshotelero.netlify.app"}/hr/login`);
+  console.log(`  URL:      ${process.env.NEXT_PUBLIC_APP_URL || "https://app.ingleshotelero.com"}/hr/login`);
   console.log(`  Email:    ${EMAIL}`);
   console.log(`  Password: ${PASSWORD}`);
   console.log(`  Role:     property_admin (hotel manager — no Master OS)`);

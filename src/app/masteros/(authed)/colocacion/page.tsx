@@ -37,7 +37,7 @@ export default async function ColocacionAdminPage() {
         la página en vivo y revisa las solicitudes aquí.
       </p>
       <a
-        href="https://ingleshotelero.netlify.app/colocacion"
+        href="https://app.ingleshotelero.com/colocacion"
         target="_blank"
         rel="noreferrer"
         className="mt-3 inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ink hover:text-ink-deep"
