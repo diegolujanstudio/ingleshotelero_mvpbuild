@@ -116,9 +116,9 @@ export default function PronunciacionPage({ searchParams }: PageProps) {
           <MinimalPairTrainer contrast={contrast} />
         </div>
 
-        {/* ── 4 · The four sounds ── */}
-        <nav className="mt-10 border-t border-hair pt-6" aria-label="Los cuatro sonidos">
-          <p className="caps mb-4 text-espresso-muted">Los cuatro sonidos</p>
+        {/* ── 4 · The sound library (Semana Sin Pena + maintenance) ── */}
+        <nav className="mt-10 border-t border-hair pt-6" aria-label="Todos los sonidos">
+          <p className="caps mb-4 text-espresso-muted">Todos los sonidos</p>
           <ul className="flex flex-wrap gap-2">
             {CONTRASTS.map((c) => (
               <li key={c.id}>

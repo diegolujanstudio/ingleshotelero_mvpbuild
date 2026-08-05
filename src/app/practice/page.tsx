@@ -14,6 +14,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { StreakChip } from "@/components/practice/StreakChip";
 import { LevelChip } from "@/components/practice/LevelChip";
 import { PRACTICE_COPY } from "@/content/practice";
+import { MODES_COPY } from "@/content/practice-modes";
 import type { CEFRLevel, RoleModule } from "@/lib/supabase/types";
 import { ROLE_IDS } from "@/content/roles";
 
@@ -191,6 +192,41 @@ export default async function PracticeIndex({ searchParams }: PageProps) {
               : PRACTICE_COPY.intro.cta}
           </ButtonLink>
         </div>
+
+        {/* ── The mode library — extra practice, never a substitute for the
+            daily drill (Law 5: the habit is the product). Cards carry the
+            learner's role+level so every mode opens already personalized. ── */}
+        <nav
+          className="mt-14 border-t border-hair pt-8"
+          aria-label={MODES_COPY.hub.eyebrow}
+        >
+          <p className="caps mb-1 text-espresso-muted">
+            {MODES_COPY.hub.eyebrow}
+          </p>
+          <p className="mb-6 font-sans text-t-caption text-espresso-muted">
+            {MODES_COPY.hub.note}
+          </p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {MODES_COPY.hub.modes.map((m) => (
+              <li key={m.id}>
+                <Link
+                  href={`${m.href}?role=${role}&level=${level}`}
+                  className="group flex min-h-[88px] flex-col justify-between rounded-md border border-hair bg-white p-4 transition-colors hover:border-ink"
+                >
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="font-serif text-t-h3 font-medium text-espresso group-hover:text-ink">
+                      {m.title}
+                    </span>
+                    <span className="caps text-espresso-muted">{m.meta}</span>
+                  </span>
+                  <span className="mt-1 font-sans text-t-body text-espresso-soft">
+                    {m.blurb}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </section>
     </main>
   );

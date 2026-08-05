@@ -36,7 +36,11 @@ export type ContrastId =
   | "long_i_short_i"
   | "ch_sh"
   | "b_v"
-  | "s_onset";
+  | "s_onset"
+  | "long_u_short_u"
+  | "d_th"
+  | "y_j"
+  | "n_ng";
 
 export interface MinimalPair {
   /** The two words. Both are safe to show and to hear. */
@@ -152,6 +156,91 @@ export const CONTRASTS: PhonemeContrast[] = [
       { a: "student", b: "estudent", a_es: "estudiante", b_es: "(el error común)" },
       { a: "special", b: "especial", a_es: "especial", b_es: "(el error común)" },
       { a: "start", b: "estart", a_es: "empezar", b_es: "(el error común)" },
+    ],
+  },
+  // ── Maintenance phase (day 8+) ─────────────────────────────────────
+  // La Semana Sin Pena stays seven days and four sounds — that's the
+  // onboarding contract. These four continue the work afterwards: same
+  // trainer, same 90 seconds, introduced one at a time so the learner
+  // always has a "next sound" instead of a finished list.
+  {
+    id: "long_u_short_u",
+    day: 8,
+    label_es: "La u larga y la u corta",
+    symbol_a: "uː",
+    symbol_b: "ʊ",
+    why_es:
+      "Igual que con la i, el español tiene una sola u. En inglés hay dos: una larga y tensa, otra corta y relajada.",
+    how_es:
+      "Para la u larga (pool), junta los labios como para silbar y alarga el sonido. Para la u corta (pull), relaja los labios y córtalo de inmediato.",
+    stakes_es:
+      "«Pool» es de las palabras que más se dicen en un hotel. Con la u corta se convierte en «pull» — jalar. El huésped entiende otra cosa y tú ni te enteras.",
+    pairs: [
+      { a: "pool", b: "pull", a_es: "alberca", b_es: "jalar" },
+      { a: "fool", b: "full", a_es: "engañar", b_es: "lleno" },
+      { a: "Luke", b: "look", a_es: "Lucas (nombre)", b_es: "mirar" },
+      { a: "suit", b: "soot", a_es: "traje", b_es: "hollín" },
+      { a: "stewed", b: "stood", a_es: "guisado", b_es: "parado" },
+    ],
+  },
+  {
+    id: "d_th",
+    day: 10,
+    label_es: "La D y la TH suave",
+    symbol_a: "ð",
+    symbol_b: "d",
+    why_es:
+      "El sonido de «they» no existe en español, así que la boca lo reemplaza con una d. «They» se vuelve «day» — y son palabras distintas.",
+    how_es:
+      "Para la TH suave, saca apenas la punta de la lengua entre los dientes y deja pasar el aire con voz, como una zumbido suave. Para la d, la lengua toca detrás de los dientes y se despega de golpe.",
+    stakes_es:
+      "«They», «this», «that», «there» — son de las palabras más usadas del inglés. Todas llevan este sonido. Corregirlo mejora cada frase que dices.",
+    pairs: [
+      { a: "they", b: "day", a_es: "ellos", b_es: "día" },
+      { a: "there", b: "dare", a_es: "ahí", b_es: "atreverse" },
+      { a: "then", b: "den", a_es: "entonces", b_es: "estudio (cuarto)" },
+      { a: "though", b: "dough", a_es: "aunque", b_es: "masa" },
+      { a: "breathe", b: "breed", a_es: "respirar", b_es: "criar" },
+    ],
+  },
+  {
+    id: "y_j",
+    day: 12,
+    label_es: "La Y y la J",
+    symbol_a: "j",
+    symbol_b: "dʒ",
+    why_es:
+      "En el español de México la y y la j inglesa se mezclan: «yes» sale como «jes». En inglés son dos sonidos separados.",
+    how_es:
+      "La y inglesa (yes) es suave, sin fricción — como la i de «bien» dicha rápido. La j inglesa (jet) empieza con la lengua pegada al paladar y se suelta con un golpe, como la ch pero con voz.",
+    stakes_es:
+      "«Use» y «juice» se confunden justo en el restaurante y el bar. Y un «yes» que suena a «jes» delata el acento en la primera palabra de la conversación.",
+    pairs: [
+      { a: "yet", b: "jet", a_es: "todavía", b_es: "avión" },
+      { a: "use", b: "juice", a_es: "usar", b_es: "jugo" },
+      { a: "yam", b: "jam", a_es: "camote", b_es: "mermelada" },
+      { a: "year", b: "jeer", a_es: "año", b_es: "burla" },
+      { a: "yellow", b: "Jell-O", a_es: "amarillo", b_es: "gelatina" },
+    ],
+  },
+  {
+    id: "n_ng",
+    day: 14,
+    label_es: "La N y la NG final",
+    symbol_a: "n",
+    symbol_b: "ŋ",
+    why_es:
+      "En español la n final siempre suena igual. En inglés hay dos: la n normal y la ng de «thing», que se hace con la parte de atrás de la lengua.",
+    how_es:
+      "Para la ng, la parte de atrás de la lengua sube y toca el paladar blando — como la n de «banco» en español, pero sin dejar salir la g. La punta de la lengua no toca nada.",
+    stakes_es:
+      "«Thin» y «thing», «win» y «wing» — la diferencia es solo este sonido final. En frases como «one more thing» se usa todos los días con el huésped.",
+    pairs: [
+      { a: "thing", b: "thin", a_es: "cosa", b_es: "delgado" },
+      { a: "sing", b: "sin", a_es: "cantar", b_es: "pecado" },
+      { a: "wing", b: "win", a_es: "ala", b_es: "ganar" },
+      { a: "bang", b: "ban", a_es: "golpe", b_es: "prohibir" },
+      { a: "rang", b: "ran", a_es: "sonó", b_es: "corrió" },
     ],
   },
 ];
