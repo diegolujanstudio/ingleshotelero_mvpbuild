@@ -8,3 +8,13 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# The app's one address is app.ingleshotelero.com. Netlify does not
+# auto-redirect the *.netlify.app origin for this runtime, so old links
+# (WhatsApp messages already sent, bookmarks, the pre-domain QR era) are
+# forwarded explicitly. 301 so the new domain accrues any link equity.
+[[redirects]]
+  from = "https://ingleshotelero.netlify.app/*"
+  to = "https://app.ingleshotelero.com/:splat"
+  status = 301
+  force = true
