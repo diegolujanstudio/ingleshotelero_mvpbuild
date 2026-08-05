@@ -20,8 +20,11 @@ export default function OnboardingHub() {
     <main className="min-h-screen bg-ivory text-espresso">
       <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-6 md:px-12 md:pt-10">
         <Logo />
-        <Link href="/" className="caps text-espresso transition-colors hover:text-ink">
-          Inglés Hotelero
+        <Link
+          href="/"
+          className="caps inline-flex min-h-[44px] items-center text-espresso transition-colors hover:text-ink"
+        >
+          Volver al inicio
         </Link>
       </header>
       <section className="mx-auto max-w-3xl px-6 py-12 md:px-8 md:py-20">

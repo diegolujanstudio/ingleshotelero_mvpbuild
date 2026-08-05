@@ -29,7 +29,7 @@ export default function TerminosPage() {
         <Logo />
         <Link
           href="/"
-          className="caps text-espresso transition-colors hover:text-ink"
+          className="caps inline-flex min-h-[44px] items-center text-espresso transition-colors hover:text-ink"
         >
           Volver al inicio
         </Link>

@@ -23,7 +23,7 @@ export default function SoporteGraciasPage() {
         <Logo />
         <Link
           href={t.backHomeHref}
-          className="caps text-espresso transition-colors hover:text-ink"
+          className="caps inline-flex min-h-[44px] items-center text-espresso transition-colors hover:text-ink"
         >
           {t.backHome}
         </Link>

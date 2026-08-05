@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { HairlineRule } from "@/components/ui/HairlineRule";
 
@@ -71,8 +72,14 @@ export default function MasterosLoginPage() {
 
   return (
     <main className="min-h-screen bg-ivory">
-      <header className="mx-auto flex max-w-shell items-center px-6 pt-8 md:px-12 md:pt-10">
-        <Logo />
+      <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
+        <Logo className="min-h-[44px] items-center" />
+        <Link
+          href="/"
+          className="caps inline-flex min-h-[44px] items-center text-espresso transition-colors hover:text-ink"
+        >
+          Volver al inicio
+        </Link>
       </header>
 
       <section className="mx-auto max-w-prose px-6 py-24 md:px-12 md:py-32">

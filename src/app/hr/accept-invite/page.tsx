@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { Logo } from "@/components/brand/Logo";
 
 export default function AcceptInvitePage() {
   return (
@@ -104,7 +105,11 @@ function AcceptInviteForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ivory px-6">
+    <main className="flex min-h-screen flex-col bg-ivory">
+      <header className="mx-auto flex w-full max-w-shell items-center px-6 pt-8 md:px-12 md:pt-10">
+        <Logo className="min-h-[44px] items-center" />
+      </header>
+      <div className="flex flex-1 items-center justify-center px-6 pb-16">
       <Card className="w-full max-w-md p-0">
         <div className="py-10 px-8">
           <h1 className="font-serif text-t-h2 font-medium text-espresso">
@@ -149,6 +154,7 @@ function AcceptInviteForm() {
           )}
         </div>
       </Card>
+      </div>
     </main>
   );
 }
