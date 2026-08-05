@@ -41,7 +41,7 @@ export default function ExamLayout({ children }: { children: React.ReactNode }) 
       <ExamPWABoot />
 
       <header className="mx-auto flex w-full max-w-shell items-center justify-between px-6 pt-6 md:px-12 md:pt-8">
-        <Logo showSub={false} />
+        <Logo />
         <span className="caps">Evaluación</span>
       </header>
       <HairlineRule className="mx-auto mt-6 max-w-shell px-6 md:px-12" />

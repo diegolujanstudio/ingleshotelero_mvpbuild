@@ -162,7 +162,7 @@ export default function WhatsAppSimulator() {
   return (
     <main className="min-h-screen bg-ivory">
       <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
-        <Logo showSub={false} />
+        <Logo />
         <Link href="/" className="caps hover:text-ink">
           ← Sitio público
         </Link>

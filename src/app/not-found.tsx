@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <main className="min-h-screen bg-ivory">
       <header className="mx-auto flex max-w-shell items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
-        <Logo showSub={false} />
+        <Logo />
       </header>
 
       <section className="mx-auto max-w-shell px-6 py-32 md:px-12">

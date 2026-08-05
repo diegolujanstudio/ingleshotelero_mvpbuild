@@ -29,7 +29,7 @@ export default function OfflinePage() {
   return (
     <main className="flex min-h-screen flex-col bg-ivory text-espresso">
       <header className="mx-auto flex w-full max-w-shell items-center justify-between px-6 pt-8 md:px-12 md:pt-10">
-        <Logo showSub={false} />
+        <Logo />
         <span className="caps">Sin conexión</span>
       </header>
       <HairlineRule className="mx-auto mt-6 max-w-shell px-6 md:px-12" />

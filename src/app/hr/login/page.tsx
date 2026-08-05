@@ -103,7 +103,7 @@ export default function HRLoginPage() {
   return (
     <main className="min-h-screen bg-ivory">
       <header className="mx-auto flex max-w-shell items-center px-6 pt-8 md:px-12 md:pt-10">
-        <Logo showSub={false} />
+        <Logo />
       </header>
 
       <section className="mx-auto max-w-prose px-6 py-24 md:px-12 md:py-32">
