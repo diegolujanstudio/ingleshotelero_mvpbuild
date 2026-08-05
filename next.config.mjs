@@ -129,7 +129,7 @@ const nextConfig = {
       // equity instead of leaving a dead route behind.
       {
         source: "/precios",
-        destination: "https://ingleshotelero.com/precios/",
+        destination: "https://www.ingleshotelero.com/precios/",
         permanent: true,
       },
     ];
