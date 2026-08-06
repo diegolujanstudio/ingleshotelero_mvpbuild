@@ -52,7 +52,35 @@ conversation a close that doesn't require discounting the list price ad hoc.
 |---|---|---|---|
 | Inicial | 12–20 | $2,625 | $150 |
 | Profesional | 21–50 | $5,250 | $300 |
-| Empresarial | 51+ | from $8,750 | from $500 |
+| Empresarial | 51–100 | $8,750 | $500 |
+| Empresarial | 101–200 | $14,875 | $850 |
+| Empresarial | 201+ | $21,000 | $1,200 |
+
+### Why Empresarial is sub-banded (August 2026)
+
+A flat "51+ from $500" had no ceiling, so it inverted our own logic at the top
+of the market:
+
+| Headcount | Paid | MXN/employee/mo |
+|---|---|---|
+| 51 | $500 | 172 |
+| 150 | $500 | 58 |
+| 300 | $500 | **29** |
+
+A 300-person all-inclusive paid the same invoice as a 51-person boutique —
+i.e. **our largest and most valuable accounts paid the least per head**, and a
+resort GM comparing us to a corporate L&D contract ($10–30 USD/user/mo in that
+category) was being quoted roughly a tenth of the category floor.
+
+The constraint in §2 is a *ceiling* on price (never cost more per employee-hour
+than a group class). It was never a *floor*, and nothing else supplied one.
+Sub-banding supplies it. At 300 staff the new price is $1,200 — still only
+$4 USD/employee/month, still far under any competitor, and still an easy yes.
+
+Deliberately unchanged: **$150 and $300**. Those points are load-bearing for
+the constraint table below (n=21 has only 7% margin), they are wired to live
+Stripe Payment Links, and they are what the vast majority of prospects will
+actually buy.
 
 ### The constraint
 
@@ -73,11 +101,17 @@ Against ~2.5 h of practice per employee per month (5 min × 30 days):
 | **21** | **Profesional** | **250** | **100** | **ok — worst cell** |
 | 30 | Profesional | 175 | 70 | ok |
 | 50 | Profesional | 105 | 42 | ok |
-| 51 | Empresarial | 172 | 69 | ok |
-| 150 | Empresarial | 58 | 23 | ok |
+| 51 | Empresarial 500 | 172 | 69 | ok |
+| 100 | Empresarial 500 | 88 | 35 | ok |
+| 101 | Empresarial 850 | 147 | 59 | ok |
+| 200 | Empresarial 850 | 74 | 30 | ok |
+| 201 | Empresarial 1200 | 104 | 42 | ok |
+| 300 | Empresarial 1200 | 70 | 28 | ok |
 
 The binding case is always the **first employee of a band**, because that is
-where the flat fee is spread thinnest.
+where the flat fee is spread thinnest. Re-run after the August 2026 sub-banding:
+every new cell clears the anchor with room to spare, and **n=21 remains the
+worst cell in the whole table** — the sub-bands did not create a losing cell.
 
 ### What the old bands got wrong
 
@@ -203,6 +237,16 @@ internal rule is to hold roughly **1.5% of frontline payroll**, i.e. about
 $110–170 MXN/employee/month, which puts a 120-person resort near $850 USD/month
 rather than $500.
 
+> **Implemented August 2026 — and made a page change after all.** Leaving it as
+> a sales-motion rule meant the site kept publishing a number ($500) that we did
+> not intend to honour at 200 employees, which is the wrong thing to ask a
+> salesperson to walk back mid-call. The published sub-bands (§2) put the
+> 101–200 tier at exactly the $850 this section derived. The 201+ tier is
+> $1,200, which is *below* a strict 1.5%-of-payroll read (~$1,625 at 250
+> employees) — deliberately, because per-property pricing is a differentiator
+> and a headcount-indexed quote at the very top starts to feel per-seat. $1,200
+> captures most of the gap without eroding the strategy.
+
 ---
 
 ## 6. Open questions for Diego
@@ -212,10 +256,9 @@ rather than $500.
    buying 8 properties. The tickets now say "el precio por propiedad baja a
    partir de la quinta," but there is **no published grid** behind that. It needs
    a real one before a chain conversation, or the line should come out.
-2. **Empresarial quoting rule** (see §5.4). Do you want to adopt the ~1.5%-of-
-   payroll guide — roughly $110–170 MXN/employee/month — so a 120-person resort
-   quotes near $850 USD instead of $500? This is the one place the research says
-   we are leaving real money on the table.
+2. ~~**Empresarial quoting rule** (see §5.4).~~ **Resolved August 2026** —
+   adopted and published as three sub-bands ($500 / $850 / $1,200), not just an
+   internal quoting rule. See §2 and the note in §5.4.
 3. **Exam pricing at scale.** $875 MXN × 120 employees = $105,000 MXN upfront for
    a large property. That may need to be bundled into the subscription for
    Empresarial rather than billed separately.

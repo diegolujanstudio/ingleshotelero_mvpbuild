@@ -456,9 +456,9 @@ export const SLIDES: Slide[] = [
         name: "Empresarial",
         price: "Desde $500",
         cadence: "USD / mes",
-        body: "Para cadenas y propiedades grandes.",
+        body: "Para cadenas y propiedades grandes. Por tramo: $500 de 51 a 100 empleados, $850 de 101 a 200, $1,200 de 201 en adelante.",
         features: [
-          "Empleados ilimitados",
+          "Altas y bajas ilimitadas en su tramo",
           "Multi-propiedad para cadenas",
           "Contenido a la medida",
           "Account manager dedicado",
